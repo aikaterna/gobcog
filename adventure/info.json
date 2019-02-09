@@ -3,13 +3,14 @@
 		"locastan",
 		"aikaterna"
 	],
-	"description": "An RPG game for Discord.",
+	"description": "An RPG for Discord.",
     "install_msg": "Thank you for installing the Adventure cog, based on the GoblinsComic Adventure Party cog by locastan. Unload the earlier version of this cog by using the [p]unload gobcog command before loading the adventure cog. Only applies to users upgrading from GobCog. There is no conversion available for users that were utilizing earlier versions of this cog - think of this as a fresh new adventure!",
     "min_python_version": [3, 6, 0],
     "permissions" : [
+		"add_reactions",
 		"manage_messages"
 	],
-	"short": "An RPG game for Discord.",
+	"short": "An RPG for Discord.",
 	"tags": [
 		"rpg",
 		"adventure"

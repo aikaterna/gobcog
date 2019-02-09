@@ -17,19 +17,19 @@
     "striped kestrel": {"name": "striped kestrel", "bonus": 1.3, "cha": 42},
     "black eagle": {"name": "black eagle", "bonus": 1.3, "cha": 44},
     "cave bear": {"name": "cave bear", "bonus": 1.35, "cha": 44},
-    "wild ox": {"name": "wild ox", "bonus": 1.35, "cha": 44},
+    "ox": {"name": "ox", "bonus": 1.35, "cha": 44},
     "playful faun": {"name": "playful faun", "bonus": 1.35, "cha": 45},
     "playful sprite": {"name": "playful sprite", "bonus": 1.35, "cha": 47},
     "speckled hawk": {"name": "speckled hawk", "bonus": 1.35, "cha": 48},
     "water sprite": {"name": "water sprite", "bonus": 1.35, "cha": 50},
     "fire fairy": {"name": "fire fairy", "bonus": 1.35, "cha": 50},
     "black panther": {"name": "black panther", "bonus": 1.35, "cha": 50},
-    "majestic kirin": {"name": "wild kirin", "bonus": 1.4, "cha": 54},
+    "majestic kirin": {"name": "majestic kirin", "bonus": 1.4, "cha": 54},
     "small gryphon": {"name": "small gryphon", "bonus": 1.4, "cha": 54},
     "small phoenix": {"name": "small phoenix", "bonus": 1.45, "cha": 54},
     "wind spirit": {"name": "wind spirit", "bonus": 1.45, "cha": 54},
     "manticore": {"name": "manticore", "bonus": 1.5, "cha": 55},
     "pygmy unicorn": {"name": "pygmy unicorn", "bonus": 1.5, "cha": 55},
     "pocket dragon": {"name": "pocket dragon", "bonus": 1.6, "cha": 58},
-    "wild phoenix": {"name": "wild phoenix", "bonus": 1.6, "cha": 60}
+    "inferno phoenix": {"name": "inferno phoenix", "bonus": 1.6, "cha": 60}
 }
