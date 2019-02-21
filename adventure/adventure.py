@@ -14,7 +14,7 @@ from redbot.core.utils.chat_formatting import box, pagify, bold, humanize_list, 
 from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 from redbot.core.utils.menus import menu as red_menu, DEFAULT_CONTROLS, start_adding_reactions
 
-from .charsheet import Character, Equipment, Item
+from .charsheet import Character, Item
 
 
 BaseCog = getattr(commands, "Cog", object)
