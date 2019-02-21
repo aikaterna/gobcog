@@ -104,7 +104,6 @@
     "Aether Dragon": {"str": 285, "dipl": 120},
     "Nether Dragon": {"str": 295, "dipl": 120},
     "Lightning Dragon": {"str": 300, "dipl": 120},
-    "Celestial Wyrm": {"str": 320, "dipl": 120},
     "Elder Dragon": {"str": 340, "dipl": 160},
     "Fire Dragon": {"str": 340, "dipl": 160},
     "Bloodrage Drake": {"str": 340, "dipl": 170},
