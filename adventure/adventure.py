@@ -177,7 +177,6 @@ class Adventure(BaseCog):
         """
         if not await self.allow_in_dm(ctx):
             return await ctx.send("This command is not available in DM's on this bot.")
-        userdata = await self.config.user(ctx.author).all()
         try:
             c = await Character._from_json(self.config, ctx.author)
         except Exception as e:
@@ -202,89 +201,156 @@ class Adventure(BaseCog):
             if not reply:
                 return
             else:
-                if (
-                    not " sell " in reply.content.lower()
-                    and not " trade " in reply.content.lower()
-                ):
-                    equip = {}
-                    for item in userdata["items"]["backpack"]:
-                        if reply.content.lower() in item:
-                            equip = {"itemname": item, "item": userdata["items"]["backpack"][item]}
-                            break
-                    if equip != {}:
-                        await self._equip_item(ctx, equip, True, backpack_message)
+                equip = None
+                for name, item in c.backpack.items():
+                    if (
+                        reply.content.lower() in item.name.lower()
+                        or reply.content.lower() in str(item).lower()
+                    ):
+                        equip = item
+                        break
+                if equip:
+                    # await self._equip_item(ctx, equip, True, backpack_message)
+                    slot = item.slot[0]
+                    if len(item.slot) > 1:
+                        slot = "two handed"
+                    if not getattr(c, item.slot[0]):
+                        equip_msg = box(
+                            f"{E(ctx.author.display_name)} equipped {item} ({slot} slot).",
+                            lang="css",
+                        )
+                    else:
+                        equip_msg = box(
+                            (
+                                f"{E(ctx.author.display_name)} equipped {item} "
+                                f"({slot} slot) and put {humanize_list([str(getattr(c, s)) for s in item.slot])} into their backpack."
+                            ),
+                            lang="css",
+                        )
+                    current_stats = box(
+                        (
+                            f"{E(ctx.author.display_name)}'s new stats: "
+                            f"Attack: {c.att} [{c.skill['att']}], "
+                            f"Diplomacy: {c.cha} [{c.skill['cha']}]."
+                        ),
+                        lang="css"
+                    )
+                    await ctx.send(equip_msg, current_stats)
+                    c = await c._equip_item(item, True)
+                    # log.info(c)
+                    await self.config.user(ctx.author).set(c._to_json())
 
     @_backpack.command(name="equip")
-    async def backpack_equip(self, ctx, *, item: str):
+    async def backpack_equip(self, ctx, *, equip_item: str):
         """Equip an item from your backpack"""
-        userdata = await self.config.user(ctx.author).all()
-        if item == "None" or not any(
-            [x for x in userdata["items"]["backpack"] if item in x.lower()]
-        ):
-            return await ctx.send(
-                f"{E(ctx.author.display_name)}, you have to specify an item from your backpack to equip."
-            )
-        lookup = list(x for x in userdata["items"]["backpack"] if item.lower() in x.lower())
-        if len(lookup) > 1:
-            await ctx.send(
-                box(
+        try:
+            c = await Character._from_json(self.config, ctx.author)
+        except Exception as e:
+            log.info("Error with the new character sheet", exc_info=True)
+            return
+        equip = None
+        for name, item in c.backpack.items():
+            if equip_item.lower() in item.name.lower() or equip_item.lower() in str(item).lower():
+                equip = item
+                break
+        if equip:
+            # await self._equip_item(ctx, equip, True, backpack_message)
+            slot = item.slot[0]
+            if len(item.slot) > 1:
+                slot = "two handed"
+            if not getattr(c, item.slot[0]):
+                equip_msg = box(
+                    f"{E(ctx.author.display_name)} equipped {item} ({slot} slot).", lang="css"
+                )
+            else:
+                equip_msg = box(
                     (
-                        f"{E(ctx.author.display_name)}, I found multiple items "
-                        f"({' and '.join([', '.join(lookup[:-1]), lookup[-1]] if len(lookup) > 2 else lookup)}) "
-                        "matching that name in your backpack.\nPlease be more specific."
+                        f"{E(ctx.author.display_name)} equipped {item} "
+                        f"({slot} slot) and put {getattr(c, item.slot[0])} into their backpack."
                     ),
                     lang="css",
                 )
-            )
-            return
-        else:
-            item = lookup[0]
-            equip = {"itemname": item, "item": userdata["items"]["backpack"][item]}
-            await self._equip_item(ctx, equip, True)  # equip command with no backpack msg visible
+            await ctx.send(equip_msg)
+            c = await c._equip_item(item, True)
+            await self.config.user(ctx.author).set(c._to_json())
 
     @_backpack.command(name="sell")
     async def backpack_sell(self, ctx, *, item: str):
         """Sell an item from your backpack"""
         userdata = await self.config.user(ctx.author).all()
-        if item == "None" or not any(
-            [x for x in userdata["items"]["backpack"] if item.lower() in x.lower()]
-        ):
+        if item.startswith("."):
+            item = item.replace("_", " ").replace(".", "")
+        if item.startswith("["):
+            item = item.replace("[", "").replace("]", "")
+        if item.startswith("{.:'"):
+            item = item.replace("{.:'", "").replace("':.}", "")
+        try:
+            c = await Character._from_json(self.config, ctx.author)
+        except Exception as e:
+            log.info("Error with the new character sheet", exc_info=True)
+            return
+        if not any([x for x in c.backpack if item.lower() in x.lower()]):
             await ctx.send(
                 f"{E(ctx.author.display_name)}, you have to specify an item (or partial name) from your backpack to sell."
             )
             return
-        lookup = list(x for x in userdata["items"]["backpack"] if item.lower() in x.lower())
-        if any([x for x in lookup if "{.:'" in x.lower()]):
-            device = [x for x in lookup if "{.:'" in x.lower()]
+        lookup = list(i for x, i in c.backpack.items() if item.lower() in x.lower())
+        if any([x for x in lookup if x.rarity == "forged"]):
+            device = lookup[0]
             return await ctx.send(
                 box(
                     f"\n{E(ctx.author.display_name)}, your {device} is refusing to be sold and bit your finger for trying.",
                     lang="css",
                 )
             )
+        item_str = box(humanize_list([str(y) for y in lookup]), lang='css')
         msg = await ctx.send(
-            f"{E(ctx.author.display_name)}, do you want to sell these items? {box(humanize_list(lookup), lang='css')}"
+            f"{E(ctx.author.display_name)}, do you want to sell these items? {item_str}"
         )
-        start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
-        pred = ReactionPredicate.yes_or_no(msg, ctx.author)
+        currency_name = await bank.get_currency_name(ctx.guild)
+        
+        emojis = [
+            "\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP}",
+            "\N{CLOCKWISE RIGHTWARDS AND LEFTWARDS OPEN CIRCLE ARROWS}",
+            "\N{CLOCKWISE RIGHTWARDS AND LEFTWARDS OPEN CIRCLE ARROWS WITH CIRCLED ONE OVERLAY}",
+            "\N{CROSS MARK}"
+        ]
+        start_adding_reactions(msg, emojis)
+        pred = ReactionPredicate.with_emojis(emojis, msg)
         await ctx.bot.wait_for("reaction_add", check=pred)
-        if pred.result:  # user reacted with Yes.
+        msg = ""
+        if pred.result == 0:  # user reacted with one to sell.
+            # sell one of the item
             for item in lookup:
-                queryitem = {"itemname": item, "item": userdata["items"]["backpack"].get(item)}
-                price = await self._sell(ctx.author, queryitem)
-                async with self.config.user(ctx.author).all() as userdata:
-                    del userdata["items"]["backpack"][item]
-                currency_name = await bank.get_currency_name(ctx.guild)
-                if str(currency_name).startswith("<"):
-                    currency_name = "credits"
-                await ctx.send(
-                    f"{E(ctx.author.display_name)} sold their {item} for {price} {currency_name}."
-                )
-        else:
-            try:
-                await msg.delete()
-            except discord.errors.Forbidden:
-                pass
+                item.owned -= 1
+                price = await self._sell(ctx.author, item)
+                msg += f"{E(ctx.author.display_name)} sold their {box(item, lang='css')} for {price} {currency_name}.\n"
+                if item.owned <= 0:
+                    del c.backpack[item.name]
+        if pred.result == 1: # user wants to sell all owned.
+            for item in lookup:
+                price = 0
+                for x in range(0, item.owned):
+                    item.owned -= 1
+                    price += await self._sell(ctx.author, item)
+                    if item.owned <= 0:
+                        del c.backpack[item.name]
+                msg += f"{E(ctx.author.display_name)} sold all their {box(item, lang='css')} for {price} {currency_name}.\n"
+        if pred.result == 2: # user wants to sell all but one.
+            for item in lookup:
+                price = 0
+                for x in range(1, item.owned):
+                    item.owned -= 1
+                    price += await self._sell(ctx.author, item)
+                if price != 0:
+                    msg += f"{E(ctx.author.display_name)} sold all their {box(item, lang='css')} for {price} {currency_name}.\n"
+        if pred.result == 3: # user doesn't want to sell those items.
+            msg = "Not selling those items."
+                
+        if msg:
+            await self.config.user(ctx.author).set(c._to_json())
+            for page in pagify(msg, delims=["\n"]):
+                await ctx.send(page)
 
     @_backpack.command(name="trade")
     async def backpack_trade(
@@ -479,49 +545,27 @@ class Adventure(BaseCog):
             return await ctx.send("This command is not available in DM's on this bot.")
         name = name.lower()
         userdata = await self.config.user(ctx.author).all()
-        if name not in userdata["loadouts"]:
+        try:
+            c = await Character._from_json(self.config, ctx.author)
+        except Exception as e:
+            log.info("Error with the new character sheet", exc_info=True)
+            return
+        if name not in c.loadouts:
             await ctx.send(f"{E(ctx.author.display_name)}, you don't have a loadout named {name}.")
             return
         else:
-            stats_msg = None
-            stats = None
-            to_remove = []
-            for slot, item in userdata["loadouts"][name].items():
-                try:
-                    loadout_item_name = [k for k in item.keys()][0]
-                except:
-                    loadout_item_name = None
-                if loadout_item_name:
-                    equip = {"itemname": loadout_item_name, "item": item[loadout_item_name]}
-                    if loadout_item_name in userdata["items"]["backpack"]:
-                        stats = await self._equip_silent_item(ctx, equip, True)
-                    elif loadout_item_name in userdata["items"][slot]:
-                        # already equipped
-                        continue
-                    else:
-                        equip_name = "".join(k for k in userdata["items"][slot].keys())
-                        stats = await self._sub_silent_unequip(ctx, equip_name)
-                        to_remove.append(slot)
-                elif userdata["items"][slot]:
-                    equip_name = "".join(k for k in userdata["items"][slot].keys())
-                    stats = await self._sub_silent_unequip(ctx, equip_name)
+            c = await c._equip_loadout(name)
+            current_stats = box(
+                        (
+                            f"{E(ctx.author.display_name)}'s new stats: "
+                            f"Attack: {c.att} [{c.skill['att']}], "
+                            f"Diplomacy: {c.cha} [{c.skill['cha']}]."
+                        ),
+                        lang="css"
+                    )
+            await ctx.send(current_stats)
+            # await self.config.user(ctx.author).set(c._to_json())
 
-                if stats:
-                    stats_msg = stats
-            if to_remove:
-                # Cleanup the loadout if the item is missing
-                for slot in to_remove:
-                    userdata["loadouts"][name][slot] = {}
-                await self.config.user(ctx.author).set(userdata)
-                await ctx.send(
-                    f"{E(ctx.author.display_name)}, you no longer have some items in your loadout."
-                )
-            if stats_msg:
-                await ctx.send(stats_msg)
-            else:
-                await ctx.send(
-                    f"{E(ctx.author.display_name)}, you already have all those items equipped."
-                )
 
     @commands.group()
     @checks.admin_or_permissions(administrator=True)
@@ -578,7 +622,9 @@ class Adventure(BaseCog):
             "tr_rare.json",
         ]
         if os.listdir(bundled_data_path(self) / theme) != good_files:
-            await ctx.send(f"That theme pack is missing one or more of the following files {humanize_list(good_files)}")
+            await ctx.send(
+                f"That theme pack is missing one or more of the following files {humanize_list(good_files)}"
+            )
             return
         else:
             await self.config.theme.set(theme)
@@ -680,7 +726,7 @@ class Adventure(BaseCog):
             return await ctx.send("This command is not available in DM's on this bot.")
         if not item:
             return await ctx.send("Please use an item name with this command.")
-        await ctx.invoke(self.backpack_equip, item=item)
+        await ctx.invoke(self.backpack_equip, equip_item=item)
 
     @commands.command()
     @commands.cooldown(rate=1, per=3600, type=commands.BucketType.user)
@@ -1295,12 +1341,17 @@ class Adventure(BaseCog):
         if not await self.allow_in_dm(ctx):
             return await ctx.send("This command is not available in DM's on this bot.")
         userdata = await self.config.user(ctx.author).all()
+        try:
+            c = await Character._from_json(self.config, ctx.author)
+        except Exception as e:
+            log.info("Error with the new character sheet", exc_info=True)
+            return
         if not box_type:
             return await ctx.send(
                 box(
                     (
-                        f"{E(ctx.author.display_name)} owns {str(userdata['treasure'][0])} "
-                        f"normal, {str(userdata['treasure'][1])} rare and {str(userdata['treasure'][2])} epic chests."
+                        f"{E(ctx.author.display_name)} owns {str(c.treasure[0])} "
+                        f"normal, {str(c.treasure[1])} rare and {str(c.treasure[2])} epic chests."
                     ),
                     lang="css",
                 )
@@ -1315,44 +1366,13 @@ class Adventure(BaseCog):
             return await ctx.send(
                 f"There is talk of a {box_type} treasure chest but nobody ever saw one."
             )
-        treasure = userdata["treasure"][redux.index(1)]
+        treasure = c.treasure[redux.index(1)]
         if treasure == 0:
             await ctx.send(
                 f"{E(ctx.author.display_name)}, you have no {box_type} treasure chest to open."
             )
         else:
-            item = await self._open_chest(ctx, ctx.author, box_type)  # returns item and msg
-            async with self.config.user(ctx.author).all() as userinfo:
-                userinfo["treasure"] = [x - y for x, y in zip(userdata["treasure"], redux)]
-            if item[0]["equip"] == "sell":
-                price = await self._sell(ctx.author, item[0])
-                currency_name = await bank.get_currency_name(ctx.guild)
-                if str(currency_name).startswith("<"):
-                    currency_name = "credits"
-                await item[1].edit(
-                    content=(
-                        box(
-                            f"{E(ctx.author.display_name)} sold the {item[0]['itemname']} for {price} {currency_name}.",
-                            lang="css",
-                        )
-                    )
-                )
-                await self._clear_react(item[1])
-            elif item[0]["equip"] == "equip":
-                equip = {"itemname": item[0]["itemname"], "item": item[0]["item"]}
-                await self._equip_item(ctx, equip, False, item[1])
-            else:
-                async with self.config.user(ctx.author).all() as userinfo:
-                    userinfo["items"]["backpack"].update({item[0]["itemname"]: item[0]["item"]})
-                await item[1].edit(
-                    content=(
-                        box(
-                            f"{E(ctx.author.display_name)} put the {item[0]['itemname']} into their backpack.",
-                            lang="css",
-                        )
-                    )
-                )
-                await self._clear_react(item[1])
+            await self._open_chest(ctx, ctx.author, box_type)  # returns item and msg
 
     @commands.command()
     @commands.guild_only()
@@ -1793,63 +1813,32 @@ class Adventure(BaseCog):
         return form_string + "\n"
 
     @commands.command()
-    async def unequip(self, ctx, *, item: str = "None"):
+    async def unequip(self, ctx, *, item: str):
         """This stashes a specified equipped item into your backpack.
 
         `[p]unequip name of item`
         You can only have one of each uniquely named item in your backpack.
         """
+
         if not await self.allow_in_dm(ctx):
             return await ctx.send("This command is not available in DM's on this bot.")
-        await self._sub_unequip(ctx, item)
-
-    async def _sub_unequip(self, ctx, item: str = "None"):
-        user = ctx.author
-        userdata = await self.config.user(ctx.author).all()
-        equipped = {}
-
-        for slot in userdata["items"]:
-            if userdata["items"][slot] and slot != "backpack":
-                async with self.config.user(user).all() as userupdate:
-                    equipped.update(userupdate["items"][slot])
-
-        if item == "None" or not any([x for x in equipped if item in x.lower()]):
-            if item == "{.:'":
-                return
-            elif item == "None":
-                return await ctx.send(
-                    f"{E(ctx.author.display_name)}, please use an item name with this command."
-                )
-            else:
-                return await ctx.send(
-                    f"{E(ctx.author.display_name)}, you do not have an item matching {item} equipped."
-                )
+        try:
+            c = await Character._from_json(self.config, ctx.author)
+        except Exception as e:
+            log.info("Error with the new character sheet", exc_info=True)
+            return
+        msg = ""
+        for current_item in c.current_equipment():
+            if item.lower() in current_item.name:
+                await c._unequip_item(current_item)
+                msg = f"{E(ctx.author.display_name)} removed the {current_item} and put it into their backpack."
+        if msg:
+            await ctx.send(box(msg, lang="css"))
+            await self.config.user(ctx.author).set(c._to_json())
         else:
-            lookup = list(x for x in equipped if item in x.lower())
-            for olditem in lookup:
-                # keep in mind that double handed items grant their bonus twice so they remove twice
-                for slot in equipped[olditem].get("slot"):
-                    async with self.config.user(user).all() as userinfo:
-                        userinfo["items"][slot] = {}
-                        userinfo["att"] -= int(equipped[olditem].get("att"))
-                        userinfo["cha"] -= int(equipped[olditem].get("cha"))
-                        userinfo["items"]["backpack"].update({olditem: equipped[olditem]})
-                # TODO: Change data structure of items dict so you can have duplicate items because of key duplicate overwrite in dicts.
-                msg = await ctx.send(
-                    box(
-                        f"{E(ctx.author.display_name)} removed the {olditem} and put it into their backpack.",
-                        lang="css",
-                    )
-                )
-            userdata = await self.config.user(ctx.author).all()
-            stats_msg = box(
-                (
-                    f"{E(ctx.author.display_name)}'s new stats: Attack: {userdata['att']} "
-                    f"[+{userdata['skill']['att']}], Diplomacy: {userdata['cha']} [+{userdata['skill']['cha']}]."
-                ),
-                lang="css",
+            await ctx.send(
+                f"{E(ctx.author.display_name)}, you do not have an item matching {item} equipped."
             )
-            await msg.edit(content=f"{msg.content}\n{stats_msg}")
 
     async def _sub_silent_unequip(self, ctx, item: str):
         user = ctx.author
@@ -1997,8 +1986,9 @@ class Adventure(BaseCog):
         self._current_adventures[ctx.guild.id] = adventure_msg.id
         start_adding_reactions(adventure_msg, self._adventure_actions, ctx.bot.loop)
         try:
-            await asyncio.wait_for(timer, timeout)
+            await asyncio.wait_for(timer, timeout + 5)
         except Exception as e:
+            log.info("Error with the countdown timer", exc_info=e)
             pass
         return await self._result(ctx, adventure_msg)
 
@@ -2503,9 +2493,7 @@ class Adventure(BaseCog):
             async with self.config.user(user).all() as userdata:
                 userdata["treasure"] = [sum(x) for x in zip(userdata["treasure"], special)]
 
-    async def _adv_countdown(
-        self, ctx, seconds, title, loop: Optional[asyncio.AbstractEventLoop] = None
-    ) -> asyncio.Task:
+    async def _adv_countdown(self, ctx, seconds, title) -> asyncio.Task:
         await self._data_check(ctx)
 
         async def adv_countdown():
@@ -2514,6 +2502,7 @@ class Adventure(BaseCog):
             message_adv = await ctx.send(f"⏳ [{title}] {self._remaining(adv_end)[0]}s")
             while True:
                 timer, done, sremain = self._remaining(adv_end)
+                log.debug(f"countdown {sremain}")
                 self._adventure_countdown[ctx.guild.id] = timer, done, sremain
                 if done:
                     await message_adv.delete()
@@ -2522,32 +2511,10 @@ class Adventure(BaseCog):
                     await message_adv.edit(content=(f"⏳ [{title}] {self._remaining(adv_end)[0]}s"))
                 await asyncio.sleep(1)
 
-        if loop is None:
-            loop = asyncio.get_event_loop()
-
-        return loop.create_task(adv_countdown())
+        return ctx.bot.loop.create_task(adv_countdown())
 
     def _build_bkpk_display(self, backpack, forging=False, consumed: list = []):
         bkpk = self._sort_backpack(backpack)
-        form_string = "Items in Backpack:"
-        consumed_list = [i for i in consumed]
-        for slot_group in bkpk:
-
-            slot_name = slot_group[0][1]["slot"]
-            slot_name = slot_name[0] if len(slot_name) < 2 else "two handed"
-            form_string += f"\n\n {slot_name.title()} slot"
-            rjust = max([len(i[0]) for i in slot_group])
-            for item in slot_group:
-                if forging and ("{.:" in item[0] or item[0] in consumed_list):
-                    continue
-                form_string += (
-                    f'\n  - {item[0]:<{rjust}} - (ATT: {item[1]["att"]} | DPL: {item[1]["cha"]})'
-                )
-
-        return form_string + "\n"
-
-    def _build_new_bkpk_display(self, backpack, forging=False, consumed=[]):
-        bkpk = self._sort_new_backpack(backpack)
         form_string = "Items in Backpack:"
         consumed_list = [i for i in consumed]
         for slot_group in bkpk:
@@ -2775,6 +2742,11 @@ class Adventure(BaseCog):
             )
         else:
             chest_msg = f"{E(ctx.author.display_name)}'s {user[:1] + user[1:]} is foraging for treasure. What will it find?"
+        try:
+            c = await Character._from_json(self.config, ctx.author)
+        except Exception as e:
+            log.info("Error with the new character sheet", exc_info=True)
+            return
         open_msg = await ctx.send(box(chest_msg, lang="css"))
         await asyncio.sleep(2)
         roll = random.randint(1, 100)
@@ -2816,20 +2788,13 @@ class Adventure(BaseCog):
         else:
             chance = self.TR_COMMON
         itemname = random.choice(list(chance.keys()))
-        item = chance[itemname]
-        if len(item["slot"]) == 2:  # two handed weapons add their bonuses twice
-            hand = "two handed"
-            att = item["att"] * 2
-            cha = item["cha"] * 2
-        else:
-            if item["slot"][0] == "right" or item["slot"][0] == "left":
-                hand = item["slot"][0] + " handed"
-            else:
-                hand = item["slot"][0] + " slot"
-            att = item["att"]
-            cha = item["cha"]
+        item = Item._from_json({itemname: chance[itemname]})
+        slot = item.slot[0]
+        if len(item.slot) > 1:
+            slot = "two handed"
         if hasattr(user, "display_name"):
-            chest_msg2 = f"{E(user.display_name)} found a {itemname}. (Attack: {str(att)}, Charisma: {str(cha)} [{hand}])"
+
+            chest_msg2 = f"{E(user.display_name)} found a {itemname}. (Attack: {str(item.att)}, Charisma: {str(item.cha)} [{slot}])"
             await open_msg.edit(
                 content=box(
                     f"{chest_msg}\n{chest_msg2}\nDo you want to equip this item, put in your backpack, or sell this item?",
@@ -2837,7 +2802,7 @@ class Adventure(BaseCog):
                 )
             )
         else:
-            chest_msg2 = f"The {user} found a {itemname}. (Attack: {str(att)}, Charisma: {str(cha)} [{hand}])"
+            chest_msg2 = f"The {user} found a {item}. (Attack: {str(item.att)}, Charisma: {str(cha)} [{slot}])"
             await open_msg.edit(
                 content=box(
                     f"{chest_msg}\n{chest_msg2}\nDo you want to equip this item, put in your backpack, or sell this item?",
@@ -2856,10 +2821,56 @@ class Adventure(BaseCog):
             )
         react, user = await ctx.bot.wait_for("reaction_add", check=pred)
         await self._clear_react(open_msg)
-        return (
-            {"itemname": itemname, "item": item, "equip": self._treasure_controls[react.emoji]},
-            open_msg,
-        )
+        # async with self.config.user(ctx.author).all() as userinfo:
+        # userinfo["treasure"] = [x - y for x, y in zip(userdata["treasure"], redux)]
+        if self._treasure_controls[react.emoji] == "sell":
+            price = await self._sell(ctx.author, item)
+            currency_name = await bank.get_currency_name(ctx.guild)
+            if str(currency_name).startswith("<"):
+                currency_name = "credits"
+            await open_msg.edit(
+                content=(
+                    box(
+                        f"{E(ctx.author.display_name)} sold the {item} for {price} {currency_name}.",
+                        lang="css",
+                    )
+                )
+            )
+            await self._clear_react(open_msg)
+        elif self._treasure_controls[react.emoji] == "equip":
+            # equip = {"itemname": item[0]["itemname"], "item": item[0]["item"]}
+            if not getattr(c, item.slot[0]):
+                equip_msg = box(
+                    f"{E(ctx.author.display_name)} equipped {item} ({slot} slot).", lang="css"
+                )
+            else:
+                equip_msg = box(
+                    (
+                        f"{E(ctx.author.display_name)} equipped {item} "
+                        f"({slot} slot) and put {getattr(c, item.slot[0])} into their backpack."
+                    ),
+                    lang="css",
+                )
+            await open_msg.edit(content=equip_msg)
+            c = await c._equip_item(item, False)
+            await self.config.user(ctx.author).set(c._to_json())
+        else:
+            # async with self.config.user(ctx.author).all() as userinfo:
+            # userinfo["items"]["backpack"].update({item[0]["itemname"]: item[0]["item"]})
+            if item.name in c.backpack:
+                c.backpack[item.name].owned += 1
+            else:
+                c.backpack[item.name] = item
+            await open_msg.edit(
+                content=(
+                    box(
+                        f"{E(ctx.author.display_name)} put the {item} into their backpack.",
+                        lang="css",
+                    )
+                )
+            )
+            await self._clear_react(open_msg)
+            await self.config.user(ctx.author).set(c._to_json())
 
     @staticmethod
     def _remaining(epoch):
@@ -2940,20 +2951,18 @@ class Adventure(BaseCog):
         return phrase
 
     @staticmethod
-    async def _sell(user, item):
+    async def _sell(user, item: Item):
         if isinstance(item, tuple):
             thing = item[0]
         else:
             thing = item
-        if "[" in thing["itemname"]:
+        if item.rarity == "epic":
             base = (500, 1000)
-        elif "." in thing["itemname"]:
+        elif item.rarity == "rare":
             base = (100, 500)
         else:
             base = (10, 200)
-        price = random.randint(base[0], base[1]) * max(
-            item["item"]["att"] + item["item"]["cha"], 1
-        )
+        price = random.randint(base[0], base[1]) * max(item.att + item.cha, 1)
         await bank.deposit_credits(user, price)
         return price
 

@@ -50,11 +50,25 @@ class Item:
             return f"{TINKER_OPEN}{self.name}{TINKER_CLOSE}"
             # Thanks Sinbad!
 
+    @staticmethod
+    def _remove_markdowns(item):
+        if item.startswith("."):
+            item = item.replace("_", " ").replace(".", "")
+        if item.startswith("["):
+            item = item.replace("[", "").replace("]", "")
+        if item.startswith("{.:'"):
+            item = item.replace("{.:'", "").replace("':.}", "")
+        return item
+
     @classmethod
     def _from_json(cls, data:dict):
+        # try:
         name = "".join(data.keys())
-        rarity = "normal"
         data = data[name]
+        # except KeyError:
+            # return cls(**data)
+        rarity = "normal"
+        # data = data[name]
         if name.startswith("."):
             name = name.replace("_", " ").replace(".", "")
             rarity = "rare"
@@ -64,13 +78,10 @@ class Item:
         if name.startswith("{.:'"):
             name = name.replace("{.:'", "").replace("':.}", "")
             rarity = "forged"
-
-        if "dex" not in data:
-            dex = 0
-        if "luck" not in data:
-            luck = 0
-        if "owned" not in data:
-            owned = 1
+        rarity = data["rarity"] if "rarity" in data else rarity
+        dex = data["dex"] if "dex" in data else 0
+        luck = data["luck"] if "luck" in data else 0
+        owned = data["owned"] if "owned" in data else 1
         item_data = {
             "name": name,
             "slot": data["slot"],
@@ -85,14 +96,17 @@ class Item:
 
     def _to_json(self) -> dict:
         return {
-            "name": self.name,
-            "slot": self.slot,
-            "att": self.att,
-            "cha": self.cha,
-            "rarity": self.rarity,
-            "dex": self.dex,
-            "luck": self.luck,
-            "owned": self.owned,
+            self.name:
+            {
+                "name": self.name,
+                "slot": self.slot,
+                "att": self.att,
+                "cha": self.cha,
+                "rarity": self.rarity,
+                "dex": self.dex,
+                "luck": self.luck,
+                "owned": self.owned,
+            }
         }
 
 class Character(Item):
@@ -120,38 +134,28 @@ class Character(Item):
         self.skill: dict = kwargs.pop("skill")
         self.bal: int = kwargs.pop("bal")
         self.user: discord.Member = kwargs.pop("user")
-        self.att = self.__att__()
-        self.cha = self.__cha__()
+        self.att = self.__stat__("att")
+        self.cha = self.__stat__("cha")
+        self.dex = self.__stat__("dex")
+        self.luck = self.__stat__("luck")
 
-    def __att__(self):
-        att = 0
+    def __stat__(self, stat: str):
+        """
+        Calculates the stats dynamically for each slot of equipment
+        """
+        stats = 0
         for slot in ORDER:
             if slot == "two handed":
                 continue
             try:
                 item = getattr(self, slot)
-                # log.info(item)
+                # log.debug(item)
                 if item:
-                    att += item.att
+                    stats += getattr(item, stat)
             except Exception as e:
-                log.error("error calculating att", exc_info=True)
+                log.error(f"error calculating {stat}", exc_info=True)
                 pass
-        return att
-
-    def __cha__(self):
-        cha = 0
-        for slot in ORDER:
-            if slot == "two handed":
-                continue
-            try:
-                item = getattr(self, slot)
-                # log.info(item)
-                if item:
-                    cha += item.cha
-            except Exception as e:
-                log.error("error calculating cha", exc_info=True)
-                pass
-        return cha
+        return stats
 
     def __str__(self):
         next_lvl = int((self.lvl + 1) ** 4)
@@ -196,7 +200,7 @@ class Character(Item):
             att = item.att * 2 if slot_name == "two handed" else item.att
             cha = item.cha * 2 if slot_name == "two handed" else item.cha
             form_string += (
-                f"\n  - {item} - (ATT: {att} | DPL: {cha})"
+                f"\n  - {str(item)} - (ATT: {att} | DPL: {cha})"
             )
 
         return form_string + "\n"
@@ -214,9 +218,8 @@ class Character(Item):
         tmp = {}
         for item in backpack:
             slots = backpack[item].slot
-            if len(slots) == 1:
-                slot_name = slots[0]
-            else:
+            slot_name = slots[0]
+            if len(slots) > 1:
                 slot_name = "two handed"
 
             if slot_name not in tmp:
@@ -245,35 +248,76 @@ class Character(Item):
             form_string += f"\n\n {slot_name.title()} slot"
             rjust = max([len(str(i[0])) for i in slot_group])
             for item in slot_group:
+                # log.debug(item[1])
                 if forging and ("{.:" in item[0] or item[0] in consumed_list):
                     continue
                 form_string += (
-                    f'\n  - {item[0]:<{rjust}} - (ATT: {item[1].att} | DPL: {item[1].cha})'
+                    f"\n {item[1].owned} - {str(item[1]):<{rjust}} - "
+                    f"(ATT: {item[1].att} | DPL: {item[1].cha})"
                 )
 
         return form_string + "\n"
 
-    def _equip_item(self, item: Item, from_backpack:bool=True):
+    async def _equip_item(self, item: Item, from_backpack:bool=True):
         """This handles moving an item from backpack to equipment"""
-        current = getattr(self, item.slot[0])
-        if current:
-            olditem = copy(current)
-            self.att -= olditem.att
-            self.cha -= olditem.cha
-            if len(olditem.slot) == 2:
-                self.att -= olditem.att
-                self.cha -= olditem.cha
-            if olditem in self.backpack:
-                self.backpack[olditem.name].owned += 1
+        # log.debug(self.backpack)
+        if from_backpack and item.name in self.backpack:
+            # self.backpack[item.name].owned -= 1
+            # log.debug("removing one from backpack")
+            log.debug("removing from backpack")
+            del self.backpack[item.name]
+        # log.debug(item)
+        for slot in item.slot:
+            log.debug(f"Equipping {slot}")
+            current = getattr(self, slot)
+            log.debug(current)
+            if current:
+                await self._unequip_item(current)
+            setattr(self, slot, item)
+        return self
+
+    async def _equip_loadout(self, loadout_name):
+        loadout = self.loadouts[loadout_name]
+        for slot, item in loadout.items():
+            if not item:
+                continue
+            name = "".join(item.keys())
+            name = Item._remove_markdowns(name)
+            current = getattr(self, slot)
+            log.debug(name)
+            if current and  current.name != name:
+                await self._unequip_item(current)
+            if name in self.backpack:
+                await self._equip_item(self.backpack[name], True)
             else:
-                self.backpack[olditem.name] = olditem
-        self.att += item.att
-        self.cha += item.cha
-        setattr(self, item.slot[0], item)
-        if len(item.slot) == 2:
-            self.att += item.att
-            self.cha += item.cha
-            setattr(self, item.slot[1], item)
+                setattr(self, slot, None)
+        return self
+
+    def current_equipment(self):
+        """
+        returns a list of Items currently equipped
+        """
+        equipped = []
+        for slot in ORDER:
+            if slot == "two handed":
+                continue
+            item = getattr(self, slot)
+            if item:
+                equipped.append(item)
+        return equipped
+
+    async def _unequip_item(self, item: Item):
+        """This handles moving an item equipment to backpack"""
+        if item.name in self.backpack:
+            self.backpack[item.name].owned += 1
+        else:
+            # item.owned += 1
+            self.backpack[item.name] = item
+            log.debug(f"storing {item} in backpack")
+        for slot in item.slot:
+            log.debug(f"Unequipping {slot} {item}")
+            setattr(self, slot, None)
+        return self
 
     @classmethod
     async def _from_json(cls, config : Config, user : discord.Member):
@@ -282,7 +326,15 @@ class Character(Item):
         balance = await bank.get_balance(user)
         equipment = {k:Item._from_json(v) if v else None for k,v in data["items"].items() if k != "backpack"}
         loadouts = data["loadouts"]
-        backpack = {n:Item._from_json({n:i}) for n, i in data["items"]["backpack"].items()}
+        if "backpack" not in data:
+            # helps move old data to new format
+            backpack = {}
+            for n, i in data["items"]["backpack"].items():
+                item = Item._from_json({n:i})
+                backpack[item.name] = item 
+        else:
+            backpack = {n:Item._from_json({n:i}) for n, i in data["backpack"].items()}
+        # log.debug(data["items"]["backpack"])
         hero_data = {
             "exp": data["exp"],
             "lvl": data["lvl"],
@@ -298,9 +350,14 @@ class Character(Item):
         }
         for k, v in equipment.items():
             hero_data[k] = v
+        # log.debug(hero_data)
         return cls(**hero_data)
 
     def _to_json(self) -> dict:
+        backpack = {}
+        for k, v in self.backpack.items():
+            for n, i in v._to_json().items():
+                backpack[n] = i
         return {
             "exp": self.exp,
             "lvl": self.lvl,
@@ -321,8 +378,8 @@ class Character(Item):
                 "charm": self.charm._to_json() if self.charm else {},
             },
 
-            "backpack": {n:i._to_json() for n, i in self.backpack.items()},
-            "loadouts": {n:l._to_json() for n, l in self.loadouts.items()}, # convert to dict of items
+            "backpack": backpack,
+            "loadouts": self.loadouts, # convert to dict of items
             "heroclass": self.heroclass,
             "skill": self.skill,
         }
