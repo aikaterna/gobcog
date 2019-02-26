@@ -158,11 +158,14 @@ class Character(Item):
         return stats
 
     def __str__(self):
+        """
+            Define str to be our default look for the character sheet :thinkies:
+        """
         next_lvl = int((self.lvl + 1) ** 4)
         if self.heroclass != {} and "name" in self.heroclass:
             class_desc = self.heroclass["name"] + "\n\n" + self.heroclass["desc"]
             if self.heroclass["name"] == "Ranger":
-                if not self.heroclass["ability"]:
+                if not self.heroclass["pet"]:
                     class_desc += "\n\n- Current pet: None"
                 elif self.heroclass["pet"]:
                     class_desc += f"\n\n- Current pet: {self.heroclass['pet']['name']}"
@@ -179,6 +182,9 @@ class Character(Item):
         )
 
     def __equipment__(self):
+        """
+            Define a secondary like __str__ to show our equipment
+        """
         form_string = ""
         last_slot = ""
         for slots in ORDER:
@@ -249,7 +255,7 @@ class Character(Item):
             rjust = max([len(str(i[0])) for i in slot_group])
             for item in slot_group:
                 # log.debug(item[1])
-                if forging and ("{.:" in item[0] or item[0] in consumed_list):
+                if forging and (item[1].rarity == "forged" or item[1] in consumed_list):
                     continue
                 form_string += (
                     f"\n {item[1].owned} - {str(item[1]):<{rjust}} - "
@@ -284,14 +290,36 @@ class Character(Item):
             name = "".join(item.keys())
             name = Item._remove_markdowns(name)
             current = getattr(self, slot)
-            log.debug(name)
             if current and  current.name != name:
                 await self._unequip_item(current)
-            if name in self.backpack:
-                await self._equip_item(self.backpack[name], True)
+            elif current and current.name == name:
+                continue
             else:
-                setattr(self, slot, None)
+                if current and name not in self.backpack:
+                    log.debug(f"{name} is missing")
+                    setattr(self, slot, None)
+                else:
+                    await self._equip_item(self.backpack[name], True)
+            
         return self
+
+    async def _save_loadout(self):
+        """
+            Return a dict of currently equipped items for loadouts
+        """
+        return {
+                "head": self.head._to_json() if self.head else {},
+                "neck": self.neck._to_json() if self.neck else {},
+                "chest": self.chest._to_json() if self.chest else {},
+                "gloves": self.gloves._to_json() if self.gloves else {},
+                "belt": self.belt._to_json() if self.belt else {},
+                "legs": self.legs._to_json() if self.legs else {},
+                "boots": self.boots._to_json() if self.boots else {},
+                "left": self.left._to_json() if self.left else {},
+                "right": self.right._to_json() if self.right else {},
+                "ring": self.ring._to_json() if self.ring else {},
+                "charm": self.charm._to_json() if self.charm else {},
+            }
 
     def current_equipment(self):
         """
@@ -326,6 +354,13 @@ class Character(Item):
         balance = await bank.get_balance(user)
         equipment = {k:Item._from_json(v) if v else None for k,v in data["items"].items() if k != "backpack"}
         loadouts = data["loadouts"]
+        heroclass = "Hero"
+        if "class" in data:
+            # to move from old data to new data
+            heroclass = data["class"]
+        if "heroclass" in data:
+            # we're saving to new data to avoid keyword conflicts
+            heroclass = data["heroclass"]
         if "backpack" not in data:
             # helps move old data to new format
             backpack = {}
@@ -343,7 +378,7 @@ class Character(Item):
             "treasure": data["treasure"],
             "backpack": backpack,
             "loadouts": loadouts,
-            "heroclass": data["class"],
+            "heroclass": heroclass,
             "skill": data["skill"],
             "bal": balance,
             "user": user,
