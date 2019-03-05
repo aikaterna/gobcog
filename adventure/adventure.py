@@ -57,7 +57,9 @@ class Adventure(BaseCog):
         self._rewards = {}
         self._participants = {}
         self._trader_countdown = {}
+        self._current_traders = {}
         self._current_adventures = {}
+        self.tasks = []
 
         self.config = Config.get_conf(self, 2710801001, force_registration=True)
 
@@ -110,6 +112,11 @@ class Adventure(BaseCog):
         self.config.register_global(**default_global)
         self.config.register_user(**default_user)
 
+    def __unload(self):
+        for task in self.tasks:
+            log.debug(f"removing task {task}")
+            task.cancel()
+
     async def initialize(self):
         """This will load all the bundled data into respective variables"""
         theme = await self.config.theme()
@@ -159,12 +166,13 @@ class Adventure(BaseCog):
     @commands.command(hidden=True)
     @commands.is_owner()
     async def atest(self, ctx):
-        userdata = await self.config.user(ctx.author).all()
-        c = await Character._from_json(self.config, ctx.author)
-        hero = bundled_data_path(self) / "hero.json"
+        # userdata = await self.config.user(ctx.author).all()
+        # c = await Character._from_json(self.config, ctx.author)
+        # hero = bundled_data_path(self) / "hero.json"
         # with hero.open("w") as f:
         # json.dump(c.to_json(), f, indent=4)
-        print(c.equipment)
+        # print(c.equipment)
+        await self._trader(ctx)
 
     @commands.group(name="backpack", autohelp=False)
     async def _backpack(self, ctx):
@@ -542,7 +550,7 @@ class Adventure(BaseCog):
             for l_name, loadout in c.loadouts.items():
                 if name and name.lower() == l_name:
                     index = count
-                stats = self._build_loadout_display({"items": loadout})
+                stats = await self._build_loadout_display({"items": loadout})
                 msg = f"[{l_name} Loadout for {E(ctx.author.display_name)}]\n\n{stats}"
                 msg_list.append(box(msg, lang="css"))
                 count += 1
@@ -1655,17 +1663,22 @@ class Adventure(BaseCog):
         (1h cooldown)
         """
 
-        userdata = await self.config.user(ctx.author).all()
-        if userdata["class"]["name"] != "Berserker":
+        try:
+            c = await Character._from_json(self.config, ctx.author)
+        except Exception as e:
+            log.error("Error with the new character sheet", exc_info=True)
+            return
+        if c.heroclass["name"] != "Berserker":
             ctx.command.reset_cooldown(ctx)
             return await ctx.send(
                 f"{E(ctx.author.display_name)}, you need to be a Berserker to do this."
             )
         else:
-            if userdata["class"]["ability"] == True:
+            if c.heroclass["ability"] == True:
                 return await ctx.send(f"{E(ctx.author.display_name)}, ability already in use.")
-            async with self.config.user(ctx.author).all() as userdata:
-                userdata["class"]["ability"] = True
+            # async with self.config.user(ctx.author).all() as userdata:
+            c.heroclass["ability"] = True
+            await self.config.user(ctx.author).set(c._to_json())
             await ctx.send(
                 f"{bold(ctx.author.display_name)} is starting to froth at the mouth...🗯️"
             )
@@ -1679,9 +1692,13 @@ class Adventure(BaseCog):
         """
         if not await self.allow_in_dm(ctx):
             return await ctx.send("This command is not available in DM's on this bot.")
-        userdata = await self.config.user(ctx.author).all()
+        try:
+            c = await Character._from_json(self.config, ctx.author)
+        except Exception as e:
+            log.error("Error with the new character sheet", exc_info=True)
+            return
         if spend == "reset":
-            bal = await bank.get_balance(ctx.author)
+            bal = c.bal
             currency_name = await bank.get_currency_name(ctx.guild)
 
             offering = int(bal / 8)
@@ -1696,25 +1713,25 @@ class Adventure(BaseCog):
             await ctx.bot.wait_for("reaction_add", check=pred)
 
             if pred.result:
-                userdata["skill"]["pool"] = userdata["skill"]["att"] + userdata["skill"]["cha"]
-                userdata["skill"]["att"] = 0
-                userdata["skill"]["cha"] = 0
+                c.skill["pool"] = c.skill["att"] + c.skill["cha"]
+                c.skill["att"] = 0
+                c.skill["cha"] = 0
                 log.debug(userdata["skill"])
-                await self.config.user(ctx.author).set(userdata)
+                await self.config.user(ctx.author).set(c._to_json())
                 await bank.withdraw_credits(ctx.author, offering)
                 await ctx.send(f"{E(ctx.author.display_name)}, your skill points have been reset.")
             else:
                 await ctx.send(f"Don't play games with me, {E(ctx.author.display_name)}.")
             return
 
-        if userdata["skill"]["pool"] == 0:
+        if c.skill["pool"] == 0:
             return await ctx.send(
                 f"{E(ctx.author.display_name)}, you do not have unspent skillpoints."
             )
         if spend == None:
             await ctx.send(
                 (
-                    f"{E(ctx.author.display_name)}, you currently have {bold(str(userdata['skill']['pool']))} "
+                    f"{E(ctx.author.display_name)}, you currently have {bold(str(c.skill['pool']))} "
                     f"unspent skillpoints.\nIf you want to put them towards a permanent attack or diplomacy bonus, use "
                     f"`{ctx.prefix}skill attack` or `{ctx.prefix}skill diplomacy`"
                 )
@@ -1723,13 +1740,12 @@ class Adventure(BaseCog):
             if spend not in ["attack", "diplomacy"]:
                 return await ctx.send(f"Don't try to fool me! There is no such thing as {spend}.")
             elif spend == "attack":
-                async with self.config.user(ctx.author).all() as userinfo:
-                    userinfo["skill"]["pool"] -= 1
-                    userinfo["skill"]["att"] += 1
+                c.skill["pool"] -= 1
+                c.skill["att"] += 1
             elif spend == "diplomacy":
-                async with self.config.user(ctx.author).all() as userinfo:
-                    userinfo["skill"]["pool"] -= 1
-                    userinfo["skill"]["cha"] += 1
+                c.skill["pool"] -= 1
+                c.skill["cha"] += 1
+            await self.config.user(ctx.author).set(c._to_json())
             await ctx.send(
                 f"{E(ctx.author.display_name)}, you permanently raised your {spend} value by one."
             )
@@ -1762,7 +1778,7 @@ class Adventure(BaseCog):
         if str(react.emoji) == "\N{CROSS MARK}":
             await msg.delete()
 
-    def _build_loadout_display(self, userdata):
+    async def _build_loadout_display(self, userdata):
         form_string = "Items Equipped:"
         last_slot = ""
         for slot, data in userdata["items"].items():
@@ -1829,7 +1845,6 @@ class Adventure(BaseCog):
         if challenge and not await ctx.bot.is_owner(ctx.author):
             # Only let the bot owner specify a specific challenge
             challenge = None
-        userdata = await self.config.user(ctx.author).all()
         adventure_msg = f"You feel adventurous, {E(ctx.author.display_name)}?"
 
         reward, participants = await self._simple(ctx, adventure_msg, challenge)
@@ -1847,11 +1862,14 @@ class Adventure(BaseCog):
                 )
             if participants:
                 for user in participants:  # reset activated abilities
-                    userdata = await self.config.user(user).all()
-                    if "name" in userdata["class"]:
-                        if userdata["class"]["name"] != "Ranger" and userdata["class"]["ability"]:
-                            async with self.config.user(user).all() as userinfo:
-                                userinfo["class"]["ability"] = False
+                    try:
+                        c = await Character._from_json(self.config, user)
+                    except Exception as e:
+                        log.error("Error with the new character sheet", exc_info=True)
+                        continue
+                    if c.heroclass["name"] != "Ranger" and c.heroclass["ability"]:
+                        c.heroclass["ability"] = False
+                        await self.config.user(user).set(c._to_json())
                     self._rewards[user.id] = {}
         self._adventure_timer[ctx.guild.id] = 0
         self._adventure_userlist[ctx.guild.id] = {"fight": [], "talk": [], "pray": [], "run": []}
@@ -1914,7 +1932,7 @@ class Adventure(BaseCog):
         timer = await self._adv_countdown(
             ctx, self._adventure_timer[ctx.guild.id], "Time remaining: "
         )
-
+        self.tasks.append(timer)
         if challenge in self.BOSSES:
             adventure_msg = await ctx.send(f"{adventure_msg}\n{dragon_text}")
             timeout = 120
@@ -1932,18 +1950,31 @@ class Adventure(BaseCog):
         except Exception as e:
             log.error("Error with the countdown timer", exc_info=e)
             pass
+        self.tasks.remove(timer)
         return await self._result(ctx, adventure_msg)
 
     async def on_reaction_add(self, reaction, user):
         """This will be a cog level reaction_add listener for game logic"""
         if user.bot:
             return
-        if str(reaction.emoji) not in self._adventure_actions:
+        if not user.guild:
             return
-        if user.guild.id not in self._current_adventures:
+        log.info("reactions working")
+        emojis = ReactionPredicate.NUMBER_EMOJIS[:5] + self._adventure_actions
+        if str(reaction.emoji) not in emojis:
+            log.info("emoji not in pool")
             return
-        if reaction.message.id != self._current_adventures[user.guild.id]:
-            return
+        guild = user.guild
+        if guild.id in self._current_adventures:
+            if reaction.message.id == self._current_adventures[guild.id]:
+                await self._handle_adventure(reaction, user)
+        if guild.id in self._current_traders:
+            if reaction.message.id == self._current_traders[guild.id]["msg"]:
+                log.info("handling cart")
+                await self._handle_cart(reaction, user)
+
+
+    async def _handle_adventure(self, reaction, user):
         action = {v: k for k, v in self._adventure_controls.items()}[str(reaction.emoji)]
         log.debug(action)
         for x in ["fight", "talk", "pray", "run"]:
@@ -1960,6 +1991,49 @@ class Adventure(BaseCog):
                     pass
         if user not in self._adventure_userlist[user.guild.id][action]:
             self._adventure_userlist[user.guild.id][action].append(user)
+
+    async def _handle_cart(self, reaction, user):
+        guild = user.guild
+        emojis = ReactionPredicate.NUMBER_EMOJIS[:5]
+        itemindex = emojis.index(str(reaction.emoji)) - 1 
+        items = self._current_traders[guild.id]["stock"][itemindex]
+        spender = user
+        react = None
+        channel = reaction.message.channel
+        currency_name = await bank.get_currency_name(guild)
+        if await bank.can_spend(spender, int(items["price"])):
+            await bank.withdraw_credits(spender, int(items["price"]))
+            try:
+                c = await Character._from_json(self.config, user)
+            except Exception as e:
+                log.error("Error with the new character sheet", exc_info=True)
+                return
+            if "chest" in items["itemname"]:
+                if items["itemname"] == ".rare_chest":
+                    c.treasure[1] += 1
+                elif items["itemname"] == "[epic chest]":
+                    c.treasure[2] += 1
+                else:
+                    c.treasure[0] += 1
+            else:
+                item = Item._from_json({items["itemname"]:items["item"]})
+                log.info(item.name)
+                if item.name in c.backpack:
+                    log.info("item already in backpack")
+                    c.backpack[item.name].owned += 1
+                else:
+                    c.backpack[item.name] = item
+                # userdata["items"]["backpack"].update({item["itemname"]: item["item"]})
+            await self.config.user(user).set(c._to_json())
+            await channel.send(
+                (
+                    f"{E(user.display_name)} bought the {items['itemname']} for "
+                    f"{str(items['price'])} {currency_name} and put it into their backpack."
+                )
+            )
+        else:
+            currency_name = await bank.get_currency_name(guild)
+            await channel.send(f"{E(user.display_name)} does not have enough {currency_name}.")
 
     async def _result(self, ctx: commands.Context, message: discord.Message):
         calc_msg = await ctx.send("Calculating...")
@@ -2262,23 +2336,27 @@ class Adventure(BaseCog):
 
         for user in self._adventure_userlist[guild_id]["fight"]:
             roll = random.randint(1, 20)
-            userdata = await self.config.user(user).all()
-            att_value = userdata["att"] + userdata["skill"]["att"]
+            try:
+                c = await Character._from_json(self.config, user)
+            except Exception as e:
+                log.error("Error with the new character sheet", exc_info=True)
+                continue
+            att_value = c.att + c.skill["att"]
             if roll == 1:
                 msg += f"{bold(E(user.display_name))} fumbled the attack.\n"
                 fumblelist.append(user)
-                if userdata["class"]["name"] == "Berserker" and userdata["class"]["ability"]:
+                if c.heroclass["name"] == "Berserker" and c.heroclass["ability"]:
                     bonus = random.randint(5, 15)
                     attack += roll - bonus + att_value
                     report += f"| {bold(E(user.display_name))}: 🎲({roll}) +💥{bonus} +🗡{str(att_value)} | "
             elif roll == 20 or (
-                userdata["class"]["name"] == "Berserker" and userdata["class"]["ability"]
+                c.heroclass["name"] == "Berserker" and c.heroclass["ability"]
             ):
                 ability = ""
                 if roll == 20:
                     msg += f"{bold(E(user.display_name))} landed a critical hit.\n"
                     critlist.append(user)
-                if userdata["class"]["ability"]:
+                if c.heroclass["ability"]:
                     ability = "🗯️"
                 bonus = random.randint(5, 15)
                 attack += roll + bonus + att_value
@@ -2305,8 +2383,12 @@ class Adventure(BaseCog):
             god = await self.config.guild(self.bot.get_guild(guild_id)).god_name()
         msg = ""
         for user in pray_list:
-            userdata = await self.config.user(user).all()
-            if userdata["class"]["name"] == "Cleric" and userdata["class"]["ability"]:
+            try:
+                c = await Character._from_json(self.config, user)
+            except Exception as e:
+                log.error("Error with the new character sheet", exc_info=True)
+                continue
+            if c.heroclass["name"] == "Cleric" and c.heroclass["ability"]:
                 roll = random.randint(1, 20)
                 if len(fight_list + talk_list) == 0:
                     msg += f"{bold(E(user.display_name))} blessed like a madman but nobody was there to receive it.\n"
@@ -2370,24 +2452,28 @@ class Adventure(BaseCog):
         else:
             return (fumblelist, critlist, diplomacy, "")
         for user in self._adventure_userlist[guild_id]["talk"]:
-            userdata = await self.config.user(user).all()
+            try:
+                c = await Character._from_json(self.config, user)
+            except Exception as e:
+                log.error("Error with the new character sheet", exc_info=True)
+                continue
             roll = random.randint(1, 20)
-            dipl_value = userdata["cha"] + userdata["skill"]["cha"]
+            dipl_value = c.cha + c.skill["cha"]
             if roll == 1:
                 msg += f"{bold(E(user.display_name))} accidentally offended the enemy.\n"
                 fumblelist.append(user)
-                if userdata["class"]["name"] == "Bard" and userdata["class"]["ability"]:
+                if c.heroclass["name"] == "Bard" and c.heroclass["ability"]:
                     bonus = random.randint(5, 15)
                     diplomacy += roll - bonus + dipl_value
                     report += f"| {bold(E(user.display_name))} 🎲({roll}) +💥{bonus} +🗨{str(dipl_value)} | "
             elif (
-                roll == 20 or userdata["class"]["name"] == "Bard" and userdata["class"]["ability"]
+                roll == 20 or c.heroclass["name"] == "Bard" and c.heroclass["ability"]
             ):
                 ability = ""
                 if roll == 20:
                     msg += f"{bold(E(user.display_name))} made a compelling argument.\n"
                     critlist.append(user)
-                if userdata["class"]["ability"]:
+                if c.heroclass["ability"]:
                     ability = "🎵"
                 bonus = random.randint(5, 15)
                 diplomacy += roll + bonus + dipl_value
@@ -2414,9 +2500,14 @@ class Adventure(BaseCog):
             for user in (
                 fight_list + talk_list + pray_list
             ):  # check if any fighter has an equipped mirror shield to give them a chance.
-                userinfo = await self.config.user(user).all()
                 try:
-                    if item in userinfo["items"][slot]:
+                    c = await Character._from_json(self.config, user)
+                except Exception as e:
+                    log.error("Error with the new character sheet", exc_info=True)
+                    continue
+                try:
+                    current_item = getattr(c, slot)
+                    if item == str(current_item):
                         failed = False
                         break
                 except KeyError:
@@ -2426,14 +2517,27 @@ class Adventure(BaseCog):
         return failed
 
     async def _add_rewards(self, ctx, user, exp, cp, special):
-        async with self.config.user(user).all() as userdata:
-            userdata["exp"] += exp
+        try:
+            c = await Character._from_json(self.config, user)
+        except Exception as e:
+            log.error("Error with the new character sheet", exc_info=True)
+            return
+        c.exp += exp
         member = ctx.guild.get_member(user.id)
         await bank.deposit_credits(member, cp)
-        await self._level_up(ctx, user)
+        lvl_start = c.lvl
+        lvl_end = int(c.exp ** (1 / 4))
+
+        if lvl_start < lvl_end:  
+        # recalculate free skillpoint pool based on new level and already spent points.
+            await ctx.send(f"{user.mention} is now level {lvl_end}!")
+            c.lvl = lvl_end
+            c.skill["pool"] = int(lvl_end / 5) - (c.skill["att"] + c.skill["cha"])
+            if c.skill["pool"] > 0:
+                await ctx.send(f"{E(user.display_name)}, you have skillpoints available.")
         if special != False:
-            async with self.config.user(user).all() as userdata:
-                userdata["treasure"] = [sum(x) for x in zip(userdata["treasure"], special)]
+            c.treasure = [sum(x) for x in zip(c.treasure, special)]
+        await self.config.user(user).set(c._to_json())
 
     async def _adv_countdown(self, ctx, seconds, title) -> asyncio.Task:
         await self._data_check(ctx)
@@ -2441,64 +2545,44 @@ class Adventure(BaseCog):
         async def adv_countdown():
             secondint = int(seconds)
             adv_end = self._get_epoch(secondint)
-            message_adv = await ctx.send(f"⏳ [{title}] {self._remaining(adv_end)[0]}s")
-            while True:
-                timer, done, sremain = self._remaining(adv_end)
-                log.debug(f"countdown {sremain}")
-                self._adventure_countdown[ctx.guild.id] = timer, done, sremain
+            timer, done, sremain = await self._remaining(adv_end)
+            message_adv = await ctx.send(f"⏳ [{title}] {timer}s")
+            while not done:
+                timer, done, sremain = await self._remaining(adv_end)
+                self._adventure_countdown[ctx.guild.id] = (timer, done, sremain)
                 if done:
                     await message_adv.delete()
                     break
                 elif int(sremain) % 5 == 0 and not done:
-                    await message_adv.edit(content=(f"⏳ [{title}] {self._remaining(adv_end)[0]}s"))
+                    await message_adv.edit(
+                        content=(f"⏳ [{title}] {timer}s")
+                    )
                 await asyncio.sleep(1)
+            log.info("Timer countdown done.")
 
         return ctx.bot.loop.create_task(adv_countdown())
 
-    def _build_bkpk_display(self, backpack, forging=False, consumed: list = []):
-        bkpk = self._sort_backpack(backpack)
-        form_string = "Items in Backpack:"
-        consumed_list = [i for i in consumed]
-        for slot_group in bkpk:
-
-            slot_name = slot_group[0][1]["slot"]
-            slot_name = slot_name[0] if len(slot_name) < 2 else "two handed"
-            form_string += f"\n\n {slot_name.title()} slot"
-            rjust = max([len(i[0]) for i in slot_group])
-            for item in slot_group:
-                if forging and ("{.:" in item[0] or item[0] in consumed_list):
-                    continue
-                form_string += (
-                    f'\n  - {item[0]:<{rjust}} - (ATT: {item[1]["att"]} | DPL: {item[1]["cha"]})'
-                )
-
-        return form_string + "\n"
-
-    async def _cart_countdown(
-        self, ctx, seconds, title, loop: Optional[asyncio.AbstractEventLoop] = None
-    ) -> asyncio.Task:
+    async def _cart_countdown(self, ctx, seconds, title) -> asyncio.Task:
         await self._data_check(ctx)
 
         async def cart_countdown():
             secondint = int(seconds)
             cart_end = self._get_epoch(secondint)
-            message_cart = await ctx.send(f"⏳ [{title}] {self._remaining(cart_end)[0]}s")
-            while True:
-                timer, done, sremain = self._remaining(cart_end)
-                self._trader_countdown[ctx.guild.id] = timer, done, sremain
+            timer, done, sremain = await self._remaining(cart_end)
+            message_cart = await ctx.send(f"⏳ [{title}] {timer}s")
+            while not done:
+                timer, done, sremain = await self._remaining(cart_end)
+                self._trader_countdown[ctx.guild.id] = (timer, done, sremain)
                 if done:
                     await message_cart.delete()
                     break
                 if int(sremain) % 5 == 0:
                     await message_cart.edit(
-                        content=(f"⏳ [{title}] {self._remaining(cart_end)[0]}s")
+                        content=(f"⏳ [{title}] {timer}s")
                     )
                 await asyncio.sleep(1)
 
-        if loop is None:
-            loop = self.bot.loop
-
-        return loop.create_task(cart_countdown())
+        return ctx.bot.loop.create_task(cart_countdown())
 
     @staticmethod
     async def _clear_react(msg):
@@ -2543,53 +2627,6 @@ class Adventure(BaseCog):
         except KeyError:
             self._trader_countdown[ctx.guild.id] = 0
 
-    async def _equip_item(self, ctx, item, from_backpack, msg=None):
-        if not msg:
-            msg = await ctx.send("\u200b")
-        async with self.config.user(ctx.author).all() as userdata:
-            for slot in item["item"]["slot"]:
-                if userdata["items"][slot] == {}:
-                    userdata["items"][slot][item["itemname"]] = item["item"]
-                    userdata["att"] += item["item"]["att"]
-                    userdata["cha"] += item["item"]["cha"]
-                    equip_msg = box(
-                        f"{E(ctx.author.display_name)} equipped {item['itemname']} ({slot} slot).",
-                        lang="css",
-                    )
-                    await msg.edit(content=equip_msg)
-                else:
-                    olditem = userdata["items"][slot]
-                    for oslot in olditem[list(olditem.keys())[0]]["slot"]:
-                        userdata["items"][oslot] = {}
-                        userdata["att"] -= olditem[list(olditem.keys())[0]][
-                            "att"
-                        ]  # keep in mind that double handed items grant their bonus twice so they remove twice
-                        userdata["cha"] -= olditem[list(olditem.keys())[0]]["cha"]
-                    userdata["items"]["backpack"].update(olditem)
-                    userdata["items"][slot][item["itemname"]] = item["item"]
-                    userdata["att"] += item["item"]["att"]
-                    userdata["cha"] += item["item"]["cha"]
-                    equip_msg = box(
-                        (
-                            f"{E(ctx.author.display_name)} equipped {item['itemname']} "
-                            f"({slot} slot) and put {list(olditem.keys())[0]} into their backpack."
-                        ),
-                        lang="css",
-                    )
-                    await msg.edit(content=equip_msg)
-        if from_backpack:
-            async with self.config.user(ctx.author).all() as userdata:
-                del userdata["items"]["backpack"][item["itemname"]]
-        userdata = await self.config.user(ctx.author).all()
-        stats_msg = box(
-            (
-                f"{E(ctx.author.display_name)}'s new stats: Attack: {userdata['att']} "
-                f"[+{userdata['skill']['att']}], Diplomacy: {userdata['cha']} [+{userdata['skill']['cha']}]."
-            ),
-            lang="css",
-        )
-        await msg.edit(content=f"{msg.content}\n{stats_msg}")
-
     @staticmethod
     def _get_epoch(seconds: int):
         epoch = time.time()
@@ -2605,27 +2642,8 @@ class Adventure(BaseCog):
         else:
             return 2  # common / normal
 
-    async def _level_up(self, ctx, user):
-        userdata = await self.config.user(user).all()
-        exp = userdata["exp"]
-        lvl_start = userdata["lvl"]
-        lvl_end = int(exp ** (1 / 4))
-
-        if (
-            lvl_start < lvl_end
-        ):  # recalculate free skillpoint pool based on new level and already spent points.
-            await ctx.send(f"{user.mention} is now level {lvl_end}!")
-            async with self.config.user(user).all() as userdata:
-                userdata["lvl"] = lvl_end
-                userdata["skill"]["pool"] = int(lvl_end / 5) - (
-                    userdata["skill"]["att"] + userdata["skill"]["cha"]
-                )
-            userdata = await self.config.user(user).all()
-            if userdata["skill"]["pool"] > 0:
-                await ctx.send(f"{E(user.display_name)}, you have skillpoints available.")
-
     async def on_message(self, message):
-        if isinstance(message.channel, discord.abc.PrivateChannel):
+        if not message.guild:
             return
         channels = await self.config.guild(message.guild).cart_channels()
         if not channels:
@@ -2730,8 +2748,6 @@ class Adventure(BaseCog):
             )
         react, user = await ctx.bot.wait_for("reaction_add", check=pred)
         await self._clear_react(open_msg)
-        # async with self.config.user(ctx.author).all() as userinfo:
-        # userinfo["treasure"] = [x - y for x, y in zip(userdata["treasure"], redux)]
         if self._treasure_controls[react.emoji] == "sell":
             price = await self._sell(ctx.author, item)
             currency_name = await bank.get_currency_name(ctx.guild)
@@ -2782,7 +2798,7 @@ class Adventure(BaseCog):
             await self.config.user(ctx.author).set(c._to_json())
 
     @staticmethod
-    def _remaining(epoch):
+    async def _remaining(epoch):
         remaining = epoch - time.time()
         finish = remaining < 0
         m, s = divmod(remaining, 60)
@@ -2807,19 +2823,23 @@ class Adventure(BaseCog):
         phrase = ""
         for user in userlist:
             self._rewards[user.id] = {}
-            userdata = await self.config.user(user).all()
+            try:
+                c = await Character._from_json(self.config, user)
+            except Exception as e:
+                log.error("Error with the new character sheet", exc_info=True)
+                return
             roll = random.randint(1, 5)
             if (
                 roll == 5
-                and userdata["class"]["name"] == "Ranger"
-                and userdata["class"]["ability"]
+                and c.heroclass["name"] == "Ranger"
+                and c.heroclass["ability"]
             ):
-                self._rewards[user.id]["xp"] = int(xp * userdata["class"]["pet"]["bonus"])
-                self._rewards[user.id]["cp"] = int(cp * userdata["class"]["pet"]["bonus"])
-                percent = round((userdata["class"]["pet"]["bonus"] - 1.0) * 100)
+                self._rewards[user.id]["xp"] = int(xp * c.heroclass["pet"]["bonus"])
+                self._rewards[user.id]["cp"] = int(cp * c.heroclass["pet"]["bonus"])
+                percent = round((c.heroclass["pet"]["bonus"] - 1.0) * 100)
                 phrase = (
                     f"\n{bold(E(user.display_name))} received a {bold(str(percent))}% "
-                    f"reward bonus from their {userdata['class']['pet']['name']}."
+                    f"reward bonus from their {c.heroclass['pet']['name']}."
                 )
 
             else:
@@ -2837,10 +2857,8 @@ class Adventure(BaseCog):
             if len(rewards_list) > 2
             else rewards_list
         )
-        if len(userlist) == 1:
-            word = "has"
-        else:
-            word = "have"
+
+        word = "has" if len(userlist) == 1 else "have"
         if special != False and sum(special) == 1:
             types = [" normal", " rare", "n epic"]
             chest_type = types[special.index(1)]
@@ -2875,102 +2893,32 @@ class Adventure(BaseCog):
         await bank.deposit_credits(user, price)
         return price
 
-    def _sort_backpack(self, backpack: dict):
-        tmp = {}
-        for item in backpack:
-            slots = backpack[item]["slot"]
-            if len(slots) == 1:
-                slot_name = slots[0]
-            else:
-                slot_name = "two handed"
-
-            if slot_name not in tmp:
-                tmp[slot_name] = []
-            tmp[slot_name].append((item, backpack[item]))
-
-        final = []
-        for idx, slot_name in enumerate(tmp.keys()):
-            final.append(sorted(tmp[slot_name], key=self._get_rarity))
-
-        final.sort(
-            key=lambda i: self._order.index(i[0][1]["slot"][0])
-            if len(i[0][1]["slot"]) == 1
-            else self._order.index("two handed")
-        )
-        return final
-
-    def _sort_new_backpack(self, backpack: dict):
-        tmp = {}
-        for item in backpack:
-            slots = backpack[item].slot
-            if len(slots) == 1:
-                slot_name = slots[0]
-            else:
-                slot_name = "two handed"
-
-            if slot_name not in tmp:
-                tmp[slot_name] = []
-            tmp[slot_name].append((item, backpack[item]))
-
-        final = []
-        for idx, slot_name in enumerate(tmp.keys()):
-            final.append(sorted(tmp[slot_name], key=self._get_rarity))
-
-        final.sort(
-            key=lambda i: self._order.index(i[0][1]["slot"][0])
-            if len(i[0][1]["slot"]) == 1
-            else self._order.index("two handed")
-        )
-        return final
+    async def _handle_buy(self, itemindex, user, stock, msg):
+        
+        try:
+            react, user = await ctx.bot.wait_for(
+                "reaction_add",
+                check=ReactionPredicate.with_emojis(tuple(controls.keys()), msg),
+                timeout=self._trader_countdown[ctx.guild.id][2],
+            )
+        except asyncio.TimeoutError:  # the timeout only applies if no reactions are made!
+            try:
+                await msg.delete()
+            except discord.errors.Forbidden:  # cannot remove all reactions
+                pass
+        if react != None and user:
+            await self._handle_buy(controls[react.emoji], user, stock, msg)
 
     async def _trader(self, ctx):
-        async def _handle_buy(itemindex, user, stock, msg):
-            item = stock[itemindex]
-            spender = user
-            react = None
-            currency_name = await bank.get_currency_name(ctx.guild)
-            if await bank.can_spend(spender, int(item["price"])):
-                await bank.withdraw_credits(spender, int(item["price"]))
-                async with self.config.user(user).all() as userdata:
-                    if "chest" in item["itemname"]:
-                        if item["itemname"] == ".rare_chest":
-                            userdata["treasure"][1] += 1
-                        elif item["itemname"] == "[epic chest]":
-                            userdata["treasure"][2] += 1
-                        else:
-                            userdata["treasure"][0] += 1
-                    else:
-                        userdata["items"]["backpack"].update({item["itemname"]: item["item"]})
-                await ctx.send(
-                    (
-                        f"{E(user.display_name)} bought the {item['itemname']} for "
-                        f"{str(item['price'])} {currency_name} and put it into their backpack."
-                    )
-                )
-            else:
-                currency_name = await bank.get_currency_name(ctx.guild)
-                await ctx.send(f"{E(user.display_name)} does not have enough {currency_name}.")
-            try:
-                react, user = await ctx.bot.wait_for(
-                    "reaction_add",
-                    check=ReactionPredicate.with_emojis(tuple(controls.keys()), msg),
-                    timeout=self._trader_countdown[ctx.guild.id][2],
-                )
-            except asyncio.TimeoutError:  # the timeout only applies if no reactions are made!
-                try:
-                    await msg.delete()
-                except discord.errors.Forbidden:  # cannot remove all reactions
-                    pass
-            if react != None and user:
-                await _handle_buy(controls[react.emoji], user, stock, msg)
-
         em_list = ReactionPredicate.NUMBER_EMOJIS[:5]
         react = False
         controls = {em_list[1]: 0, em_list[2]: 1, em_list[3]: 2, em_list[4]: 3}
         cart = await self.config.cart_name()
         if await self.config.guild(ctx.guild).cart_name():
             cart = await self.config.guild(ctx.guild).cart_name()
-        text = box(f"[{cart}'s brother is bringing the cart around!]", lang="css")
+        text = box(f"[{cart} is bringing the cart around!]", lang="css")
+        if ctx.guild.id not in self._last_trade:
+            self._last_trade[ctx.guild.id] = 0
         if self._last_trade[ctx.guild.id] == 0:
             self._last_trade[ctx.guild.id] = time.time()
         elif (
@@ -3010,24 +2958,18 @@ class Adventure(BaseCog):
                 )
         text += "Do you want to buy any of these fine items? Tell me which one below:"
         msg = await ctx.send(text)
-        start_adding_reactions(msg, controls.keys(), ctx.bot.loop)
+        start_adding_reactions(msg, controls.keys())
+        self._current_traders[ctx.guild.id] = {"msg": msg.id, "stock":stock}
+        timeout = self._last_trade[ctx.guild.id] + 180 - time.time()
+        if timeout <= 0:
+            timeout = 0
+        timer = await self._cart_countdown(ctx, timeout, "The cart will leave in: ")
+        self.tasks.append(timer)
         try:
-            timeout = self._last_trade[ctx.guild.id] + 180 - time.time()
-            if timeout <= 0:
-                timeout = 0
-            await self._cart_countdown(ctx, timeout, "The cart will leave in: ", ctx.bot.loop)
-            react, user = await ctx.bot.wait_for(
-                "reaction_add",
-                check=ReactionPredicate.with_emojis(tuple(controls.keys()), msg),
-                timeout=timeout,
-            )
-        except asyncio.TimeoutError:  # the timeout only applies if no reactions are made!
-            try:
-                await msg.delete()
-            except discord.errors.Forbidden:  # cannot remove all reactions
-                pass
-        if react and user:
-            await _handle_buy(controls[react.emoji], user, stock, msg)
+            await asyncio.wait_for(timer, timeout + 5)
+        except asyncio.TimeoutError:
+            self.tasks.remove(timer)
+            await msg.delete()
 
     async def _trader_get_items(self):
         items = {}
