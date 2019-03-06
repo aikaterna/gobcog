@@ -1365,6 +1365,8 @@ class Adventure(BaseCog):
                 f"{E(ctx.author.display_name)}, you have no {box_type} treasure chest to open."
             )
         else:
+            c.treasure[redux.index(1)] -= 1
+            await self.config.user(ctx.author).set(c._to_json()) 
             await self._open_chest(ctx, ctx.author, box_type)  # returns item and msg
 
     @commands.command()
@@ -2763,6 +2765,7 @@ class Adventure(BaseCog):
                 )
             )
             await self._clear_react(open_msg)
+            await self.config.user(ctx.author).set(c._to_json())
         elif self._treasure_controls[react.emoji] == "equip":
             # equip = {"itemname": item[0]["itemname"], "item": item[0]["item"]}
             if not getattr(c, item.slot[0]):
