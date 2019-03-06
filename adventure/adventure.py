@@ -1948,6 +1948,7 @@ class Adventure(BaseCog):
         try:
             await asyncio.wait_for(timer, timeout + 5)
         except Exception as e:
+            timer.cancel()
             log.error("Error with the countdown timer", exc_info=e)
             pass
         self.tasks.remove(timer)
@@ -1959,10 +1960,10 @@ class Adventure(BaseCog):
             return
         if not user.guild:
             return
-        log.info("reactions working")
+        log.debug("reactions working")
         emojis = ReactionPredicate.NUMBER_EMOJIS[:5] + self._adventure_actions
         if str(reaction.emoji) not in emojis:
-            log.info("emoji not in pool")
+            log.debug("emoji not in pool")
             return
         guild = user.guild
         if guild.id in self._current_adventures:
@@ -1970,7 +1971,7 @@ class Adventure(BaseCog):
                 await self._handle_adventure(reaction, user)
         if guild.id in self._current_traders:
             if reaction.message.id == self._current_traders[guild.id]["msg"]:
-                log.info("handling cart")
+                log.debug("handling cart")
                 await self._handle_cart(reaction, user)
 
 
@@ -2017,9 +2018,9 @@ class Adventure(BaseCog):
                     c.treasure[0] += 1
             else:
                 item = Item._from_json({items["itemname"]:items["item"]})
-                log.info(item.name)
+                log.debug(item.name)
                 if item.name in c.backpack:
-                    log.info("item already in backpack")
+                    log.debug("item already in backpack")
                     c.backpack[item.name].owned += 1
                 else:
                     c.backpack[item.name] = item
