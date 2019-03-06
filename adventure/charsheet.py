@@ -290,10 +290,10 @@ class Character(Item):
             name = "".join(item.keys())
             name = Item._remove_markdowns(name)
             current = getattr(self, slot)
-            if current and  current.name != name:
-                await self._unequip_item(current)
-            elif current and current.name == name:
+            if current and current.name == name:
                 continue
+            if current and current.name != name:
+                await self._unequip_item(current)
             else:
                 if current and name not in self.backpack:
                     log.debug(f"{name} is missing")
@@ -303,22 +303,23 @@ class Character(Item):
             
         return self
 
-    async def _save_loadout(self):
+    @staticmethod
+    async def _save_loadout(char):
         """
             Return a dict of currently equipped items for loadouts
         """
         return {
-                "head": self.head._to_json() if self.head else {},
-                "neck": self.neck._to_json() if self.neck else {},
-                "chest": self.chest._to_json() if self.chest else {},
-                "gloves": self.gloves._to_json() if self.gloves else {},
-                "belt": self.belt._to_json() if self.belt else {},
-                "legs": self.legs._to_json() if self.legs else {},
-                "boots": self.boots._to_json() if self.boots else {},
-                "left": self.left._to_json() if self.left else {},
-                "right": self.right._to_json() if self.right else {},
-                "ring": self.ring._to_json() if self.ring else {},
-                "charm": self.charm._to_json() if self.charm else {},
+                "head": char.head._to_json() if char.head else {},
+                "neck": char.neck._to_json() if char.neck else {},
+                "chest": char.chest._to_json() if char.chest else {},
+                "gloves": char.gloves._to_json() if char.gloves else {},
+                "belt": char.belt._to_json() if char.belt else {},
+                "legs": char.legs._to_json() if char.legs else {},
+                "boots": char.boots._to_json() if char.boots else {},
+                "left": char.left._to_json() if char.left else {},
+                "right": char.right._to_json() if char.right else {},
+                "ring": char.ring._to_json() if char.ring else {},
+                "charm": char.charm._to_json() if char.charm else {},
             }
 
     def current_equipment(self):

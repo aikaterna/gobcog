@@ -242,7 +242,7 @@ class Adventure(BaseCog):
                         ),
                         lang="css",
                     )
-                    await ctx.send(equip_msg, current_stats)
+                    await ctx.send(equip_msg + current_stats)
                     c = await c._equip_item(item, True)
                     # log.info(c)
                     await self.config.user(ctx.author).set(c._to_json())
@@ -495,13 +495,13 @@ class Adventure(BaseCog):
         except Exception as e:
             log.error("Error with the new character sheet", exc_info=True)
             return
-        if name in c.loadouts():
+        if name in c.loadouts:
             await ctx.send(
                 f"{E(ctx.author.display_name)}, you already have a loadout named {name}."
             )
             return
         else:
-            loadout = await c._save_loadout()
+            loadout = await Character._save_loadout(c)
             c.loadouts[name] = loadout
             await self.config.user(ctx.author).set(c._to_json())
             await ctx.send(
@@ -1784,6 +1784,7 @@ class Adventure(BaseCog):
         form_string = "Items Equipped:"
         last_slot = ""
         for slot, data in userdata["items"].items():
+
             if slot == "backpack":
                 continue
             if last_slot == "two handed":
@@ -1794,15 +1795,13 @@ class Adventure(BaseCog):
                 last_slot = slot
                 form_string += f"\n\n {slot.title()} slot"
                 continue
+            item = Item._from_json(data)
             slot_name = userdata["items"][slot]["".join(i for i in data.keys())]["slot"]
             slot_name = slot_name[0] if len(slot_name) < 2 else "two handed"
             form_string += f"\n\n {slot_name.title()} slot"
             last_slot = slot_name
             rjust = max([len(i) for i in data.keys()])
-            for name, stats in data.items():
-                att = stats["att"] * 2 if slot_name == "two handed" else stats["att"]
-                cha = stats["cha"] * 2 if slot_name == "two handed" else stats["cha"]
-                form_string += f"\n  - {name:<{rjust}} - (ATT: {att} | DPL: {cha})"
+            form_string += f"\n  - {str(item):<{rjust}} - (ATT: {item.att} | DPL: {item.cha})"
 
         return form_string + "\n"
 
@@ -1953,7 +1952,7 @@ class Adventure(BaseCog):
             timer.cancel()
             log.error("Error with the countdown timer", exc_info=e)
             pass
-        self.tasks.remove(timer)
+        
         return await self._result(ctx, adventure_msg)
 
     async def on_reaction_add(self, reaction, user):
@@ -2972,7 +2971,7 @@ class Adventure(BaseCog):
         try:
             await asyncio.wait_for(timer, timeout + 5)
         except asyncio.TimeoutError:
-            self.tasks.remove(timer)
+            
             await msg.delete()
 
     async def _trader_get_items(self):
