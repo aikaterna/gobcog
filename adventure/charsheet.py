@@ -294,12 +294,11 @@ class Character(Item):
                 continue
             if current and current.name != name:
                 await self._unequip_item(current)
+            if current and name not in self.backpack:
+                log.debug(f"{name} is missing")
+                setattr(self, slot, None)
             else:
-                if current and name not in self.backpack:
-                    log.debug(f"{name} is missing")
-                    setattr(self, slot, None)
-                else:
-                    await self._equip_item(self.backpack[name], True)
+                await self._equip_item(self.backpack[name], True)
             
         return self
 
