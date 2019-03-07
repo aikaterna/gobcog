@@ -2118,7 +2118,7 @@ class Adventure(BaseCog):
         if attack:
             damage_str = (
                 f"The group {'hit the' if not slain else 'killed the'} {challenge} "
-                f"**{attack}/{int(strength)}**.\n"
+                f"**({attack}/{int(strength)})**.\n"
             )
         if diplomacy:
             diplo_str = (
