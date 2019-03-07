@@ -309,7 +309,7 @@ class Adventure(BaseCog):
                 )
             )
         item_str = box(humanize_list([str(y) for y in lookup]), lang="css")
-        msg = await ctx.send(
+        start_msg = await ctx.send(
             f"{E(ctx.author.display_name)}, do you want to sell these items? {item_str}"
         )
         currency_name = await bank.get_currency_name(ctx.guild)
@@ -320,9 +320,13 @@ class Adventure(BaseCog):
             "\N{CLOCKWISE RIGHTWARDS AND LEFTWARDS OPEN CIRCLE ARROWS WITH CIRCLED ONE OVERLAY}",
             "\N{CROSS MARK}",
         ]
-        start_adding_reactions(msg, emojis)
-        pred = ReactionPredicate.with_emojis(emojis, msg)
-        await ctx.bot.wait_for("reaction_add", check=pred)
+        start_adding_reactions(start_msg, emojis)
+        pred = ReactionPredicate.with_emojis(emojis, start_msg)
+        try:
+            await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+        except asyncio.TimeoutError:
+            await self._clear_react(start_msg)
+            return
         msg = ""
         if pred.result == 0:  # user reacted with one to sell.
             # sell one of the item
@@ -406,7 +410,11 @@ class Adventure(BaseCog):
             trade_msg = await ctx.send(f"{buyer.mention}\n{trade_talk}")
             start_adding_reactions(trade_msg, ReactionPredicate.YES_OR_NO_EMOJIS)
             pred = ReactionPredicate.yes_or_no(trade_msg, buyer)
-            await ctx.bot.wait_for("reaction_add", check=pred)
+            try:
+                await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+            except asyncio.TimeoutError:
+                await self._clear_react(trade_msg)
+                return
             if pred.result:  # buyer reacted with Yes.
                 try:
                     if await bank.can_spend(buyer, asking):
@@ -859,16 +867,20 @@ class Adventure(BaseCog):
             # userdata = await self.config.user(ctx.author).all()
             lookup = list(i for n, i in c.backpack.items() if i.rarity == "forged")
             if len(lookup) > 0:
-                msg = await ctx.send(
+                forge_msg = await ctx.send(
                     box(
                         f"{E(ctx.author.display_name)}, you already have a device. "
                         f"Do you want to replace {', '.join([str(x) for x in lookup])}?",
                         lang="css",
                     )
                 )
-                start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
-                pred = ReactionPredicate.yes_or_no(msg, ctx.author)
-                await ctx.bot.wait_for("reaction_add", check=pred)
+                start_adding_reactions(forge_msg, ReactionPredicate.YES_OR_NO_EMOJIS)
+                pred = ReactionPredicate.yes_or_no(forge_msg, ctx.author)
+                try:
+                    await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+                except asyncio.TimeoutError:
+                    await self._clear_react(forge_msg)
+                    return
                 try:
                     await msg.delete()
                 except discord.errors.Forbidden:
@@ -1226,7 +1238,11 @@ class Adventure(BaseCog):
                 return
             start_adding_reactions(class_msg, ReactionPredicate.YES_OR_NO_EMOJIS)
             pred = ReactionPredicate.yes_or_no(class_msg, ctx.author)
-            await ctx.bot.wait_for("reaction_add", check=pred)
+            try:
+                await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+            except asyncio.TimeoutError:
+                await self._clear_react(class_msg)
+                return
 
             if not pred.result:
                 await class_msg.edit(
@@ -1272,8 +1288,11 @@ class Adventure(BaseCog):
                             )
                         start_adding_reactions(class_msg, ReactionPredicate.YES_OR_NO_EMOJIS)
                         pred = ReactionPredicate.yes_or_no(class_msg, ctx.author)
-                        await ctx.bot.wait_for("reaction_add", check=pred)
-
+                        try:
+                            await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+                        except asyncio.TimeoutError:
+                            await self._clear_react(class_msg)
+                            return
                         if pred.result:  # user reacted with Yes.
                             if c.heroclass["name"] == "Tinkerer":
                                 tinker_wep = []
@@ -1430,8 +1449,11 @@ class Adventure(BaseCog):
         )
         start_adding_reactions(nv_msg, ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = ReactionPredicate.yes_or_no(nv_msg, ctx.author)
-        await ctx.bot.wait_for("reaction_add", check=pred)
-
+        try:
+            await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+        except asyncio.TimeoutError:
+            await self._clear_react(nv_msg)
+            return
         if not pred.result:
             try:
                 ctx.command.reset_cooldown(ctx)
@@ -1712,7 +1734,11 @@ class Adventure(BaseCog):
             )
             start_adding_reactions(nv_msg, ReactionPredicate.YES_OR_NO_EMOJIS)
             pred = ReactionPredicate.yes_or_no(nv_msg, ctx.author)
-            await ctx.bot.wait_for("reaction_add", check=pred)
+            try:
+                await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+            except asyncio.TimeoutError:
+                await self._clear_react(nv_msg)
+                return
 
             if pred.result:
                 c.skill["pool"] = c.skill["att"] + c.skill["cha"]
@@ -1776,7 +1802,10 @@ class Adventure(BaseCog):
         msg = await ctx.send(box(c, lang="css"))
         await msg.add_reaction("\N{CROSS MARK}")
         pred = ReactionPredicate.same_context(msg, ctx.author)
-        react, user = await self.bot.wait_for("reaction_add", check=pred)
+        try:
+            react, user = await self.bot.wait_for("reaction_add", check=pred, timeout=60)
+        except asyncio.TimeoutError:
+            return
         if str(react.emoji) == "\N{CROSS MARK}":
             await msg.delete()
 
@@ -2748,7 +2777,11 @@ class Adventure(BaseCog):
             pred = ReactionPredicate.with_emojis(
                 tuple(self._treasure_controls.keys()), open_msg, ctx.author
             )
-        react, user = await ctx.bot.wait_for("reaction_add", check=pred)
+        try:
+            react, user = await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+        except asyncio.TimeoutError:
+            await self._clear_react(open_msg)
+            return
         await self._clear_react(open_msg)
         if self._treasure_controls[react.emoji] == "sell":
             price = await self._sell(ctx.author, item)
@@ -2895,22 +2928,6 @@ class Adventure(BaseCog):
         price = random.randint(base[0], base[1]) * max(item.att + item.cha, 1)
         await bank.deposit_credits(user, price)
         return price
-
-    async def _handle_buy(self, itemindex, user, stock, msg):
-        
-        try:
-            react, user = await ctx.bot.wait_for(
-                "reaction_add",
-                check=ReactionPredicate.with_emojis(tuple(controls.keys()), msg),
-                timeout=self._trader_countdown[ctx.guild.id][2],
-            )
-        except asyncio.TimeoutError:  # the timeout only applies if no reactions are made!
-            try:
-                await msg.delete()
-            except discord.errors.Forbidden:  # cannot remove all reactions
-                pass
-        if react != None and user:
-            await self._handle_buy(controls[react.emoji], user, stock, msg)
 
     async def _trader(self, ctx):
         em_list = ReactionPredicate.NUMBER_EMOJIS[:5]
