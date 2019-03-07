@@ -719,7 +719,8 @@ class Adventure(BaseCog):
                 await self.config.user(ctx.author).set(c._to_json())
             else:
                 await ctx.send(
-                    f"{E(ctx.author.display_name)}, you do not have 5 normal treasure chests to convert."
+                    f"{E(ctx.author.display_name)}, you do not have {(5 * amount)} "
+                    "normal treasure chests to convert."
                 )
         elif box_rarity.lower() == "rare":
             if c.treasure[1] >= (4 * amount):
@@ -739,7 +740,8 @@ class Adventure(BaseCog):
                 await self.config.user(ctx.author).set(c._to_json())
             else:
                 await ctx.send(
-                    f"{E(ctx.author.display_name)}, you do not have 4 rare treasure chests to convert."
+                    f"{E(ctx.author.display_name)}, you do not have {(4 * amount)} "
+                    "rare treasure chests to convert."
                 )
         else:
             await ctx.send(
