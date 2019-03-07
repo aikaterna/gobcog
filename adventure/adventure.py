@@ -688,7 +688,7 @@ class Adventure(BaseCog):
 
     @commands.command()
     @commands.cooldown(rate=1, per=4, type=commands.BucketType.guild)
-    async def convert(self, ctx, box_rarity: str):
+    async def convert(self, ctx, amount: Optional[int]=1, *, box_rarity: str):
         """Convert normal or rare treasure chests to epic.
 
         Trade 5 normal treasure chests for 1 rare treasure chest.
@@ -702,13 +702,14 @@ class Adventure(BaseCog):
             log.error("Error with the new character sheet", exc_info=True)
             return
         if box_rarity.lower() == "normal":
-            if c.treasure[0] >= 5:
-                c.treasure[0] -= 5
-                c.treasure[1] += 1
+            if c.treasure[0] >= (5 * amount):
+                c.treasure[0] -= (5 * amount)
+                c.treasure[1] += (1 * amount)
                 await ctx.send(
                     box(
                         (
-                            f"Successfully converted 5 normal treasure chests to 1 rare treasure chest. "
+                            f"Successfully converted {(5 * amount)} normal treasure "
+                            f"chests to {(1 * amount)} rare treasure chest. "
                             f"\n{E(ctx.author.display_name)} now owns {c.treasure[0]} normal, "
                             f"{c.treasure[1]} rare and {c.treasure[2]} epic treasure chests."
                         ),
@@ -721,13 +722,14 @@ class Adventure(BaseCog):
                     f"{E(ctx.author.display_name)}, you do not have 5 normal treasure chests to convert."
                 )
         elif box_rarity.lower() == "rare":
-            if c.treasure[1] >= 4:
-                c.treasure[1] -= 4
-                c.treasure[2] += 1
+            if c.treasure[1] >= (4 * amount):
+                c.treasure[1] -= (4 * amount)
+                c.treasure[2] += (1 * amount)
                 await ctx.send(
                     box(
                         (
-                            f"Successfully converted 4 rare treasure chests to 1 epic treasure chest. "
+                            f"Successfully converted {(4 * amount)} rare treasure "
+                            f"chests to {(1 * amount)} epic treasure chest. "
                             f"\n{E(ctx.author.display_name)} now owns {c.treasure[0]} normal, "
                             f"{c.treasure[1]} rare and {c.treasure[2]} epic treasure chests."
                         ),
