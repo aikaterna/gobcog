@@ -89,7 +89,7 @@ class Adventure(BaseCog):
         }
 
         default_guild = {"cart_channels": [], "god_name": "", "cart_name": "", "embed": True}
-        default_global = {"god_name": "Herbert", "cart_name": "Hawl", "theme": "default"}
+        default_global = {"god_name": "Herbert", "cart_name": "Hawl's brother", "theme": "default"}
 
         self.RAISINS: list = None
         self.THREATEE: list = None
