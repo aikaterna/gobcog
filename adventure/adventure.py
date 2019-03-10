@@ -1386,6 +1386,7 @@ class Adventure(BaseCog):
             await self.config.user(ctx.author).set(c._to_json()) 
             await self._open_chest(ctx, ctx.author, box_type)  # returns item and msg
 
+
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(rate=1, per=3600, type=commands.BucketType.user)
@@ -2952,6 +2953,7 @@ class Adventure(BaseCog):
         text = box(f"[{cart} is bringing the cart around!]", lang="css")
         if ctx.guild.id not in self._last_trade:
             self._last_trade[ctx.guild.id] = 0
+
         if self._last_trade[ctx.guild.id] == 0:
             self._last_trade[ctx.guild.id] = time.time()
         elif (

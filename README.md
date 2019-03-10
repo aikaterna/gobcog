@@ -14,10 +14,6 @@ This version is significantly different internally and features:
 
 Things I would like to improve in the future, or will very gladly welcome PRs on:
 
-* Better handling of bundled data json loading (load files once in startup of cog, refer to it elsewhere with the variable)
-* Theme packs with the ability to use commands to manage them for theming the game.
-* Use the backpack formatter to format the stats page the same way (appropriate alignment/spacing of items like the backpack has)
-* Use the backpack formatter to format forging pages the same way
 * End of game HP display (show total groups’ hit vs mob points, for both str and cha)
 * Make it so that the backpack can hold more than 1x of each item (double items overwrite)
 * Trade unopened loot boxes between players
