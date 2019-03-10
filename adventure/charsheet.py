@@ -1,7 +1,7 @@
 from redbot.core import Config, bank
 from redbot.core.utils.chat_formatting import escape
 import discord
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Set
 from copy import copy
 import logging
 
@@ -108,6 +108,41 @@ class Item:
                 "owned": self.owned,
             }
         }
+
+class GameSession:
+    """A class to represent and hold current game sessions per server"""
+    challenge: str
+    attribute: str
+    timer: int
+    guild: discord.Guild
+    boss: bool
+    miniboss: dict
+    monster: dict
+    message_id: int
+    participants: Set[discord.Member] = set()
+    fight: List[discord.Member] = []
+    talk: List[discord.Member] = []
+    pray: List[discord.Member] = []
+    run: List[discord.Member] = []
+
+    def __init__(self, **kwargs):
+        self.challenge: str = kwargs.pop("challenge")
+        self.attribute: dict = kwargs.pop("attribute")
+        self.guild: discord.Guild = kwargs.pop("guild")
+        self.boss : bool = kwargs.pop("boss")
+        self.miniboss: dict = kwargs.pop("miniboss")
+        self.timer: int = kwargs.pop("timer")
+        self.monster: dict = kwargs.pop("monster")
+        self.message_id: int = 0
+        self.participants : Set[discord.Member] = set()
+        self.fight: List[discord.Member] = []
+        self.talk: List[discord.Member] = []
+        self.pray: List[discord.Member] = []
+        self.run: List[discord.Member] = []
+
+
+
+
 
 class Character(Item):
     """An class to represent the characters stats"""
