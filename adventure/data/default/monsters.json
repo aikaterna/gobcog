@@ -15,7 +15,7 @@
     "Orc": {"str": 16, "dipl": 10, "image": "https://cdn.pixabay.com/photo/2017/04/08/21/03/orc-2214392_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Ogre": {"str": 18, "dipl": 10, "image": "https://cdn.pixabay.com/photo/2016/07/17/15/10/ogre-1524018_960_720.png", "boss": false, "miniboss": {}, "color":""},
     "Rotting Slime": {"str": 12, "dipl": 10, "image": "", "boss": false, "miniboss": {}, "color":""},
-    "Ogre Mage": {"str": 18, "dipl": 22, "image": "https://en.wikipedia.org/wiki/Ogre_mage#/media/File:Ogre_Mage.JPG", "boss": false, "miniboss": {}, "color":""},
+    "Ogre Mage": {"str": 18, "dipl": 22, "image": "https://upload.wikimedia.org/wikipedia/en/e/e1/Ogre_Mage.JPG", "boss": false, "miniboss": {}, "color":""},
     "Wood Spider": {"str": 20, "dipl": 20, "image": "", "boss": false, "miniboss": {}, "color":""},
     "Wizard": {"str": 13, "dipl": 15, "image": "https://cdn.pixabay.com/photo/2016/04/01/09/42/evil-1299513_960_720.png", "boss": false, "miniboss": {}, "color":""},
     "Bog Beast": {"str": 20, "dipl": 15, "image": "", "boss": false, "miniboss": {}, "color":""},
