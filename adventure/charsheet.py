@@ -7,12 +7,14 @@ from datetime import timedelta
 
 from redbot.core import commands
 from redbot.core import Config, bank
+from redbot.core.i18n import Translator, cog_i18n
 
 from discord.ext.commands.converter import Converter
 from discord.ext.commands.errors import BadArgument
 
 log = logging.getLogger("red.adventure")
 
+_ = Translator("Adventure", __file__)
 
 ORDER = [
     "head",
@@ -50,6 +52,7 @@ class Stats(Converter):
     This will parse a string for specific keywords like attack and dexterity followed by a number
     to create an item object to be added to a users inventory
     """
+
     ATT = re.compile(r"([\d]*) (att(?:ack)?)")
     CHA = re.compile(r"([\d]*) (cha(?:risma)?|dip(?:lo?(?:macy)?)?)")
     INT = re.compile(r"([\d]*) (int(?:elligence)?)")
@@ -60,20 +63,20 @@ class Stats(Converter):
 
     async def convert(self, ctx: commands.Context, argument: str) -> Dict[str, int]:
         result = {
-                "slot": ["left"],
-                "att": 0,
-                "cha": 0,
-                "int": 0,
-                "dex": 0,
-                "luck": 0,
-                "rarity": "normal"
-            }
+            "slot": ["left"],
+            "att": 0,
+            "cha": 0,
+            "int": 0,
+            "dex": 0,
+            "luck": 0,
+            "rarity": "normal",
+        }
         possible_stats = dict(
             att=self.ATT.search(argument),
             cha=self.CHA.search(argument),
             int=self.INT.search(argument),
             dex=self.DEX.search(argument),
-            luck=self.LUCK.search(argument)
+            luck=self.LUCK.search(argument),
         )
         try:
             slot = [self.SLOT.search(argument).group(0)]
@@ -296,24 +299,42 @@ class Character(Item):
             class_desc = self.heroclass["name"] + "\n\n" + self.heroclass["desc"]
             if self.heroclass["name"] == "Ranger":
                 if not self.heroclass["pet"]:
-                    class_desc += "\n\n- Current pet: None"
+                    class_desc += _("\n\n- Current pet: None")
                 elif self.heroclass["pet"]:
-                    class_desc += f"\n\n- Current pet: {self.heroclass['pet']['name']}"
+                    class_desc += _("\n\n- Current pet: {}").format(self.heroclass["pet"]["name"])
         else:
-            class_desc = "Hero."
-        legend = "( ATT  |  CHA  |  INT  |  DEX  |  LUCK)"
-        return (
-            f"[{self.user.display_name}'s Character Sheet]\n\n"
-            f"A level {self.lvl} {class_desc} \n\n- "
-            f"ATTACK: {self.att} [+{self.skill['att']}] - "
-            f"INTELLIGENCE: {self.int} [+{self.skill['int']}] - "
-            f"DIPLOMACY: {self.cha} [+{self.skill['cha']}] -\n\n- "
-            f"DEXTERITY: {self.dex} - "
-            f"LUCK: {self.luck} \n\n "
-            f"Currency: {self.bal} \n- "
-            f"Experience: {round(self.exp)}/{next_lvl} \n- "
-            f"Unspent skillpoints: {self.skill['pool']}\n\n"
-            f"Items Equipped:\n{legend}{self.__equipment__()}"
+            class_desc = _("Hero.")
+        legend = _("( ATT  |  CHA  |  INT  |  DEX  |  LUCK)")
+        return _(
+            "[{user}'s Character Sheet]\n\n"
+            "A level {lvl} {class_desc} \n\n- "
+            "ATTACK: {att} [+{att_skill}] - "
+            "INTELLIGENCE: {int} [+{int_skill}] - "
+            "CHARISMA: {cha} [+{cha_skill}] -\n\n- "
+            "DEXTERITY: {dex} - "
+            "LUCK: {luck} \n\n "
+            "Currency: {bal} \n- "
+            "Experience: {xp}/{next_lvl} \n- "
+            "Unspent skillpoints: {skill_points}\n\n"
+            "Items Equipped:\n{legend}{equip}"
+        ).format(
+            user=self.user.display_name,
+            lvl=self.lvl,
+            class_desc=class_desc,
+            att=self.att,
+            att_skill=self.skill["att"],
+            int=self.int,
+            int_skill=self.skill["int"],
+            cha=self.cha,
+            cha_skill=self.skill["cha"],
+            dex=self.dex,
+            luck=self.luck,
+            bal=self.bal,
+            xp=round(self.exp),
+            next_lvl=next_lvl,
+            skill_points=self.skill["pool"],
+            legend=legend,
+            equip=self.__equipment__(),
         )
 
     def __equipment__(self):
@@ -332,10 +353,10 @@ class Character(Item):
             item = getattr(self, slots)
             if item is None:
                 last_slot = slots
-                form_string += f"\n\n {slots.title()} slot"
+                form_string += _("\n\n {} slot").format(slots.title())
                 continue
             slot_name = item.slot[0] if len(item.slot) < 2 else "two handed"
-            form_string += f"\n\n {slot_name.title()} slot"
+            form_string += _("\n\n {} slot").format(slot_name.title())
             last_slot = slot_name
             # rjust = max([len(i) for i in item.name])
             # for name, stats in data.items():
@@ -396,12 +417,12 @@ class Character(Item):
 
     def __backpack__(self, forging: bool = False, consumed: list = []):
         bkpk = self._sort_new_backpack(self.backpack)
-        form_string = "Items in Backpack:\n( ATT  |  CHA  |  INT  |  DEX  |  LUCK)"
+        form_string = _("Items in Backpack: \n( ATT  |  CHA  |  INT  |  DEX  |  LUCK)")
         consumed_list = [i for i in consumed]
         for slot_group in bkpk:
 
             slot_name = slot_group[0][1].slot
-            slot_name = slot_name[0] if len(slot_name) < 2 else "two handed"
+            slot_name = slot_name[0] if len(slot_name) < 2 else _("two handed")
             form_string += f"\n\n {slot_name.title()} slot"
             rjust = max([len(str(i[1])) for i in slot_group])
             for item in slot_group:
