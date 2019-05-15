@@ -1067,48 +1067,16 @@ class Adventure(BaseCog):
                             "rare treasure chests to convert."
                         ).format(author=self.E(ctx.author.display_name), amount=(4 * amount))
                     )
-            elif box_rarity.lower() == "epic":
-                if c.treasure[2] >= (4 * amount):
-                    c.treasure[2] -= 4 * amount
-                    c.treasure[3] += 1 * amount
-                    await ctx.send(
-                        box(
-                            _(
-                                "Successfully converted {converted} epic treasure "
-                                "chests to {to} legendary treasure chest{plural}. \n{author} "
-                                "now owns {normal} normal, {rare} rare, {epic} epic "
-                                "and {leg} legendary treasure chests."
-                            ).format(
-                                converted=(4 * amount),
-                                to=(1 * amount),
-                                plur=plural,
-                                author=self.E(ctx.author.display_name),
-                                normal=c.treasure[0],
-                                rare=c.treasure[1],
-                                epic=c.treasure[2],
-                                leg=c.treasure[3],
-                            ),
-                            lang="css",
-                        )
-                    )
-                    await self.config.user(ctx.author).set(c._to_json())
-                else:
-                    await ctx.send(
-                        _(
-                            "{author}, you do not have {amount} "
-                            "epic treasure chests to convert."
-                        ).format(author=self.E(ctx.author.display_name), amount=(4 * amount))
-                    )
-            elif box_rarity.lower() == "legendary":
+            elif box_rarity.lower() == "legendary" or box_rarity.lower()="epic":
                 return await ctx.send(
-                    _("{}, I cannot convert " "loot rarer than epic.").format(
+                    _("{}, I cannot convert loot rarer than epic.").format(
                         self.E(ctx.author.display_name)
                     )
                 )
             else:
                 await ctx.send(
                     _(
-                        "{}, please select between normal, rare or epic treasure chests to convert."
+                        "{}, please select between normal or rare treasure chests to convert."
                     ).format(self.E(ctx.author.display_name))
                 )
 
