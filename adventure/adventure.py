@@ -1063,9 +1063,9 @@ class Adventure(BaseCog):
                 else:
                     await ctx.send(
                         _(
-                            "{}, you do not have {(4 * amount)} "
+                            "{author}, you do not have {amount} "
                             "rare treasure chests to convert."
-                        ).format(self.E(ctx.author.display_name))
+                        ).format(author=self.E(ctx.author.display_name), amount=(4 * amount))
                     )
             elif box_rarity.lower() == "epic":
                 return await ctx.send(
