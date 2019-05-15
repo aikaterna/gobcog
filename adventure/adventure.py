@@ -1068,11 +1068,6 @@ class Adventure(BaseCog):
                         ).format(author=self.E(ctx.author.display_name), amount=(4 * amount))
                     )
             elif box_rarity.lower() == "epic":
-                return await ctx.send(
-                    _("{}, I cannot convert " "loot rarer than epic.").format(
-                        self.E(ctx.author.display_name)
-                    )
-                )
                 if c.treasure[2] >= (4 * amount):
                     c.treasure[2] -= 4 * amount
                     c.treasure[3] += 1 * amount
@@ -1104,10 +1099,16 @@ class Adventure(BaseCog):
                             "epic treasure chests to convert."
                         ).format(author=self.E(ctx.author.display_name), amount=(4 * amount))
                     )
+            elif box_rarity.lower() == "legendary":
+                return await ctx.send(
+                    _("{}, I cannot convert " "loot rarer than epic.").format(
+                        self.E(ctx.author.display_name)
+                    )
+                )
             else:
                 await ctx.send(
                     _(
-                        "{}, please select between normal or rare treasure chests to convert."
+                        "{}, please select between normal, rare or epic treasure chests to convert."
                     ).format(self.E(ctx.author.display_name))
                 )
 
