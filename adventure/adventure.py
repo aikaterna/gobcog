@@ -1067,7 +1067,7 @@ class Adventure(BaseCog):
                             "rare treasure chests to convert."
                         ).format(author=self.E(ctx.author.display_name), amount=(4 * amount))
                     )
-            elif box_rarity.lower() == "legendary" or box_rarity.lower()="epic":
+            elif box_rarity.lower() == "legendary" or box_rarity.lower() == "epic":
                 return await ctx.send(
                     _("{}, I cannot convert loot rarer than epic.").format(
                         self.E(ctx.author.display_name)
