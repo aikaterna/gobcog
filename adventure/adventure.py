@@ -782,7 +782,7 @@ class Adventure(BaseCog):
             await menu(ctx, msg_list, DEFAULT_CONTROLS, page=index)
 
     @loadout.command(name="equip", aliases=["load"])
-    @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
+    @commands.cooldown(rate=1, per=60, type=commands.BucketType.user)
     async def equip_loadout(self, ctx: Context, name: str):
         """Equip a saved loadout"""
         if not await self.allow_in_dm(ctx):
@@ -1172,7 +1172,7 @@ class Adventure(BaseCog):
         """[Tinkerer Class Only]
 
         This allows a Tinkerer to forge two items into a device.
-        (2h cooldown)
+        (1h cooldown)
         """
         if not await self.allow_in_dm(ctx):
             return await ctx.send(_("This command is not available in DM's on this bot."))
@@ -2169,7 +2169,7 @@ class Adventure(BaseCog):
         """[Ranger Class Only]
 
         This allows a Ranger to tame or set free a pet or send it foraging.
-        (2h cooldown)
+        (1h cooldown)
         """
 
         if not await self.allow_in_dm(ctx):
@@ -2707,7 +2707,7 @@ class Adventure(BaseCog):
 
     @commands.command(name="adventure", aliases=["a"])
     @commands.guild_only()
-    @commands.cooldown(rate=1, per=125, type=commands.BucketType.guild)
+    @commands.cooldown(rate=1, per=60, type=commands.BucketType.guild)
     async def _adventure(self, ctx: Context, *, challenge=None):
         """This will send you on an adventure!
 
