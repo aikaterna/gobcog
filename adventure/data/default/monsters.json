@@ -2,7 +2,7 @@
     "Tame Dove": {"hp": 14, "pdef": 1, "mdef": 1, "dipl": 14, "image": "https://cdn.pixabay.com/photo/2016/02/23/20/31/dove-1218474_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Fossil of Spike": {"hp": 10, "pdef": 0.8, "mdef": 1, "dipl": 10, "image": "https://i.imgur.com/wOPXLwL.png", "boss": false, "miniboss": {}, "color":""},
     "Bat": {"hp": 16, "pdef": 1, "mdef": 1.1, "dipl": 18, "image": "https://live.staticflickr.com/3741/9187712502_bbecd929e1_b.jpg", "boss": false, "miniboss": {}, "color":""},
-    "8-bit Duck": {"hp": 22, "pdef": 1.25, "mdef": 1.1, "dipl": 5, "image": "https://imgur.com/E56t7iI", "boss": false, "miniboss": {}, "color":""},
+    "8-bit Duck": {"hp": 22, "pdef": 1.25, "mdef": 1.1, "dipl": 5, "image": "https://i.imgur.com/E56t7iI.png", "boss": false, "miniboss": {}, "color":""},
     "Red Squirrel": {"hp": 17, "pdef": 0.9, "mdef": 1, "dipl": 19, "image": "https://cdn.pixabay.com/photo/2012/02/28/00/49/squirrel-17854_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Mouse": {"hp": 17, "pdef": 1, "mdef": 1.1, "dipl": 18, "image": "https://cdn.pixabay.com/photo/2016/10/01/20/54/mouse-1708347_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Rat": {"hp": 18, "pdef": 1, "mdef": 1.15, "dipl": 18, "image": "https://cdn.pixabay.com/photo/2018/04/09/10/13/degu-3303715_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
