@@ -934,8 +934,11 @@ class Character(Item):
             "set_items": self.set_items,
         }
 
-    async def rebirth(self) -> dict:
-        self.rebirths += 1
+    async def rebirth(self, dev_val: int = None) -> dict:
+        if dev_val is None:
+            self.rebirths += 1
+        else:
+            self.rebirths = dev_val
         self.keep_equipped()
         backpack = {}
         for item in [

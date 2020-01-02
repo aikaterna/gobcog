@@ -969,6 +969,39 @@ class Adventure(BaseCog):
                 )
                 await self.config.user(ctx.author).set(await c.rebirth())
 
+    @commands.is_owner()
+    @commands.command()
+    async def devrebirth(self, ctx: Context, user:discord.Member=None, rebirth_level:int=1):
+        """Set a users rebith level."""
+        target = user or ctx.author
+        async with self.get_lock(target):
+            try:
+                c = await Character.from_json(self.config, target)
+            except Exception:
+                log.exception("Error with the new character sheet")
+                return
+
+            bal = await bank.get_balance(target)
+            if bal >= 1000:
+                withdraw = bal - 1000
+                await bank.withdraw_credits(target, withdraw )
+            else:
+                withdraw = bal
+                await bank.set_balance(target, 0)
+
+            await ctx.send(
+                content=(
+                    box(
+                        _("{c} congratulations with your rebirth.\nYou paid {bal}").format(
+                            c=bold(self.escape(target.display_name)),
+                            bal=humanize_number(withdraw)
+                        ),
+                        lang="css",
+                    )
+                )
+            )
+            await self.config.user(ctx.author).set(await c.rebirth(dev_val=rebirth_level))
+
     @loadout.command(name="delete", aliases=["del", "rem", "remove"])
     async def remove_loadout(self, ctx: Context, name: str):
         """Delete a saved loadout."""
@@ -3359,7 +3392,7 @@ class Adventure(BaseCog):
 
         if c.rebirths >= 25:
             monsters = self.AS_MONSTERS
-            self.monster_stats = 1 + max((c.rebirths // 50) - 1, 0)
+            self.monster_stats = 1 + max((c.rebirths // 25) - 1, 0)
         elif c.rebirths >= 15:
             monsters = {**self.AS_MONSTERS}
         else:
@@ -3995,8 +4028,9 @@ class Adventure(BaseCog):
                 "\n{loss_l} to repay a passing "
                 "cleric that resurrected the group."
             ).format(miniboss=miniboss, special=special, loss_l=humanize_list(loss_list))
-        amount = (1 * people) * self.monster_stats // 2
+        amount = 1 * self.monster_stats
         amount *= (hp + dipl) if slain and persuaded else hp if slain else dipl
+        amount += int(amount * (0.25 * people))
         if people == 1:
             if slain:
                 group = fighters if len(fight_list) == 1 else wizards
@@ -5214,10 +5248,11 @@ class Adventure(BaseCog):
             if roll == 5 and c.heroclass["name"] == "Ranger" and c.heroclass["pet"]:
                 petxp = int(userxp * c.heroclass["pet"]["bonus"])
                 newxp += petxp
-                self._rewards[user.id]["xp"] = userxp + petxp
+                log.debug(f"{user}: user gained the following xp: {userxp}")
+                self._rewards[user.id]["xp"] = userxp
                 petcp = int(usercp * c.heroclass["pet"]["bonus"])
                 newcp += petcp
-                self._rewards[user.id]["cp"] = usercp + petcp
+                self._rewards[user.id]["cp"] = usercp
                 percent = round((c.heroclass["pet"]["bonus"] - 1.0) * 100)
                 phrase = _(
                     "\n{user} received a {percent}% reward bonus from their {pet_name}."
@@ -5228,6 +5263,7 @@ class Adventure(BaseCog):
                 )
 
             else:
+                log.debug(f"{user}: user gained the following xp: {userxp}")
                 self._rewards[user.id]["xp"] = userxp
                 self._rewards[user.id]["cp"] = usercp
             if special is not False:
