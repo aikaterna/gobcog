@@ -1508,7 +1508,7 @@ class Adventure(BaseCog):
                         box(
                             _(
                                 "Successfully converted {converted} epic treasure "
-                                "chests to {to} legendary treasure chest{plural}. \n{author} "
+                                "chests to {to} legendary treasure chest{plur}. \n{author} "
                                 "now owns {normal} normal, {rare} rare, {epic} epic, "
                                 "{leg} legendary treasure chests and {set} set treasure chests."
                             ).format(
