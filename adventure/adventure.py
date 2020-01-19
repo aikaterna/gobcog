@@ -3639,7 +3639,7 @@ class Adventure(commands.Cog):
             except Exception:
                 log.exception("Error with the new character sheet")
                 continue
-            crit_mod = max(c.dex, c.luck) // 10
+            crit_mod = max(c.dex, c.luck)
             mod = 0
             if crit_mod != 0:
                 mod = round(crit_mod / 10)
