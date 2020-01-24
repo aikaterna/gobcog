@@ -43,7 +43,7 @@ from .charsheet import (
     equip_level,
     has_funds,
     parse_timedelta,
-    DEV_LIST
+    DEV_LIST,
 )
 
 try:
@@ -206,7 +206,7 @@ class Adventure(BaseCog):
             "cooldown": 0,
             "cartroom": None,
             "cart_timeout": 10800,
-            "cooldown_timer_manual": 120
+            "cooldown_timer_manual": 120,
         }
         default_global = {
             "god_name": _("Herbert"),
@@ -962,7 +962,8 @@ class Adventure(BaseCog):
                     content=(
                         box(
                             _("{c} congratulations with your rebirth.\nYou paid {bal}").format(
-                                c=bold(self.escape(ctx.author.display_name)), bal=humanize_number(withdraw)
+                                c=bold(self.escape(ctx.author.display_name)),
+                                bal=humanize_number(withdraw),
                             ),
                             lang="css",
                         )
@@ -972,7 +973,7 @@ class Adventure(BaseCog):
 
     @commands.is_owner()
     @commands.command()
-    async def devrebirth(self, ctx: Context, user:discord.Member=None, rebirth_level:int=1):
+    async def devrebirth(self, ctx: Context, user: discord.Member = None, rebirth_level: int = 1):
         """Set a users rebith level."""
         target = user or ctx.author
         async with self.get_lock(target):
@@ -985,7 +986,7 @@ class Adventure(BaseCog):
             bal = await bank.get_balance(target)
             if bal >= 1000:
                 withdraw = bal - 1000
-                await bank.withdraw_credits(target, withdraw )
+                await bank.withdraw_credits(target, withdraw)
             else:
                 withdraw = bal
                 await bank.set_balance(target, 0)
@@ -994,8 +995,7 @@ class Adventure(BaseCog):
                 content=(
                     box(
                         _("{c} congratulations with your rebirth.\nYou paid {bal}").format(
-                            c=bold(self.escape(target.display_name)),
-                            bal=humanize_number(withdraw)
+                            c=bold(self.escape(target.display_name)), bal=humanize_number(withdraw)
                         ),
                         lang="css",
                     )
@@ -1176,9 +1176,7 @@ class Adventure(BaseCog):
         Default is 120 seconds.
         """
         if time_in_seconds < 30:
-            return await smart_embed(
-            ctx, _("Cooldown cannot be set to less than 30 seconds")
-        )
+            return await smart_embed(ctx, _("Cooldown cannot be set to less than 30 seconds"))
 
         await self.config.guild(ctx.guild).cooldown_timer_manual.set(time_in_seconds)
         await smart_embed(
@@ -1617,7 +1615,9 @@ class Adventure(BaseCog):
                     return await smart_embed(
                         ctx,
                         _("This command is on cooldown. Try again in {}").format(
-                            humanize_timedelta(seconds=int(cooldown_time)) if cooldown_time >= 1 else _("1 second")
+                            humanize_timedelta(seconds=int(cooldown_time))
+                            if cooldown_time >= 1
+                            else _("1 second")
                         ),
                     )
                 consumed = []
@@ -2513,9 +2513,21 @@ class Adventure(BaseCog):
         weekend = datetime.today().weekday() in [5, 6]
         wedfriday = datetime.today().weekday() in [2, 4]
         daymult = 2 if weekend else 1.5 if wedfriday else 1
+        xp_won = int((offering / xp_mod) * daymult)
+        async with self.get_lock(ctx.message.author):
+            try:
+                c = await Character.from_json(self.config, ctx.message.author)
+            except Exception:
+                log.exception("Error with the new character sheet")
+                return
+        xp_to_max = int((c.maxlevel + 1) ** 3)
+        ten_percent = xp_to_max * 0.1
+        xp_randomizer = random.randint(1, 100)
+        xp_won = ten_percent if xp_won > ten_percent else xp_won
+        xp_won = xp_randomizer / 100 * xp_won * c.rebirths // 10
+
         if roll == 1:
-            loss_mod = random.randint(1, 10)
-            loss = round((offering / loss_mod) * 3)
+            loss = round(bal // 3)
             try:
                 await bank.withdraw_credits(ctx.author, loss)
                 loss_msg = ""
@@ -2545,14 +2557,12 @@ class Adventure(BaseCog):
                     content=nega_msg.content,
                     author=bold(ctx.author.display_name),
                     negachar=negachar,
-                    xp_gain=humanize_number(int((offering / xp_mod) * daymult)),
+                    xp_gain=humanize_number(xp_won),
                     offering=humanize_number(offering),
                     currency_name=currency_name,
                 )
             )
-            await self._add_rewards(
-                ctx, ctx.message.author, int((offering / xp_mod) * daymult), offering, False
-            )
+            await self._add_rewards(ctx, ctx.message.author, xp_won, offering, False)
         elif roll > versus:
             await nega_msg.edit(
                 content=_(
@@ -2566,12 +2576,10 @@ class Adventure(BaseCog):
                     roll=roll,
                     negachar=negachar,
                     versus=versus,
-                    xp_gain=humanize_number(int((offering / xp_mod) * daymult)),
+                    xp_gain=humanize_number(xp_won),
                 )
             )
-            await self._add_rewards(
-                ctx, ctx.message.author, (int((offering / xp_mod) * daymult)), 0, False
-            )
+            await self._add_rewards(ctx, ctx.message.author, xp_won, 0, False)
         elif roll == versus:
             await nega_msg.edit(
                 content=_(
@@ -2587,7 +2595,7 @@ class Adventure(BaseCog):
                 )
             )
         else:
-            loss = round(offering * 0.8)
+            loss = round(bal / (random.randint(10, 25)))
             try:
                 await bank.withdraw_credits(ctx.author, loss)
                 loss_msg = ""
@@ -2665,7 +2673,11 @@ class Adventure(BaseCog):
                         ctx,
                         _(
                             "You caught a pet recently, you will be able to go hunting in {}."
-                        ).format(humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second"))
+                        ).format(
+                            humanize_timedelta(seconds=int(cooldown_time))
+                            if int(cooldown_time) >= 1
+                            else _("1 second")
+                        ),
                     )
                 extra_dipl = 0
                 pet_choices = list(self.PETS.keys())
@@ -2790,7 +2802,11 @@ class Adventure(BaseCog):
             cooldown_time = (c.heroclass["cooldown"] + 7200) - time.time()
             return await smart_embed(
                 ctx,
-                _("This command is on cooldown. Try again in {}.").format(humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")),
+                _("This command is on cooldown. Try again in {}.").format(
+                    humanize_timedelta(seconds=int(cooldown_time))
+                    if int(cooldown_time) >= 1
+                    else _("1 second")
+                ),
             )
 
     @pet.command(name="free")
@@ -2876,7 +2892,11 @@ class Adventure(BaseCog):
                     ctx,
                     _(
                         "Your hero is currently recovering from the last time they used this skill. Try again in {}"
-                    ).format(humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second"))
+                    ).format(
+                        humanize_timedelta(seconds=int(cooldown_time))
+                        if int(cooldown_time) >= 1
+                        else _("1 second")
+                    ),
                 )
 
     @commands.command()
@@ -2928,7 +2948,11 @@ class Adventure(BaseCog):
                     ctx,
                     _(
                         "Your hero is currently recovering from the last time they used this skill. Try again in {}"
-                    ).format(humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second"))
+                    ).format(
+                        humanize_timedelta(seconds=int(cooldown_time))
+                        if int(cooldown_time) >= 1
+                        else _("1 second")
+                    ),
                 )
 
     @commands.command()
@@ -2980,7 +3004,11 @@ class Adventure(BaseCog):
                     ctx,
                     _(
                         "Your hero is currently recovering from the last time they used this skill. Try again in {}"
-                    ).format(humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second"))
+                    ).format(
+                        humanize_timedelta(seconds=int(cooldown_time))
+                        if int(cooldown_time) >= 1
+                        else _("1 second")
+                    ),
                 )
 
     @commands.command()
@@ -3327,7 +3355,11 @@ class Adventure(BaseCog):
             cooldown_time = cooldown + cooldown_time - time.time()
             return await smart_embed(
                 ctx,
-                _("No heroes are ready to depart in an adventure, try again in {}").format(humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second"))
+                _("No heroes are ready to depart in an adventure, try again in {}").format(
+                    humanize_timedelta(seconds=int(cooldown_time))
+                    if int(cooldown_time) >= 1
+                    else _("1 second")
+                ),
             )
 
         if challenge and not (self.is_dev(ctx.author) or await ctx.bot.is_owner(ctx.author)):
@@ -3379,7 +3411,9 @@ class Adventure(BaseCog):
             return
         possible_monsters = []
         for e, (m, stats) in enumerate(self.MONSTER_NOW.items(), 1):
-            if e not in range(10) and (stats["hp"] + stats["dipl"]) > (c.total_stats * min(max(c.rebirths, 1), 15)):
+            if e not in range(10) and (stats["hp"] + stats["dipl"]) > (
+                c.total_stats * min(max(c.rebirths, 1), 15)
+            ):
                 continue
             if not stats["boss"] and not stats["miniboss"]:
                 count = 0
