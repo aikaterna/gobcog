@@ -332,7 +332,17 @@ class Adventure(BaseCog):
         if not sessions:
             return False
         participants_ids = set(
-            [p.id for _loop, session in self._sessions.items() for p in session.participants]
+            [
+                p.id
+                for _loop, session in self._sessions.items()
+                for p in [
+                    *session.fight,
+                    *session.magic,
+                    *session.pray,
+                    *session.talk,
+                    *session.run,
+                ]
+            ]
         )
         return bool(author.id in participants_ids)
 
@@ -2411,7 +2421,7 @@ class Adventure(BaseCog):
                 await self._open_chest(ctx, ctx.author, box_type)  # returns item and msg
 
     @commands.command(name="negaverse", aliases=["nv"])
-    @commands.cooldown(rate=1, per=10, type=commands.BucketType.user)
+    @commands.cooldown(rate=1, per=3600, type=commands.BucketType.user)
     @commands.guild_only()
     async def _negaverse(self, ctx: Context, offering: int = None):
         """This will send you to fight a nega-member!
@@ -2420,6 +2430,7 @@ class Adventure(BaseCog):
         sacrificing for this fight.
         """
         if self.in_adventure(ctx):
+            ctx.command.reset_cooldown(ctx)
             return await smart_embed(
                 ctx,
                 _(
@@ -2507,8 +2518,8 @@ class Adventure(BaseCog):
                 author=bold(ctx.author.display_name), negachar=negachar
             )
         )
-        roll = random.randint(1, 20)
-        versus = random.randint(1, 20)
+        roll = random.randint(1, 50)
+        versus = random.randint(10, 60)
         xp_mod = random.randint(1, 20)
         weekend = datetime.today().weekday() in [5, 6]
         wedfriday = datetime.today().weekday() in [2, 4]
@@ -2524,9 +2535,14 @@ class Adventure(BaseCog):
         ten_percent = xp_to_max * 0.1
         xp_randomizer = random.randint(1, 100)
         xp_won = ten_percent if xp_won > ten_percent else xp_won
-        xp_won = xp_randomizer / 100 * xp_won * c.rebirths // 10
+        xp_won = (
+            xp_randomizer
+            / 100
+            * xp_won
+            * (min(max(random.randint(0, c.rebirths // 10), 1), 3) / 10 + 1)
+        )
 
-        if roll == 1:
+        if roll < 10:
             loss = round(bal // 3)
             try:
                 await bank.withdraw_credits(ctx.author, loss)
@@ -2548,7 +2564,7 @@ class Adventure(BaseCog):
                     loss_msg=loss_msg,
                 )
             )
-        elif roll == 20:
+        elif roll == 50 and versus < 50:
             await nega_msg.edit(
                 content=_(
                     "{content}\n{author} decapitated {negachar}. You gain {xp_gain} xp and take "
@@ -2567,7 +2583,7 @@ class Adventure(BaseCog):
             await nega_msg.edit(
                 content=_(
                     "{content}\n{author} "
-                    "{dice}{roll}) bravely defeated {negachar} {dice}({versus}). "
+                    "{dice}({roll}) bravely defeated {negachar} {dice}({versus}). "
                     "You gain {xp_gain} xp."
                 ).format(
                     dice=self.emojis.dice,
@@ -2604,7 +2620,11 @@ class Adventure(BaseCog):
                 loss = _("all of their")
             loss_msg = _(
                 ", losing {loss} {currency_name} as {negachar} looted their backpack"
-            ).format(loss=humanize_number(loss), currency_name=currency_name, negachar=negachar)
+            ).format(
+                loss=humanize_number(loss) if not isinstance(loss, str) else loss,
+                currency_name=currency_name,
+                negachar=negachar,
+            )
             await nega_msg.edit(
                 content=_(
                     "{author} {dice}({roll}) was killed by {negachar} {dice}({versus}){loss_msg}."
@@ -2843,7 +2863,6 @@ class Adventure(BaseCog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
     async def bless(self, ctx: Context):
         """[Cleric Class Only]
 
@@ -2901,7 +2920,6 @@ class Adventure(BaseCog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
     async def rage(self, ctx: Context):
         """[Berserker Class Only]
 
@@ -2957,7 +2975,6 @@ class Adventure(BaseCog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
     async def focus(self, ctx: Context):
         """[Wizard Class Only]
 
@@ -3013,7 +3030,6 @@ class Adventure(BaseCog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
     async def music(self, ctx: Context):
         """[Bard Class Only]
 
@@ -3129,10 +3145,17 @@ class Adventure(BaseCog):
                 )
             return
 
-        if c.skill["pool"] < amount:
+        if c.skill["pool"] <= 0:
             return await smart_embed(
                 ctx,
                 _("{}, you do not have unspent skillpoints.").format(
+                    self.escape(ctx.author.display_name)
+                ),
+            )
+        elif c.skill["pool"] < amount:
+            return await smart_embed(
+                ctx,
+                _("{}, you do not have enough unspent skillpoints.").format(
                     self.escape(ctx.author.display_name)
                 ),
             )
@@ -3590,7 +3613,7 @@ class Adventure(BaseCog):
             timeout = 60 * 2
         session.message_id = adventure_msg.id
         start_adding_reactions(adventure_msg, self._adventure_actions, ctx.bot.loop)
-        timer = await self._adv_countdown(ctx, session.timer, "Time remaining: ")
+        timer = await self._adv_countdown(ctx, session.timer, "Time remaining")
         self.tasks[adventure_msg.id] = timer
         try:
             await asyncio.wait_for(timer, timeout=timeout + 5)
@@ -4021,14 +4044,17 @@ class Adventure(BaseCog):
             loss_list = []
             result_msg += session.miniboss["defeat"]
             if len(repair_list) > 0:
+                temp_repair = []
                 for user, loss in repair_list:
-                    loss_list.append(
-                        _("{user} used {loss} {currency_name}").format(
-                            user=bold(self.escape(user.display_name)),
-                            loss=humanize_number(loss),
-                            currency_name=currency_name,
+                    if user not in temp_repair:
+                        loss_list.append(
+                            _("{user} used {loss} {currency_name}").format(
+                                user=bold(self.escape(user.display_name)),
+                                loss=humanize_number(loss),
+                                currency_name=currency_name,
+                            )
                         )
-                    )
+                        temp_repair.append(user)
                 result_msg += _(
                     "\n{loss_list} to repay a passing cleric that unfroze the group."
                 ).format(loss_list=humanize_list(loss_list))
@@ -4066,10 +4092,13 @@ class Adventure(BaseCog):
                         await bank.set_balance(user, 0)
             loss_list = []
             if len(repair_list) > 0:
+                temp_repair = []
                 for user, loss in repair_list:
-                    loss_list.append(
-                        f"{bold(self.escape(user.display_name))} used {humanize_number(loss)} {currency_name}"
-                    )
+                    if user not in temp_repair:
+                        loss_list.append(
+                            f"{bold(self.escape(user.display_name))} used {humanize_number(loss)} {currency_name}"
+                        )
+                        temp_repair.append(user)
             miniboss = session.challenge
             special = session.miniboss["special"]
             result_msg += _(
@@ -4134,10 +4163,13 @@ class Adventure(BaseCog):
                             await bank.set_balance(user, 0)
                 loss_list = []
                 if len(repair_list) > 0:
+                    temp_repair = []
                     for user, loss in repair_list:
-                        loss_list.append(
-                            f"{bold(self.escape(user.display_name))} used {humanize_number(loss)} {currency_name}"
-                        )
+                        if user not in temp_repair:
+                            loss_list.append(
+                                f"{bold(self.escape(user.display_name))} used {humanize_number(loss)} {currency_name}"
+                            )
+                            temp_repair.append(user)
                 repair_text = (
                     ""
                     if not loss_list
@@ -4335,14 +4367,17 @@ class Adventure(BaseCog):
                                 await bank.set_balance(user, 0)
                     loss_list = []
                     if len(repair_list) > 0:
+                        temp_repair = []
                         for user, loss in repair_list:
-                            loss_list.append(
-                                _("{user} used {loss} {currency_name}").format(
-                                    user=bold(self.escape(user.display_name)),
-                                    loss=humanize_number(loss),
-                                    currency_name=currency_name,
+                            if user not in temp_repair:
+                                loss_list.append(
+                                    _("{user} used {loss} {currency_name}").format(
+                                        user=bold(self.escape(user.display_name)),
+                                        loss=humanize_number(loss),
+                                        currency_name=currency_name,
+                                    )
                                 )
-                            )
+                                temp_repair.append(user)
                     repair_text = (
                         ""
                         if not loss_list
@@ -4469,7 +4504,7 @@ class Adventure(BaseCog):
             except Exception:
                 log.exception("Error with the new character sheet")
                 continue
-            crit_mod = (max(c.dex, c.luck) // 10) + (c.total_att // 20)
+            crit_mod = max(c.dex, c.luck) + (c.total_att // 20)  # Thanks GoaFan77
             mod = 0
             if crit_mod != 0:
                 mod = round(crit_mod / 10)
