@@ -4845,23 +4845,24 @@ class Adventure(BaseCog):
             lvl_start = c.lvl
             lvl_end = int(max(c.exp, 0) ** (1 / 3))
             lvl_end = lvl_end if lvl_end < c.maxlevel else c.maxlevel
+            levelup_emoji = self.emojis.level_up
+            rebirth_emoji = self.emojis.rebirth
+            if lvl_end == c.maxlevel:
+                rebirthextra = _("{} You can now Rebirth {}").format(
+                    rebirth_emoji, user.mention
+                )
             if lvl_start < lvl_end:
                 # recalculate free skillpoint pool based on new level and already spent points.
                 c.lvl = lvl_end
                 assigned_stats = c.skill["att"] + c.skill["cha"] + c.skill["int"]
                 starting_points = calculate_sp(lvl_start, c) + assigned_stats
                 ending_points = calculate_sp(lvl_end, c) + assigned_stats
-                levelup_emoji = self.emojis.level_up
-                rebirth_emoji = self.emojis.rebirth
+
                 if c.skill["pool"] < 0:
                     c.skill["pool"] = 0
                 c.skill["pool"] += ending_points - starting_points
                 if c.skill["pool"] > 0:
                     extra = _(" You have **{}** skill points available.").format(c.skill["pool"])
-                if lvl_end == c.maxlevel:
-                    rebirthextra = _("{} You can now Rebirth {}").format(
-                        rebirth_emoji, user.mention
-                    )
                 await smart_embed(
                     ctx,
                     _("{} {} is now level **{}**!{}\n{}").format(
@@ -4870,6 +4871,8 @@ class Adventure(BaseCog):
                 )
             if c.rebirths > 10:
                 roll = random.randint(1, 100)
+                if lvl_end == c.maxlevel:
+                    roll += random.randint(50, 100)
                 if special is False:
                     special = [0, 0, 0, 0, 0]
                     if c.rebirths > 5 and roll < 50:
