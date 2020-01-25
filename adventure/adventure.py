@@ -5353,7 +5353,7 @@ class Adventure(BaseCog):
             types = [" normal", " rare", "n epic", " legendary"]
             chest_type = types[special.index(1)]
             phrase += _(
-                "\n**{b_reward}** {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats). "
+                "\n{b_reward} {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats). "
                 "You also secured **a{chest_type} treasure chest**!"
             ).format(
                 b_reward=to_reward,
@@ -5365,7 +5365,7 @@ class Adventure(BaseCog):
             )
         elif special is not False and sum(special) > 1:
             phrase += _(
-                "\n**{b_reward}** {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats). "
+                "\n{b_reward} {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats). "
                 "You also secured **several treasure chests**!"
             ).format(
                 b_reward=to_reward,
@@ -5376,7 +5376,7 @@ class Adventure(BaseCog):
             )
         else:
             phrase += _(
-                "\n**{b_reward}** {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats)."
+                "\n{b_reward} {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats)."
             ).format(
                 b_reward=to_reward,
                 word=word,
