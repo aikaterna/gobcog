@@ -160,15 +160,15 @@ class Item:
     def __str__(self):
         if self.rarity == "normal":
             return self.name
-        if self.rarity == "rare":
+        elif self.rarity == "rare":
             return "." + self.name.replace(" ", "_")
-        if self.rarity == "epic":
+        elif self.rarity == "epic":
             return f"[{self.name}]"
-        if self.rarity == "legendary":
+        elif self.rarity == "legendary":
             return f"{LEGENDARY_OPEN}{self.name}{LEGENDARY_CLOSE}"
-        if self.rarity == "set":
+        elif self.rarity == "set":
             return f"{SET_OPEN}{self.name}{LEGENDARY_CLOSE}"
-        if self.rarity == "forged":
+        elif self.rarity == "forged":
             name = self.name.replace("'", "’")
             return f"{TINKER_OPEN}{name}{TINKER_CLOSE}"
             # Thanks Sinbad!

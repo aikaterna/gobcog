@@ -1718,10 +1718,9 @@ class Adventure(BaseCog):
                         del c.backpack[x.name_formated]
                     await self.config.user(ctx.author).set(c.to_json())
                 # save so the items are eaten up already
-                log.debug("tambourine" in c.backpack)
-                for items in c.get_current_equipment():
-                    if item.rarity in ["forged"]:
-                        c = await c.unequip_item(items)
+                for it in c.get_current_equipment():
+                    if it.rarity in ["forged"]:
+                        c = await c.unequip_item(it)
                 lookup = list(i for n, i in c.backpack.items() if i.rarity in ["forged"])
                 if len(lookup) > 0:
                     forge_str = box(
@@ -3923,6 +3922,7 @@ class Adventure(BaseCog):
         wizard_name_list = []
         talk_name_list = []
         pray_name_list = []
+        repair_list = []
         for user in fight_list:
             fight_name_list.append(self.escape(user.display_name))
         for user in magic_list:
@@ -4013,7 +4013,6 @@ class Adventure(BaseCog):
                 fight_list + talk_list + pray_list + magic_list + fumblelist
             )
             currency_name = await bank.get_currency_name(ctx.guild)
-            repair_list = []
             for user in session.participants:
                 try:
                     c = await Character.from_json(self.config, user)
@@ -4033,11 +4032,12 @@ class Adventure(BaseCog):
                 balance = c.bal
                 loss = min(min(loss, balance), 1000000000)
                 if c.bal > 0:
-                    repair_list.append([user, loss])
-                    if c.bal > loss:
-                        await bank.withdraw_credits(user, loss)
-                    else:
-                        await bank.set_balance(user, 0)
+                    if user not in [u for u, t in repair_list]:
+                        repair_list.append([user, loss])
+                        if c.bal > loss:
+                            await bank.withdraw_credits(user, loss)
+                        else:
+                            await bank.set_balance(user, 0)
                 c.adventures.update({"loses": c.adventures.get("loses", 0) + 1})
                 c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
                 await self.config.user(user).set(c.to_json())
@@ -4064,7 +4064,6 @@ class Adventure(BaseCog):
             session.participants = set(
                 fight_list + talk_list + pray_list + magic_list + fumblelist
             )
-            repair_list = []
             currency_name = await bank.get_currency_name(ctx.guild)
             for user in session.participants:
                 try:
@@ -4085,11 +4084,12 @@ class Adventure(BaseCog):
                 balance = c.bal
                 loss = min(min(loss, balance), 1000000000)
                 if c.bal > 0:
-                    repair_list.append([user, loss])
-                    if c.bal > loss:
-                        await bank.withdraw_credits(user, loss)
-                    else:
-                        await bank.set_balance(user, 0)
+                    if user not in [u for u, t in repair_list]:
+                        repair_list.append([user, loss])
+                        if c.bal > loss:
+                            await bank.withdraw_credits(user, loss)
+                        else:
+                            await bank.set_balance(user, 0)
             loss_list = []
             if len(repair_list) > 0:
                 temp_repair = []
@@ -4135,7 +4135,6 @@ class Adventure(BaseCog):
             if not slain and not persuaded:
                 lost = True
                 currency_name = await bank.get_currency_name(ctx.guild)
-                repair_list = []
                 users = set(fight_list + magic_list + talk_list + pray_list + fumblelist)
                 for user in users:
                     try:
@@ -4156,11 +4155,12 @@ class Adventure(BaseCog):
                     balance = c.bal
                     loss = min(min(loss, balance), 1000000000)
                     if c.bal > 0:
-                        repair_list.append([user, loss])
-                        if c.bal > loss:
-                            await bank.withdraw_credits(user, loss)
-                        else:
-                            await bank.set_balance(user, 0)
+                        if user not in [u for u, t in repair_list]:
+                            repair_list.append([user, loss])
+                            if c.bal > loss:
+                                await bank.withdraw_credits(user, loss)
+                            else:
+                                await bank.set_balance(user, 0)
                 loss_list = []
                 if len(repair_list) > 0:
                     temp_repair = []
@@ -4312,7 +4312,6 @@ class Adventure(BaseCog):
             if not slain and not persuaded:
                 lost = True
                 currency_name = await bank.get_currency_name(ctx.guild)
-                repair_list = []
                 users = set(fight_list + magic_list + talk_list + pray_list + fumblelist)
                 for user in users:
                     try:
@@ -4333,13 +4332,13 @@ class Adventure(BaseCog):
                     balance = c.bal
                     loss = min(min(loss, balance), 1000000000)
                     if c.bal > 0:
-                        repair_list.append([user, loss])
-                        if c.bal > loss:
-                            await bank.withdraw_credits(user, loss)
-                        else:
-                            await bank.set_balance(user, 0)
+                        if user not in [u for u, t in repair_list]:
+                            repair_list.append([user, loss])
+                            if c.bal > loss:
+                                await bank.withdraw_credits(user, loss)
+                            else:
+                                await bank.set_balance(user, 0)
                 if run_list:
-                    repair_list = []
                     users = run_list
                     for user in users:
                         try:
@@ -4360,29 +4359,13 @@ class Adventure(BaseCog):
                         balance = c.bal
                         loss = min(min(loss, balance), 1000000000)
                         if c.bal > 0:
-                            repair_list.append([user, loss])
-                            if c.bal > loss:
-                                await bank.withdraw_credits(user, loss)
-                            else:
-                                await bank.set_balance(user, 0)
-                    loss_list = []
-                    if len(repair_list) > 0:
-                        temp_repair = []
-                        for user, loss in repair_list:
-                            if user not in temp_repair:
-                                loss_list.append(
-                                    _("{user} used {loss} {currency_name}").format(
-                                        user=bold(self.escape(user.display_name)),
-                                        loss=humanize_number(loss),
-                                        currency_name=currency_name,
-                                    )
-                                )
-                                temp_repair.append(user)
-                    repair_text = (
-                        ""
-                        if not loss_list
-                        else _("{} to repair their gear.").format(humanize_list(loss_list))
-                    )
+                            if user not in [u for u, t in repair_list]:
+                                repair_list.append([user, loss])
+                                if user not in [u for u,t in repair_list]:
+                                    if c.bal > loss:
+                                        await bank.withdraw_credits(user, loss)
+                                    else:
+                                        await bank.set_balance(user, 0)
                 loss_list = []
                 if len(repair_list) > 0:
                     temp_repair = []
