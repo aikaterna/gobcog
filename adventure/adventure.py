@@ -19,7 +19,6 @@ from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils.chat_formatting import (
-    bold,
     box,
     escape,
     humanize_list,
@@ -971,8 +970,8 @@ class Adventure(BaseCog):
                 await open_msg.edit(
                     content=(
                         box(
-                            _("{c} congratulations with your rebirth.\nYou paid {bal}").format(
-                                c=bold(self.escape(ctx.author.display_name)),
+                            _("**{c}** congratulations with your rebirth.\nYou paid {bal}").format(
+                                c=self.escape(ctx.author.display_name),
                                 bal=humanize_number(withdraw),
                             ),
                             lang="css",
@@ -1004,8 +1003,8 @@ class Adventure(BaseCog):
             await ctx.send(
                 content=(
                     box(
-                        _("{c} congratulations with your rebirth.\nYou paid {bal}").format(
-                            c=bold(self.escape(target.display_name)), bal=humanize_number(withdraw)
+                        _("**{c}** congratulations with your rebirth.\nYou paid {bal}").format(
+                            c=self.escape(target.display_name), bal=humanize_number(withdraw)
                         ),
                         lang="css",
                     )
@@ -1449,8 +1448,8 @@ class Adventure(BaseCog):
             elif c.rebirths < 2:
                 return await smart_embed(
                     ctx,
-                    _("{c}, you need to 3 rebirths to use this.").format(
-                        c=bold(self.escape(ctx.author.display_name))
+                    _("**{c}**, you need to 3 rebirths to use this.").format(
+                        c=self.escape(ctx.author.display_name)
                     ),
                 )
 
@@ -2507,14 +2506,13 @@ class Adventure(BaseCog):
             await self._clear_react(nv_msg)
             await bank.withdraw_credits(ctx.author, offering)
 
-        negachar = bold(
-            _("Nega-{c}").format(
+        negachar = _("Nega-{c}").format(
                 c=self.escape(random.choice(ctx.message.guild.members).display_name)
             )
-        )
+
         nega_msg = await ctx.send(
-            _("{author} enters the negaverse and meets {negachar}.").format(
-                author=bold(ctx.author.display_name), negachar=negachar
+            _("**{author}** enters the negaverse and meets **{negachar}**.").format(
+                author=self.escape(ctx.author.display_name), negachar=negachar
             )
         )
         roll = random.randint(1, 50)
@@ -2551,14 +2549,14 @@ class Adventure(BaseCog):
                 await bank.set_balance(ctx.author, 0)
                 loss = _("all of their")
             loss_msg = _(
-                ", losing {loss} {currency_name} as {negachar} rifled through their belongings"
+                ", losing {loss} {currency_name} as **{negachar}** rifled through their belongings"
             ).format(loss=loss, currency_name=currency_name, negachar=negachar)
             await nega_msg.edit(
                 content=_(
-                    "{content}\n{author} fumbled and died to {negachar}'s savagery{loss_msg}."
+                    "{content}\n**{author}** fumbled and died to **{negachar}'s** savagery{loss_msg}."
                 ).format(
                     content=nega_msg.content,
-                    author=bold(ctx.author.display_name),
+                    author=self.escape(ctx.author.display_name),
                     negachar=negachar,
                     loss_msg=loss_msg,
                 )
@@ -2566,11 +2564,11 @@ class Adventure(BaseCog):
         elif roll == 50 and versus < 50:
             await nega_msg.edit(
                 content=_(
-                    "{content}\n{author} decapitated {negachar}. You gain {xp_gain} xp and take "
+                    "{content}\n**{author}** decapitated **{negachar}**. You gain {xp_gain} xp and take "
                     "{offering} {currency_name} back from the shadowy corpse."
                 ).format(
                     content=nega_msg.content,
-                    author=bold(ctx.author.display_name),
+                    author=self.escape(ctx.author.display_name),
                     negachar=negachar,
                     xp_gain=humanize_number(xp_won),
                     offering=humanize_number(offering),
@@ -2581,13 +2579,13 @@ class Adventure(BaseCog):
         elif roll > versus:
             await nega_msg.edit(
                 content=_(
-                    "{content}\n{author} "
-                    "{dice}({roll}) bravely defeated {negachar} {dice}({versus}). "
+                    "{content}\n**{author}** "
+                    "{dice}({roll}) bravely defeated **{negachar}** {dice}({versus}). "
                     "You gain {xp_gain} xp."
                 ).format(
                     dice=self.emojis.dice,
                     content=nega_msg.content,
-                    author=bold(ctx.author.display_name),
+                    author=self.escape(ctx.author.display_name),
                     roll=roll,
                     negachar=negachar,
                     versus=versus,
@@ -2598,12 +2596,12 @@ class Adventure(BaseCog):
         elif roll == versus:
             await nega_msg.edit(
                 content=_(
-                    "{content}\n{author} "
-                    "{dice}({roll}) almost killed {negachar} {dice}({versus})."
+                    "{content}\n**{author}** "
+                    "{dice}({roll}) almost killed **{negachar}** {dice}({versus})."
                 ).format(
                     dice=self.emojis.dice,
                     content=nega_msg.content,
-                    author=bold(ctx.author.display_name),
+                    author=self.escape(ctx.author.display_name),
                     roll=roll,
                     negachar=negachar,
                     versus=versus,
@@ -2618,7 +2616,7 @@ class Adventure(BaseCog):
                 await bank.set_balance(ctx.author, 0)
                 loss = _("all of their")
             loss_msg = _(
-                ", losing {loss} {currency_name} as {negachar} looted their backpack"
+                ", losing {loss} {currency_name} as **{negachar}** looted their backpack"
             ).format(
                 loss=humanize_number(loss) if not isinstance(loss, str) else loss,
                 currency_name=currency_name,
@@ -2626,10 +2624,10 @@ class Adventure(BaseCog):
             )
             await nega_msg.edit(
                 content=_(
-                    "{author} {dice}({roll}) was killed by {negachar} {dice}({versus}){loss_msg}."
+                    "**{author}** {dice}({roll}) was killed by **{negachar}** {dice}({versus}){loss_msg}."
                 ).format(
                     dice=self.emojis.dice,
-                    author=bold(ctx.author.display_name),
+                    author=self.escape(ctx.author.display_name),
                     roll=roll,
                     negachar=negachar,
                     versus=versus,
@@ -2899,8 +2897,8 @@ class Adventure(BaseCog):
 
                 await smart_embed(
                     ctx,
-                    _("{bless}📜 {c} is starting an inspiring sermon. {bless}📜").format(
-                        c=bold(self.escape(ctx.author.display_name)),
+                    _("{bless}📜 **{c}** is starting an inspiring sermon. {bless}📜").format(
+                        c=self.escape(ctx.author.display_name),
                         bless=self.emojis.skills.bless,
                     ),
                 )
@@ -2954,8 +2952,8 @@ class Adventure(BaseCog):
                     await self.config.user(ctx.author).set(c.to_json())
                 await smart_embed(
                     ctx,
-                    _("🗯️{skill} {c} is starting to froth at the mouth... {skill}🗯️").format(
-                        c=bold(self.escape(ctx.author.display_name)),
+                    _("🗯️{skill} **{c}** is starting to froth at the mouth... {skill}🗯️").format(
+                        c=self.escape(ctx.author.display_name),
                         skill=self.emojis.skills.berserker,
                     ),
                 )
@@ -3009,8 +3007,8 @@ class Adventure(BaseCog):
                     await self.config.user(ctx.author).set(c.to_json())
                 await smart_embed(
                     ctx,
-                    _("{skill} {c} is focusing all of their energy...{skill}").format(
-                        c=bold(self.escape(ctx.author.display_name)),
+                    _("{skill} **{c}** is focusing all of their energy...{skill}").format(
+                        c=self.escape(ctx.author.display_name),
                         skill=self.emojis.skills.wizzard,
                     ),
                 )
@@ -3065,8 +3063,8 @@ class Adventure(BaseCog):
                     await self.config.user(ctx.author).set(c.to_json())
                     await smart_embed(
                         ctx,
-                        _("{skill} {c} is whipping up a performance...{skill}").format(
-                            c=bold(self.escape(ctx.author.display_name)),
+                        _("{skill} **{c}** is whipping up a performance...{skill}").format(
+                            c=self.escape(ctx.author.display_name),
                             skill=self.emojis.skills.bard,
                         ),
                     )
@@ -3162,12 +3160,12 @@ class Adventure(BaseCog):
             await smart_embed(
                 ctx,
                 _(
-                    "{author}, you currently have {skillpoints} unspent skillpoints.\n"
+                    "**{author}**, you currently have **{skillpoints}** unspent skillpoints.\n"
                     "If you want to put them towards a permanent attack, diplomacy or intelligence bonus, use "
                     "`{prefix}skill attack`, `{prefix}skill diplomacy` or  `{prefix}skill intelligence`"
                 ).format(
                     author=self.escape(ctx.author.display_name),
-                    skillpoints=bold(str(c.skill["pool"])),
+                    skillpoints=str(c.skill["pool"]),
                     prefix=ctx.prefix,
                 ),
             )
@@ -3526,15 +3524,15 @@ class Adventure(BaseCog):
         ).format(
             attr=session.attribute,
             chall=session.challenge,
-            reactions=bold(_("Fight"))
-            + " - "
-            + bold(_("Spell"))
-            + " - "
-            + bold(_("Talk"))
-            + " - "
-            + bold(_("Pray"))
-            + " - "
-            + bold(_("Run")),
+            reactions="**" + _("Fight")
+            + "** - **"
+            + _("Spell")
+            + "** - **"
+            + _("Talk")
+            + "** - **"
+            + _("Pray")
+            + "** - **"
+            + _("Run") + "**",
         )
         basilisk_text = _(
             "but **a{attr} {chall}** stepped out looking around. \n\n"
@@ -3544,15 +3542,15 @@ class Adventure(BaseCog):
         ).format(
             attr=session.attribute,
             chall=session.challenge,
-            reactions=bold(_("Fight"))
-            + " - "
-            + bold(_("Spell"))
-            + " - "
-            + bold(_("Talk"))
-            + " - "
-            + bold(_("Pray"))
-            + " - "
-            + bold(_("Run")),
+            reactions="**" + _("Fight")
+            + "** - **"
+            + _("Spell")
+            + "** - **"
+            + _("Talk")
+            + "** - **"
+            + _("Pray")
+            + "** - **"
+            + _("Run") + "**",
         )
         normal_text = _(
             "but **a{attr} {chall}** "
@@ -3564,15 +3562,15 @@ class Adventure(BaseCog):
             attr=session.attribute,
             chall=session.challenge,
             threat=random.choice(self.THREATEE),
-            reactions=bold(_("Fight"))
-            + " - "
-            + bold(_("Spell"))
-            + " - "
-            + bold(_("Talk"))
-            + " - "
-            + bold(_("Pray"))
-            + " - "
-            + bold(_("Run")),
+            reactions="**" + _("Fight")
+            + "** - **"
+            + _("Spell")
+            + "** - **"
+            + _("Talk")
+            + "** - **"
+            + _("Pray")
+            + "** - **"
+            + _("Run") + "**",
         )
 
         embed = discord.Embed(colour=discord.Colour.blurple())
@@ -3735,9 +3733,9 @@ class Adventure(BaseCog):
                     if user_id not in self._react_messaged:
                         await reaction.message.channel.send(
                             _(
-                                "{c}, you are already in an existing adventure. "
+                                "**{c}**, you are already in an existing adventure. "
                                 "Wait for it to finish before joining another one."
-                            ).format(c=bold(self.escape(user.display_name)))
+                            ).format(c=self.escape(user.display_name))
                         )
                         self._react_messaged.append(user_id)
                         return
@@ -3861,7 +3859,7 @@ class Adventure(BaseCog):
         self._sessions[ctx.guild.id].run = run_list
         self._sessions[ctx.guild.id].magic = magic_list
 
-        people = len(fight_list) + len(talk_list) + len(pray_list) + len(run_list)
+        people = len(fight_list) + list(magic_list) + len(talk_list) + len(pray_list) + len(run_list)
 
         challenge = session.challenge
 
@@ -3924,30 +3922,30 @@ class Adventure(BaseCog):
         pray_name_list = []
         repair_list = []
         for user in fight_list:
-            fight_name_list.append(self.escape(user.display_name))
+            fight_name_list.append(f"**{self.escape(user.display_name)}**")
         for user in magic_list:
-            wizard_name_list.append(self.escape(user.display_name))
+            wizard_name_list.append(f"**{self.escape(user.display_name)}**")
         for user in talk_list:
-            talk_name_list.append(self.escape(user.display_name))
+            talk_name_list.append(f"**{self.escape(user.display_name)}**")
         for user in pray_list:
-            pray_name_list.append(self.escape(user.display_name))
+            pray_name_list.append(f"**{self.escape(user.display_name)}**")
 
-        fighters = " and ".join(
+        fighters_final_string = _(" and ").join(
             [", ".join(fight_name_list[:-1]), fight_name_list[-1]]
             if len(fight_name_list) > 2
             else fight_name_list
         )
-        wizards = " and ".join(
+        wizards_final_string = _(" and ").join(
             [", ".join(wizard_name_list[:-1]), wizard_name_list[-1]]
             if len(wizard_name_list) > 2
             else wizard_name_list
         )
-        talkers = " and ".join(
+        talkers_final_string = _(" and ").join(
             [", ".join(talk_name_list[:-1]), talk_name_list[-1]]
             if len(talk_name_list) > 2
             else talk_name_list
         )
-        preachermen = " and ".join(
+        preachermen_final_string = _(" and ").join(
             [", ".join(pray_name_list[:-1]), pray_name_list[-1]]
             if len(pray_name_list) > 2
             else pray_name_list
@@ -4048,8 +4046,8 @@ class Adventure(BaseCog):
                 for user, loss in repair_list:
                     if user not in temp_repair:
                         loss_list.append(
-                            _("{user} used {loss} {currency_name}").format(
-                                user=bold(self.escape(user.display_name)),
+                            _("**{user}** used {loss} {currency_name}").format(
+                                user=self.escape(user.display_name),
                                 loss=humanize_number(loss),
                                 currency_name=currency_name,
                             )
@@ -4096,7 +4094,7 @@ class Adventure(BaseCog):
                 for user, loss in repair_list:
                     if user not in temp_repair:
                         loss_list.append(
-                            f"{bold(self.escape(user.display_name))} used {humanize_number(loss)} {currency_name}"
+                            f"**{self.escape(user.display_name)}** used {humanize_number(loss)} {currency_name}"
                         )
                         temp_repair.append(user)
             miniboss = session.challenge
@@ -4112,22 +4110,22 @@ class Adventure(BaseCog):
         amount += int(amount * (0.25 * people))
         if people == 1:
             if slain:
-                group = fighters if len(fight_list) == 1 else wizards
+                group = fighters_final_string if len(fight_list) == 1 else wizards_final_string
                 text = _("{b_group} has slain the {chall} in an epic battle!").format(
-                    b_group=bold(group), chall=session.challenge
+                    b_group=group, chall=session.challenge
                 )
                 text += await self._reward(
                     ctx,
                     fight_list + magic_list + pray_list,
                     amount,
-                    round(((attack if group == fighters else magic) / hp) * 0.25),
+                    round(((attack if group == fighters_final_string else magic) / hp) * 0.25),
                     treasure,
                 )
 
             if persuaded:
                 text = _(
                     "{b_talkers} almost died in battle, but confounded the {chall} in the last second."
-                ).format(b_talkers=bold(talkers), chall=session.challenge)
+                ).format(b_talkers=talk_name_list, chall=session.challenge)
                 text += await self._reward(
                     ctx, talk_list + pray_list, amount, round((diplomacy / dipl) * 0.25), treasure
                 )
@@ -4167,7 +4165,7 @@ class Adventure(BaseCog):
                     for user, loss in repair_list:
                         if user not in temp_repair:
                             loss_list.append(
-                                f"{bold(self.escape(user.display_name))} used {humanize_number(loss)} {currency_name}"
+                                f"**{self.escape(user.display_name)}** used {humanize_number(loss)} {currency_name}"
                             )
                             temp_repair.append(user)
                 repair_text = (
@@ -4198,24 +4196,24 @@ class Adventure(BaseCog):
                             "{b_wizard} chanted magical incantations and "
                             "{b_preachers} aided in {god}'s name."
                         ).format(
-                            b_fighters=bold(fighters),
+                            b_fighters=fighters_final_string,
                             chall=session.challenge,
-                            b_talkers=bold(talkers),
-                            b_wizard=bold(wizards),
-                            b_preachers=bold(preachermen),
+                            b_talkers=talkers_final_string,
+                            b_wizard=wizards_final_string,
+                            b_preachers=preachermen_final_string,
                             god=god,
                         )
                     else:
-                        group = fighters if len(fight_list) > 0 else wizards
+                        group = fighters_final_string if len(fight_list) > 0 else wizards_final_string
                         text = _(
                             "{b_group} slayed the {chall} "
                             "in battle, while {b_talkers} distracted with flattery and "
                             "{b_preachers} aided in {god}'s name."
                         ).format(
-                            b_group=bold(group),
+                            b_group=group,
                             chall=session.challenge,
-                            b_talkers=bold(talkers),
-                            b_preachers=bold(preachermen),
+                            b_talkers=talkers_final_string,
+                            b_preachers=preachermen_final_string,
                             god=god,
                         )
                 else:
@@ -4225,18 +4223,18 @@ class Adventure(BaseCog):
                             "in battle, while {b_talkers} distracted with insults and "
                             "{b_wizard} chanted magical incantations."
                         ).format(
-                            b_fighters=bold(fighters),
+                            b_fighters=fighters_final_string,
                             chall=session.challenge,
-                            b_talkers=bold(talkers),
-                            b_wizard=bold(wizards),
+                            b_talkers=talkers_final_string,
+                            b_wizard=wizards_final_string,
                         )
                     else:
-                        group = fighters if len(fight_list) > 0 else wizards
+                        group = fighters_final_string if len(fight_list) > 0 else wizards_final_string
                         text = _(
                             "{b_group} slayed the {chall} "
                             "in battle, while {b_talkers} distracted with insults."
                         ).format(
-                            b_group=bold(group), chall=session.challenge, b_talkers=bold(talkers)
+                            b_group=group, chall=session.challenge, b_talkers=talkers_final_string
                         )
                 text += await self._reward(
                     ctx,
@@ -4251,13 +4249,13 @@ class Adventure(BaseCog):
                     text = _(
                         "{b_talkers} talked the {chall} " "down with {b_preachers}'s blessing."
                     ).format(
-                        b_talkers=bold(talkers),
+                        b_talkers=talkers_final_string,
                         chall=session.challenge,
-                        b_preachers=bold(preachermen),
+                        b_preachers=preachermen_final_string,
                     )
                 else:
                     text = _("{b_talkers} talked the {chall} down.").format(
-                        b_talkers=bold(talkers), chall=session.challenge
+                        b_talkers=talkers_final_string, chall=session.challenge
                     )
                 text += await self._reward(
                     ctx, talk_list + pray_list, amount, round((diplomacy / dipl) * 0.25), treasure
@@ -4271,20 +4269,20 @@ class Adventure(BaseCog):
                             "in a most heroic battle with a little help from {b_preachers} and "
                             "{b_wizard} chanting magical incantations."
                         ).format(
-                            b_fighters=bold(fighters),
+                            b_fighters=fighters_final_string,
                             chall=session.challenge,
-                            b_preachers=bold(preachermen),
-                            b_wizard=bold(wizards),
+                            b_preachers=preachermen_final_string,
+                            b_wizard=wizards_final_string,
                         )
                     else:
-                        group = fighters if len(fight_list) > 0 else wizards
+                        group = fighters_final_string if len(fight_list) > 0 else wizards_final_string
                         text = _(
                             "{b_group} killed the {chall} "
                             "in a most heroic battle with a little help from {b_preachers}."
                         ).format(
-                            b_group=bold(group),
+                            b_group=group,
                             chall=session.challenge,
-                            b_preachers=bold(preachermen),
+                            b_preachers=preachermen_final_string,
                         )
                 else:
                     if len(magic_list) > 0 and len(fight_list) > 0:
@@ -4292,14 +4290,14 @@ class Adventure(BaseCog):
                             "{b_fighters} killed the {chall} "
                             "in a most heroic battle with {b_wizard} chanting magical incantations."
                         ).format(
-                            b_fighters=bold(fighters),
+                            b_fighters=fighters_final_string,
                             chall=session.challenge,
-                            b_wizard=bold(wizards),
+                            b_wizard=wizards_final_string,
                         )
                     else:
-                        group = fighters if len(fight_list) > 0 else wizards
+                        group = fighters_final_string if len(fight_list) > 0 else wizards_final_string
                         text = _("{b_group} killed the {chall} in an epic fight.").format(
-                            b_group=bold(group), chall=session.challenge
+                            b_group=group, chall=session.challenge
                         )
                 text += await self._reward(
                     ctx,
@@ -4372,8 +4370,8 @@ class Adventure(BaseCog):
                     for user, loss in repair_list:
                         if user not in temp_repair:
                             loss_list.append(
-                                _("{user} used {loss} {currency_name}").format(
-                                    user=bold(self.escape(user.display_name)),
+                                _("**{user}** used {loss} {currency_name}").format(
+                                    user=self.escape(user.display_name),
                                     loss=humanize_number(loss),
                                     currency_name=currency_name,
                                 )
@@ -4435,8 +4433,8 @@ class Adventure(BaseCog):
         session = self._sessions[guild_id]
         if len(list(session.run)) != 0:
             for user in session.run:
-                runners.append(self.escape(user.display_name))
-            msg += _("{} just ran away.\n").format(bold(humanize_list(runners)))
+                runners.append(f"**{self.escape(user.display_name)}**")
+            msg += _("{} just ran away.\n").format(humanize_list(runners))
         return (attack, diplomacy, magic, msg)
 
     async def handle_fight(self, guild_id, fumblelist, critlist, attack, magic, challenge):
@@ -4506,7 +4504,7 @@ class Adventure(BaseCog):
 
             att_value = c.total_att
             if roll == 1:
-                msg += _("{} fumbled the attack.\n").format(bold(self.escape(user.display_name)))
+                msg += _("**{}** fumbled the attack.\n").format(self.escape(user.display_name))
                 fumblelist.append(user)
                 fumble_count += 1
                 if c.heroclass["name"] == "Berserker" and c.heroclass["ability"]:
@@ -4515,7 +4513,7 @@ class Adventure(BaseCog):
                     bonus = max(bonus_roll, int((roll + att_value) * bonus_multi))
                     attack += int((roll - bonus + att_value) / pdef)
                     report += (
-                        f"{bold(self.escape(user.display_name))}: "
+                        f"**{self.escape(user.display_name)}**: "
                         f"{self.emojis.dice}({roll}) + {self.emojis.berserk}{bonus} + {self.emojis.attack}{str(att_value)}\n"
                     )
             elif roll == 20 or c.heroclass["name"] == "Berserker":
@@ -4523,8 +4521,8 @@ class Adventure(BaseCog):
                 crit_bonus = 0
                 base_bonus = random.randint(5, 10) + c.rebirths // 3
                 if roll == 20:
-                    msg += _("{} landed a critical hit.\n").format(
-                        bold(self.escape(user.display_name))
+                    msg += _("**{}** landed a critical hit.\n").format(
+                        self.escape(user.display_name)
                     )
                     critlist.append(user)
                     crit_bonus = random.randint(5, 20) + 2 * c.rebirths // 5
@@ -4535,12 +4533,12 @@ class Adventure(BaseCog):
                 attack += int((roll + base_bonus + crit_bonus + att_value) / pdef)
                 bonus = base_str + crit_str
                 report += (
-                    f"{bold(self.escape(user.display_name))}: "
+                    f"**{self.escape(user.display_name)}**: "
                     f"{self.emojis.dice}({roll}) + {self.emojis.berserk}{bonus} + {self.emojis.attack}{str(att_value)}\n"
                 )
             else:
                 attack += int((roll + att_value) / pdef) + c.rebirths // 5
-                report += f"{bold(self.escape(user.display_name))}: {self.emojis.dice}({roll}) + {self.emojis.attack}{str(att_value)}\n"
+                report += f"**{self.escape(user.display_name)}**: {self.emojis.dice}({roll}) + {self.emojis.attack}{str(att_value)}\n"
         for user in magic_list:
             try:
                 c = await Character.from_json(self.config, user)
@@ -4565,8 +4563,8 @@ class Adventure(BaseCog):
                     roll = random.randint(roll, 20)
             int_value = c.total_int
             if roll == 1:
-                msg += _("{}{} almost set themselves on fire.\n").format(
-                    failed_emoji, bold(self.escape(user.display_name))
+                msg += _("{}**{}** almost set themselves on fire.\n").format(
+                    failed_emoji, self.escape(user.display_name)
                 )
                 fumblelist.append(user)
                 fumble_count += 1
@@ -4576,7 +4574,7 @@ class Adventure(BaseCog):
                     bonus = max(bonus_roll, int((roll + int_value) * bonus_multi))
                     magic += int((roll - bonus + int_value) / mdef)
                     report += (
-                        f"{bold(self.escape(user.display_name))}: "
+                        f"**{self.escape(user.display_name)}**: "
                         f"{self.emojis.dice}({roll}) + {self.emojis.magic_crit}{bonus} + {self.emojis.magic}{str(int_value)}\n"
                     )
             elif roll == 20 or (c.heroclass["name"] == "Wizard"):
@@ -4585,8 +4583,8 @@ class Adventure(BaseCog):
                 base_bonus = random.randint(5, 10) + c.rebirths // 3
                 base_str = f"{self.emojis.magic_crit}️ {base_bonus}"
                 if roll == 20:
-                    msg += _("{} had a surge of energy.\n").format(
-                        bold(self.escape(user.display_name))
+                    msg += _("**{}** had a surge of energy.\n").format(
+                        self.escape(user.display_name)
                     )
                     critlist.append(user)
                     crit_bonus = random.randint(5, 20) + 2 * c.rebirths // 5
@@ -4597,12 +4595,12 @@ class Adventure(BaseCog):
                 magic += int((roll + base_bonus + crit_bonus + int_value) / mdef)
                 bonus = base_str + crit_str
                 report += (
-                    f"{bold(self.escape(user.display_name))}: "
+                    f"**{self.escape(user.display_name)}**: "
                     f"{self.emojis.dice}({roll}) + {bonus} + {self.emojis.magic}{str(int_value)}\n"
                 )
             else:
                 magic += int((roll + int_value) / mdef) + c.rebirths // 5
-                report += f"{bold(self.escape(user.display_name))}: {self.emojis.dice}({roll}) + {self.emojis.magic}{str(int_value)}\n"
+                report += f"**{self.escape(user.display_name)}**: {self.emojis.dice}({roll}) + {self.emojis.magic}{str(int_value)}\n"
         if fumble_count == len(attack_list):
             report += _("No one!")
         msg += report + "\n"
@@ -4640,8 +4638,8 @@ class Adventure(BaseCog):
                 roll = random.randint((1 + mod), 20)
                 if len(fight_list + talk_list + magic_list) == 0:
                     msg += _(
-                        "{} blessed like a madman but nobody was there to receive it.\n"
-                    ).format(bold(self.escape(user.display_name)))
+                        "**{}* blessed like a madman but nobody was there to receive it.\n"
+                    ).format(self.escape(user.display_name))
 
                 if roll == 1:
                     attack -= 5 * len(fight_list)
@@ -4649,10 +4647,10 @@ class Adventure(BaseCog):
                     magic -= 5 * len(magic_list)
                     fumblelist.append(user)
                     msg += _(
-                        "{user}'s sermon offended the mighty {god}. {failed_emoji}"
+                        "**{user}'s** sermon offended the mighty {god}. {failed_emoji}"
                         "(-{len_f_list}{attack}/-{len_t_list}{talk}/-{len_m_list}{magic})\n"
                     ).format(
-                        user=bold(self.escape(user.display_name)),
+                        user=self.escape(user.display_name),
                         god=god,
                         failed_emoji=failed_emoji,
                         attack=self.emojis.attack,
@@ -4675,11 +4673,11 @@ class Adventure(BaseCog):
                         )
                     else:
                         roll_msg = _(
-                            "{user} blessed you all in {god}'s name. "
+                            "**{user}** blessed you all in {god}'s name. "
                             "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic})\n"
                         )
                     msg += roll_msg.format(
-                        user=bold(self.escape(user.display_name)),
+                        user=self.escape(user.display_name),
                         god=god,
                         attack=self.emojis.attack,
                         talk=self.emojis.talk,
@@ -4691,8 +4689,8 @@ class Adventure(BaseCog):
             else:
                 roll = random.randint(1, 4)
                 if len(fight_list + talk_list + magic_list) == 0:
-                    msg += _("{} prayed like a madman but nobody else helped them.\n").format(
-                        bold(self.escape(user.display_name))
+                    msg += _("**{}** prayed like a madman but nobody else helped them.\n").format(
+                        self.escape(user.display_name)
                     )
 
                 elif roll == 4:
@@ -4700,10 +4698,10 @@ class Adventure(BaseCog):
                     diplomacy += 10 * (len(talk_list) + c.rebirths // 15)
                     magic += 10 * (len(magic_list) + c.rebirths // 15)
                     msg += _(
-                        "{user}'s prayer called upon the mighty {god} to help you. "
+                        "**{user}'s** prayer called upon the mighty {god} to help you. "
                         "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic})\n"
                     ).format(
-                        user=bold(self.escape(user.display_name)),
+                        user=self.escape(user.display_name),
                         god=god,
                         attack=self.emojis.attack,
                         talk=self.emojis.talk,
@@ -4714,8 +4712,8 @@ class Adventure(BaseCog):
                     )
                 else:
                     fumblelist.append(user)
-                    msg += _("{}{}'s prayers went unanswered.\n").format(
-                        failed_emoji, bold(self.escape(user.display_name))
+                    msg += _("{}**{}'s** prayers went unanswered.\n").format(
+                        failed_emoji, self.escape(user.display_name)
                     )
         for user in fumblelist:
             if user in pray_list:
@@ -4747,8 +4745,8 @@ class Adventure(BaseCog):
             roll = random.randint((1 + mod), 20)
             dipl_value = c.total_cha
             if roll == 1:
-                msg += _("{}{} accidentally offended the enemy.\n").format(
-                    failed_emoji, bold(self.escape(user.display_name))
+                msg += _("{}**{}** accidentally offended the enemy.\n").format(
+                    failed_emoji, self.escape(user.display_name)
                 )
                 fumblelist.append(user)
                 fumble_count += 1
@@ -4756,7 +4754,7 @@ class Adventure(BaseCog):
                     bonus = random.randint(5, 15)
                     diplomacy += roll - bonus + dipl_value
                     report += (
-                        f"{bold(self.escape(user.display_name))} "
+                        f"**{self.escape(user.display_name)}** "
                         f"🎲({roll}) +💥{bonus} +🗨{str(dipl_value)} | "
                     )
             elif roll == 20 or c.heroclass["name"] == "Bard":
@@ -4764,8 +4762,8 @@ class Adventure(BaseCog):
                 crit_bonus = 0
                 base_bonus = random.randint(5, 10) + c.rebirths // 3
                 if roll == 20:
-                    msg += _("{} made a compelling argument.\n").format(
-                        bold(self.escape(user.display_name))
+                    msg += _("**{}** made a compelling argument.\n").format(
+                        self.escape(user.display_name)
                     )
                     critlist.append(user)
                     crit_bonus = random.randint(5, 20) + 2 * c.rebirths // 5
@@ -4777,12 +4775,12 @@ class Adventure(BaseCog):
                 diplomacy += roll + base_bonus + crit_bonus + dipl_value
                 bonus = base_str + crit_str
                 report += (
-                    f"{bold(self.escape(user.display_name))} "
+                    f"**{self.escape(user.display_name)}** "
                     f"{self.emojis.dice}({roll}) + {bonus} + {self.emojis.talk}{str(dipl_value)}\n"
                 )
             else:
                 diplomacy += roll + dipl_value + c.rebirths // 5
-                report += f"{bold(self.escape(user.display_name))} {self.emojis.dice}({roll}) + {self.emojis.talk}{str(dipl_value)}\n"
+                report += f"**{self.escape(user.display_name)}** {self.emojis.dice}({roll}) + {self.emojis.talk}{str(dipl_value)}\n"
         if fumble_count == len(talk_list):
             report += _("No one!")
         msg = msg + report + "\n"
@@ -5326,10 +5324,10 @@ class Adventure(BaseCog):
                 self._rewards[user.id]["cp"] = usercp
                 percent = round((c.heroclass["pet"]["bonus"] - 1.0) * 100)
                 phrase = _(
-                    "\n{user} received a {percent}% reward bonus from their {pet_name}."
+                    "\n**{user}** received a **{percent}%** reward bonus from their {pet_name}."
                 ).format(
-                    user=bold(self.escape(user.display_name)),
-                    percent=bold(str(percent)),
+                    user=self.escape(user.display_name),
+                    percent=str(percent),
                     pet_name=c.heroclass["pet"]["name"],
                 )
 
@@ -5355,10 +5353,10 @@ class Adventure(BaseCog):
             types = [" normal", " rare", "n epic", " legendary"]
             chest_type = types[special.index(1)]
             phrase += _(
-                "\n{b_reward} {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats). "
+                "\n**{b_reward}** {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats). "
                 "You also secured **a{chest_type} treasure chest**!"
             ).format(
-                b_reward=bold(to_reward),
+                b_reward=to_reward,
                 word=word,
                 xp=humanize_number(newxp),
                 cp=humanize_number(newcp),
@@ -5367,10 +5365,10 @@ class Adventure(BaseCog):
             )
         elif special is not False and sum(special) > 1:
             phrase += _(
-                "\n{b_reward} {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats). "
+                "\n**{b_reward}** {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats). "
                 "You also secured **several treasure chests**!"
             ).format(
-                b_reward=bold(to_reward),
+                b_reward=to_reward,
                 word=word,
                 xp=humanize_number(newxp),
                 cp=humanize_number(newcp),
@@ -5378,9 +5376,9 @@ class Adventure(BaseCog):
             )
         else:
             phrase += _(
-                "\n{b_reward} {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats)."
+                "\n**{b_reward}** {word} been awarded {xp} xp and found {cp} {currency_name} (split based on stats)."
             ).format(
-                b_reward=bold(to_reward),
+                b_reward=to_reward,
                 word=word,
                 xp=humanize_number(newxp),
                 cp=humanize_number(newcp),
