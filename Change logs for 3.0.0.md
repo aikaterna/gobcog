@@ -8,52 +8,52 @@
   - Between 10 - 19 rebirths you get 1 extra base stats per rebirth
   - Between 20 - 29 rebirths you get 5 extra base stats per rebirth
   - After 30 rebirths you get 3 extra base stats per rebirth
-- Characters are guaranteed some item chests after their rebirth
+- Characters are given chests after rebirth as follows:
   - 1 common chest per 5 rebirths they have
   - 1 rare chest per 10 rebirths they have
   - 1 epic chest per 20 rebirths they have
-  - 1 legendary test per 50 rebirths they have
-#### Mechanics affect by rebirths
-As your rebirths increases the following will change
-- The amount of XP you gain for activities will also increase
-- The amount of currency you gain for activities will also increase
-- You will get a better items from loot chests
-- The amount you sell items for will be higher
-- Characters with more rebirths will be more likely to encounter stronger monsters that will rebirth more XP
-- Character will more rebirths will be able to convert lesser loot chest into higher quality loot chests
-- Characters will more rebirths will have their skill cooldowns significantly reduced
-- Characters can only trade items to other users with the same or higher number of rebirths.
+  - 1 legendary chest per 50 rebirths they have
+#### Mechanics affected by rebirths
+Each time you Rebirth the following incremental bonuses are given: 
+- The amount of XP you gain for activities
+- The amount of currency rewarded for activities
+- Increased chance for better items from loot chests
+- Higher selling price for items you choose to sell
+- Higher chance to encounter stronger monsters that give boosted XP 
+- The ability to convert lesser loot chests into higher quality loot chests
+- Cooldowns for Skills are reduced with each rebirth! 
+note: Users can only trade items to other users with the same or higher number of rebirths.
 #### How to rebirth
-- When your character reach max level they can run `[p]rebirth`
-- This will cost all their current currency
-- This will remove all their items with the following exceptions
+- When your character reaches its max level simply use the following command: `[p]rebirth`
+- Takes all of your currency 
+- All items will be lost when you rebirth- with the following exceptions
   - Set items will stay with you forever
   - Tinkerer items will stay with you as long as you are a tinkerer
   - Legendary items will stay with you for 3 rebirths after you get them
-     - Say you get a legendary item with you on level 30 Rebirth 3, this item will stay with you until your 6th rebirth
-  - Any loot chests or other items you has prior to rebirthing will be removed
+     - Say you get a legendary item on level 30 Rebirth 3, this item will stay with you until your 6th rebirth
+  - Any loot chests or other items will also be removed
   - You will keep your class upon rebirthing (Say Hello to level 1 Berserkers)
 ### Max Level
-- New dynamic Max levels based on number of rebirths your character has.
+- New dynamic Max level based on your rebirth count.
   - For character with 0 rebirths the max level is 5
   - For character with 1 rebirth the Max level is 20
   - For character with 2 to 9 rebirths the max level increases by 5 per rebirth (25, 30, 35...)
   - For character with 10 to 19 rebirths the max level increases by 10 per rebirth (70, 80, 90...)
   - For character with 20 to 38 rebirths the max level increases by 5 per rebirth (170, 175, 180..)
   - For character with more than 38 rebirths the max level will always be 255
-- Characters will stop gaining XP once their character reach max level
-## Items
+- Characters will stop gaining XP once their character reaches max level
+## Items (variety/quality)
 - Over 84 thousand new common items.
 - Over 84 thousand new rare items.
 - Over 84 thousand new epic items.
 - Over 84 thousand new legendary items.
-- 12 New Sets.
+- 12 all New Sets, comprised of very powerful items from the new "Set" quality. (see below)
 ### Item Level
-- Items now have dynamically generated Item levels based on their stats.
+- Items now have dynamically generated Item levels based on their stats. 
 ### Set Items
 - Sets provide significant bonuses when all pieces are equipped.
 - The 12 new sets can be broken down in a total of 86 Set items.
-- Set Bonuses are as follow
+- Set Bonuses are as follows
     - Extra Attack points
     - Extra Dexterity points
     - Extra Intelligence points
