@@ -4125,7 +4125,7 @@ class Adventure(BaseCog):
             if persuaded:
                 text = _(
                     "{b_talkers} almost died in battle, but confounded the {chall} in the last second."
-                ).format(b_talkers=talk_name_list, chall=session.challenge)
+                ).format(b_talkers=talkers_final_string, chall=session.challenge)
                 text += await self._reward(
                     ctx, talk_list + pray_list, amount, round((diplomacy / dipl) * 0.25), treasure
                 )
