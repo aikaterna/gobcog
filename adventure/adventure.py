@@ -5360,11 +5360,13 @@ class Adventure(BaseCog):
             if roll == 5 and c.heroclass["name"] == "Ranger" and c.heroclass["pet"]:
                 petxp = int(userxp * c.heroclass["pet"]["bonus"])
                 newxp += petxp
+                userxp += petxp
                 log.debug(f"{user}: user gained the following xp: {userxp}")
                 self._rewards[user.id]["xp"] = userxp
                 petcp = int(usercp * c.heroclass["pet"]["bonus"])
                 newcp += petcp
-                self._rewards[user.id]["cp"] = usercp
+                usercp += petcp
+                self._rewards[user.id]["cp"] = usercp + petcp
                 percent = round((c.heroclass["pet"]["bonus"] - 1.0) * 100)
                 phrase = _(
                     "\n**{user}** received a **{percent}%** reward bonus from their {pet_name}."
