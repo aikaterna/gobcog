@@ -2685,7 +2685,7 @@ class Adventure(BaseCog):
 
         Use the box rarity type with the command: normal, rare, epic, legendary or set.
         """
-        if number > 100:
+        if number > 100 or number < 1:
             return await smart_embed(ctx, _("Nice try :smirk:."),)
         if self.in_adventure(ctx):
             return await smart_embed(
