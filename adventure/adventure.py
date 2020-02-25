@@ -5069,7 +5069,7 @@ class Adventure(BaseCog):
                 if pet_crit == 100:
                     roll = max_roll
                 elif roll <= 25 and pet_crit >= 95:
-                    roll = random.randint(25, max_roll)
+                    roll = random.randint(max_roll-5, max_roll)
                 elif roll > 25 and pet_crit >= 95:
                     roll = random.randint(roll, max_roll)
 
@@ -5135,7 +5135,7 @@ class Adventure(BaseCog):
                 if pet_crit == 100:
                     roll = max_roll
                 elif roll <= 25 and pet_crit >= 95:
-                    roll = random.randint(25, max_roll)
+                    roll = random.randint(max_roll-5, max_roll)
                 elif roll > 25 and pet_crit >= 95:
                     roll = random.randint(roll, max_roll)
             int_value = c.total_int
