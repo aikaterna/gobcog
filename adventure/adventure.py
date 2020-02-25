@@ -3940,34 +3940,41 @@ class Adventure(BaseCog):
 
     def _dynamic_monster_stats(self, choice: MutableMapping):
         stat_range = self._adv_results.get_stat_range()
+        stat_type = stat_range["stat_type"]
         monster_hp = choice["hp"]
         monster_diplo = choice["dipl"]
+
         monster_pdef = choice["pdef"]
         monster_mdef = choice["mdef"]
-        multiplier = max(random.random(), random.random())
-        if bool(random.getrandbits(1)):  # Dynamically strength
-            new_hp = monster_hp + (monster_hp * multiplier)
-        else:  # Dynamically Weaken
-            new_hp = max(monster_hp - (monster_hp * multiplier), monster_hp * 0.7)
 
-        if bool(random.getrandbits(1)):  # Dynamically strength
-            new_diplo = monster_diplo + (monster_diplo * multiplier)
-        else:  # Dynamically Weaken
-            new_diplo = max(monster_diplo - (monster_diplo * multiplier), monster_diplo * 0.7)
+        if stat_type == "hp":
+            min_stat, max_stat = (
+                stat_range["min_stat"] or monster_hp,
+                stat_range["max_stat"] or monster_hp,
+            )
+            min_stat_percent = min(abs(min_stat / monster_hp), monster_hp)
+            max_stat_percent = max(abs(max_stat / monster_hp), monster_hp)
+            hp_range = [min_stat_percent * monster_hp, max_stat_percent * monster_hp]
+            diplo_range = [monster_diplo, monster_diplo]
+        else:
+            min_stat, max_stat = (
+                stat_range["min_stat"] or monster_diplo,
+                stat_range["max_stat"] or monster_diplo,
+            )
+            min_stat_percent = min(abs(min_stat / monster_diplo), monster_diplo)
+            max_stat_percent = max(abs(max_stat / monster_diplo), monster_diplo)
+            diplo_range = [min_stat_percent * monster_diplo, max_stat_percent * monster_diplo]
+            hp_range = [monster_hp, monster_hp]
 
-        if bool(random.getrandbits(1)):  # Dynamically strength
-            new_pdef = monster_pdef + (monster_pdef * multiplier)
-        else:  # Dynamically Weaken
-            new_pdef = max(monster_pdef - (monster_pdef * multiplier), 0.5)
-
-        if bool(random.getrandbits(1)):  # Dynamically strength
-            new_mdef = monster_mdef + (monster_mdef * multiplier)
-        else:  # Dynamically Weaken
-            new_mdef = max(monster_mdef - (monster_mdef * multiplier), 0.5)
+        new_hp = random.choice(hp_range)
+        new_diplo = random.choice(diplo_range)
+        new_pdef = monster_pdef + (monster_pdef * random.random())
+        new_mdef = monster_mdef + (monster_mdef * random.random())
         choice["hp"] = new_hp
         choice["dipl"] = new_diplo
         choice["pdef"] = new_pdef
         choice["mdef"] = new_mdef
+        print(choice)
         return choice
 
     async def update_monster_roster(self, user):
@@ -5047,14 +5054,14 @@ class Adventure(BaseCog):
                 continue
             crit_mod = max(c.dex, c.luck) + (c.total_att // 20)  # Thanks GoaFan77
             mod = 0
-            max_roll = 50
+            max_roll = 50 if c.rebirths >= 15 else 20
             if crit_mod != 0:
                 mod = round(crit_mod / 10)
-            if (mod + 1) > 45:
-                mod = 45
-            elif c.rebirths < 15 and mod > 20:
+            if c.rebirths < 15 < mod:
                 mod = 15
                 max_roll = 20
+            elif (mod + 1) > 45:
+                mod = 45
 
             roll = random.randint((1 + mod), max_roll)
             if c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", False):
@@ -5114,14 +5121,14 @@ class Adventure(BaseCog):
                 continue
             crit_mod = max(c.dex, c.luck) + (c.total_int // 20)
             mod = 0
-            max_roll = 50
+            max_roll = 50 if c.rebirths >= 15 else 20
             if crit_mod != 0:
                 mod = round(crit_mod / 10)
-            if (mod + 1) > 45:
-                mod = 45
-            elif c.rebirths < 15 and mod > 19:
+            if c.rebirths < 15 < mod:
                 mod = 15
                 max_roll = 20
+            elif (mod + 1) > 45:
+                mod = 45
             roll = random.randint((1 + mod), max_roll)
             if c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", False):
                 pet_crit = c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", 0)
@@ -5205,14 +5212,14 @@ class Adventure(BaseCog):
                 rebirths = c.rebirths * 3 if c.heroclass["name"] == "Cleric" else 0
                 crit_mod = max(c.dex, c.luck) + (c.total_int // 20)
                 mod = 0
-                max_roll = 50
+                max_roll = 50 if c.rebirths >= 15 else 20
                 if crit_mod != 0:
                     mod = round(crit_mod / 10)
-                if (mod + 1) > 50:
-                    mod = 45
-                elif c.rebirths < 15 and mod > 20:
+                if c.rebirths < 15 < mod:
                     mod = 15
                     max_roll = 20
+                elif (mod + 1) > 45:
+                    mod = 45
                 roll = random.randint((1 + mod), max_roll)
                 if len(fight_list + talk_list + magic_list) == 0:
                     msg += _(
@@ -5269,7 +5276,7 @@ class Adventure(BaseCog):
                     )
                     magic -= pray_magic_bonus
 
-                    if roll == 20:
+                    if roll == 50:
                         roll_msg = _(
                             "{user} turned into an avatar of mighty {god}. "
                             "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic})\n"
@@ -5341,14 +5348,13 @@ class Adventure(BaseCog):
                 continue
             crit_mod = max(c.dex, c.luck) + (c.total_int // 50) + (c.total_cha // 20)
             mod = 0
-            max_roll = 50
+            max_roll = 50 if c.rebirths >= 15 else 20
             if crit_mod != 0:
                 mod = round(crit_mod / 10)
-            if (mod + 1) > 50:
-                mod = 45
-            elif c.rebirths < 15 and mod > 20:
+            if c.rebirths < 15 < mod:
                 mod = 15
-                max_roll = 20
+            elif (mod + 1) > 45:
+                mod = 45
             roll = random.randint((1 + mod), max_roll)
             dipl_value = c.total_cha
             rebirths = c.rebirths * 3 if c.heroclass["name"] == "Bard" else 0
