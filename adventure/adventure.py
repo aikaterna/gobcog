@@ -3835,6 +3835,8 @@ class Adventure(BaseCog):
             return
         if not reward and not participants:
             await self.config.guild(ctx.guild).cooldown.set(0)
+            while ctx.guild.id in self._sessions:
+                del self._sessions[ctx.guild.id]
             return
         reward_copy = reward.copy()
         for (userid, rewards) in reward_copy.items():
