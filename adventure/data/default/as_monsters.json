@@ -1,8 +1,8 @@
 {
     "Ascended Tame Dove": {
         "hp": 546.5,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 530.5,
         "image": "https://cdn.pixabay.com/photo/2016/02/23/20/31/dove-1218474_960_720.jpg",
         "boss": false,
@@ -11,7 +11,7 @@
     },
     "Ascended Weasel": {
         "hp": 512.75,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.2,
         "dipl": 538.75,
         "image": "https://cdn.pixabay.com/photo/2018/04/26/14/50/animals-3352109_960_720.jpg",
@@ -41,7 +41,7 @@
     },
     "Ascended Red Squirrel": {
         "hp": 519.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.67,
         "dipl": 544.75,
         "image": "https://cdn.pixabay.com/photo/2012/02/28/00/49/squirrel-17854_960_720.jpg",
@@ -71,8 +71,8 @@
     },
     "Ascended Wild Dove": {
         "hp": 537.5,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 550.5,
         "image": "https://cdn.pixabay.com/photo/2016/07/16/20/39/dove-1522656_960_720.jpg",
         "boss": false,
@@ -101,7 +101,7 @@
     },
     "Ascended Imp": {
         "hp": 544.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.08,
         "dipl": 515.0,
         "image": "https://media-waterdeep.cursecdn.com/avatars/thumbnails/0/361/234/315/636252778560366227.jpeg",
@@ -111,8 +111,8 @@
     },
     "Ascended Petty Thief": {
         "hp": 515.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 521.0,
         "image": "https://cdn.pixabay.com/photo/2013/07/13/10/24/burglar-157142_960_720.png",
         "boss": false,
@@ -122,7 +122,7 @@
     "Ascended Gnoll": {
         "hp": 547.0,
         "pdef": 1.51,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 508.5,
         "image": "http://www.wizards.com/dnd/images/MM35_gallery/MM35_PG130.jpg",
         "boss": false,
@@ -132,7 +132,7 @@
     "Ascended Slime": {
         "hp": 524.0,
         "pdef": 1.4,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 517.0,
         "image": "https://cdn.pixabay.com/photo/2013/07/12/14/54/slime-148995_960_720.png",
         "boss": false,
@@ -141,8 +141,8 @@
     },
     "Ascended Kobold": {
         "hp": 524.75,
-        "pdef": 0.9,
-        "mdef": 0.74,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 543.5,
         "image": "https://vignette.wikia.nocookie.net/forgottenrealms/images/f/f3/Monster_Manual_5e_-_Kobold_-_p195.jpg",
         "boss": false,
@@ -151,8 +151,8 @@
     },
     "Ascended Bandit": {
         "hp": 501.75,
-        "pdef": 0.9,
-        "mdef": 0.63,
+        "pdef": 1.2,
+        "mdef": 1.3,
         "dipl": 541.75,
         "image": "https://cdn.pixabay.com/photo/2013/07/13/10/24/burglar-157142_960_720.png",
         "boss": false,
@@ -161,7 +161,7 @@
     },
     "Ascended Cave Rat": {
         "hp": 532.75,
-        "pdef": 0.77,
+        "pdef": 1.2,
         "mdef": 1.51,
         "dipl": 515.5,
         "image": "https://cdn.pixabay.com/photo/2014/07/22/21/29/color-rat-399706_960_720.jpg",
@@ -182,7 +182,7 @@
     "Ascended Orc": {
         "hp": 549.0,
         "pdef": 1.83,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 503.5,
         "image": "https://cdn.pixabay.com/photo/2017/04/08/21/03/orc-2214392_960_720.jpg",
         "boss": false,
@@ -201,8 +201,8 @@
     },
     "Ascended Eagle": {
         "hp": 516.5,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 545.0,
         "image": "https://cdn.pixabay.com/photo/2016/10/19/13/42/eagle-1753002_960_720.jpg",
         "boss": false,
@@ -211,8 +211,8 @@
     },
     "Ascended Sylph": {
         "hp": 533.5,
-        "pdef": 0.97,
-        "mdef": 0.9,
+        "pdef": 1.4,
+        "mdef": 1.2,
         "dipl": 512.0,
         "image": "https://cdn.pixabay.com/photo/2017/02/01/10/19/creature-2029421_960_720.png",
         "boss": false,
@@ -231,7 +231,7 @@
     },
     "Ascended Goose": {
         "hp": 533.75,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.5,
         "dipl": 530.0,
         "image": "https://cdn.pixabay.com/photo/2017/04/25/21/30/wild-goose-2260866_960_720.jpg",
@@ -242,7 +242,7 @@
     "Ascended Frost Spider": {
         "hp": 513.0,
         "pdef": 1.88,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 521.0,
         "image": "https://cdn.pixabay.com/photo/2016/12/09/11/16/web-spider-1894655_960_720.jpg",
         "boss": false,
@@ -251,7 +251,7 @@
     },
     "Ascended Siren": {
         "hp": 539.5,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.49,
         "dipl": 513.0,
         "image": "https://cdn.pixabay.com/photo/2017/09/25/19/23/mermaid-2786382_960_720.png",
@@ -262,7 +262,7 @@
     "Ascended Rotting Slime": {
         "hp": 540.5,
         "pdef": 2.1,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 545.25,
         "image": "https://i.imgur.com/uL6L5Qj.png",
         "boss": false,
@@ -271,7 +271,7 @@
     },
     "Ascended Brown Eagle": {
         "hp": 509.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.6,
         "dipl": 545.0,
         "image": "https://cdn.pixabay.com/photo/2015/12/01/19/35/portrait-1072696_960_720.jpg",
@@ -282,7 +282,7 @@
     "Ascended Forest Sprite": {
         "hp": 539.0,
         "pdef": 1.42,
-        "mdef": 0.75,
+        "mdef": 1.1,
         "dipl": 543.0,
         "image": "https://cdn.pixabay.com/photo/2012/02/28/15/47/swirls-18530_960_720.jpg",
         "boss": false,
@@ -292,7 +292,7 @@
     "Ascended Lone Wolf": {
         "hp": 507.0,
         "pdef": 1.94,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 513.25,
         "image": "https://cdn.pixabay.com/photo/2019/01/06/03/38/wolf-3916379_960_720.jpg",
         "boss": false,
@@ -312,7 +312,7 @@
     "Ascended Giant Eagle": {
         "hp": 507.25,
         "pdef": 1.1,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 513.0,
         "image": "https://cdn.pixabay.com/photo/2017/08/28/12/21/giant-eagle-2689367_960_720.jpg",
         "boss": false,
@@ -321,7 +321,7 @@
     },
     "Ascended Ram": {
         "hp": 539.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.27,
         "dipl": 533.0,
         "image": "https://cdn.pixabay.com/photo/2017/12/17/15/58/mammal-3024471_960_720.jpg",
@@ -332,7 +332,7 @@
     "Ascended Forest Fairie": {
         "hp": 505.0,
         "pdef": 1.74,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 518.5,
         "image": "https://cdn.pixabay.com/photo/2016/03/16/15/56/woman-1261048_960_720.png",
         "boss": false,
@@ -341,7 +341,7 @@
     },
     "Ascended Troll Slave": {
         "hp": 501.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 2.03,
         "dipl": 526.5,
         "image": "https://cdn.pixabay.com/photo/2018/04/17/20/11/troll-3328570_960_720.png",
@@ -351,7 +351,7 @@
     },
     "Ascended Striped Kestrel": {
         "hp": 528.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.97,
         "dipl": 514.5,
         "image": "https://cdn.pixabay.com/photo/2018/12/04/10/01/animal-3855236_960_720.jpg",
@@ -361,7 +361,7 @@
     },
     "Ascended Goblin": {
         "hp": 524.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.73,
         "dipl": 544.5,
         "image": "https://cdn.pixabay.com/photo/2018/04/18/17/26/troll-3331024_960_720.png",
@@ -372,7 +372,7 @@
     "Ascended Bloodtooth Wolf": {
         "hp": 532.5,
         "pdef": 2.08,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 500.5,
         "image": "https://cdn.pixabay.com/photo/2015/02/13/11/57/wolf-635063_960_720.jpg",
         "boss": false,
@@ -381,7 +381,7 @@
     },
     "Ascended Rabbit Spirit": {
         "hp": 502.5,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 2.1,
         "dipl": 506.5,
         "image": "https://cdn.pixabay.com/photo/2018/06/25/19/47/hare-3497805_960_720.jpg",
@@ -391,7 +391,7 @@
     },
     "Ascended Tiger": {
         "hp": 505.5,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.85,
         "dipl": 517.0,
         "image": "https://cdn.pixabay.com/photo/2018/03/26/20/49/tiger-3264048_960_720.jpg",
@@ -421,8 +421,8 @@
     },
     "Ascended Orc Slavedriver": {
         "hp": 544.5,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 518.25,
         "image": "https://cdn.pixabay.com/photo/2016/10/07/23/19/vintage-1722810_960_720.jpg",
         "boss": false,
@@ -432,7 +432,7 @@
     "Ascended Ogre Bruiser": {
         "hp": 515.5,
         "pdef": 1.69,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 508.75,
         "image": "https://cdn.pixabay.com/photo/2016/04/01/10/30/armour-1299911_960_720.png",
         "boss": false,
@@ -442,7 +442,7 @@
     "Ascended Flatland Cougar": {
         "hp": 536.0,
         "pdef": 1.7,
-        "mdef": 0.8,
+        "mdef": 1.5,
         "dipl": 539.25,
         "image": "https://cdn.pixabay.com/photo/2015/04/11/19/56/cougar-718092_960_720.jpg",
         "boss": false,
@@ -451,8 +451,8 @@
     },
     "Ascended Forest Guardian": {
         "hp": 540.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 523.25,
         "image": "https://cdn.pixabay.com/photo/2017/06/10/22/58/composing-2391033_960_720.jpg",
         "boss": false,
@@ -461,8 +461,8 @@
     },
     "Ascended Swan": {
         "hp": 531.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 530.75,
         "image": "https://cdn.pixabay.com/photo/2019/05/01/09/50/swan-4170400_960_720.jpg",
         "boss": false,
@@ -482,7 +482,7 @@
     "Ascended Voidwalker Demon": {
         "hp": 545.25,
         "pdef": 1.05,
-        "mdef": 0.77,
+        "mdef": 1.24,
         "dipl": 522.5,
         "image": "https://cdn.pixabay.com/photo/2013/07/13/13/49/demon-161607_960_720.png",
         "boss": false,
@@ -492,7 +492,7 @@
     "Ascended Harpy Witch": {
         "hp": 519.25,
         "pdef": 1.97,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 527.5,
         "image": "https://cdn.pixabay.com/photo/2015/01/31/18/44/harpie-618781_960_720.jpg",
         "boss": false,
@@ -532,7 +532,7 @@
     "Ascended Centaur Spirit-talker": {
         "hp": 541.5,
         "pdef": 1.33,
-        "mdef": 0.99,
+        "mdef": 1.4,
         "dipl": 521.75,
         "image": "https://cdn.pixabay.com/photo/2013/07/13/12/16/centaur-159538_960_720.png",
         "boss": false,
@@ -551,8 +551,8 @@
     },
     "Ascended Dappled Centaur": {
         "hp": 508.5,
-        "pdef": 0.55,
-        "mdef": 0.98,
+        "pdef": 1.55,
+        "mdef": 1.98,
         "dipl": 523.5,
         "image": "https://cdn.pixabay.com/photo/2013/07/13/12/16/centaur-159538_960_720.png",
         "boss": false,
@@ -561,7 +561,7 @@
     },
     "Ascended Skeleton Berserker": {
         "hp": 520.0,
-        "pdef": 0.78,
+        "pdef": 1.78,
         "mdef": 1.81,
         "dipl": 546.0,
         "image": "https://cdn.pixabay.com/photo/2017/10/23/17/02/fantasy-2881646_960_720.jpg",
@@ -571,8 +571,8 @@
     },
     "Ascended Posessed Sword": {
         "hp": 508.5,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 533.5,
         "image": "https://cdn.pixabay.com/photo/2015/09/02/12/35/sword-918542_960_720.jpg",
         "boss": false,
@@ -581,8 +581,8 @@
     },
     "Ascended Mountain Troll": {
         "hp": 530.75,
-        "pdef": 0.9,
-        "mdef": 0.73,
+        "pdef": 1.2,
+        "mdef": 1.73,
         "dipl": 523.0,
         "image": "https://cdn.pixabay.com/photo/2016/10/14/11/21/fantasy-1739989_960_720.jpg",
         "boss": false,
@@ -592,7 +592,7 @@
     "Ascended Fire Hawk": {
         "hp": 530.25,
         "pdef": 1.11,
-        "mdef": 0.84,
+        "mdef": 1.84,
         "dipl": 541.5,
         "image": "https://cdn.pixabay.com/photo/2013/07/13/09/35/eagle-155747_960_720.png",
         "boss": false,
@@ -611,7 +611,7 @@
     },
     "Ascended Troll Berserker": {
         "hp": 509.75,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 2.08,
         "dipl": 523.5,
         "image": "https://cdn.pixabay.com/photo/2018/04/17/20/15/troll-3328599_960_720.png",
@@ -621,8 +621,8 @@
     },
     "Ascended Spectral Spirit": {
         "hp": 501.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 505.25,
         "image": "https://cdn.pixabay.com/photo/2017/02/08/17/24/butterfly-2049567_960_720.jpg",
         "boss": false,
@@ -642,7 +642,7 @@
     "Ascended Balrog": {
         "hp": 540.0,
         "pdef": 1.81,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 531.0,
         "image": "https://en.wikipedia.org/wiki/Balrog#/media/File:Durin%27s_Bane.jpg",
         "boss": false,
@@ -651,7 +651,7 @@
     },
     "Ascended Doomsayer Cultist": {
         "hp": 514.25,
-        "pdef": 0.69,
+        "pdef": 1.69,
         "mdef": 1.49,
         "dipl": 513.25,
         "image": "https://cdn.pixabay.com/photo/2016/09/14/12/32/forest-1669338_960_720.jpg",
@@ -662,7 +662,7 @@
     "Ascended Centaur Archwizard": {
         "hp": 524.0,
         "pdef": 1.05,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 548.75,
         "image": "https://cdn.pixabay.com/photo/2018/02/17/09/23/fantasy-3159483_960_720.jpg",
         "boss": false,
@@ -681,7 +681,7 @@
     },
     "Ascended Succubus": {
         "hp": 513.5,
-        "pdef": 0.44,
+        "pdef": 1.44,
         "mdef": 1.9,
         "dipl": 537.25,
         "image": "https://dibujando.net/files/fs/p/c/900x1000/2016/297/SuccubusnInprnt_290935.jpg",
@@ -691,8 +691,8 @@
     },
     "Ascended Bear": {
         "hp": 546.5,
-        "pdef": 0.9,
-        "mdef": 0.63,
+        "pdef": 1.2,
+        "mdef": 1.63,
         "dipl": 546.0,
         "image": "https://cdn.pixabay.com/photo/2016/03/09/09/28/bear-1245807_960_720.jpg",
         "boss": false,
@@ -701,8 +701,8 @@
     },
     "Ascended Satyr Bard": {
         "hp": 533.5,
-        "pdef": 0.65,
-        "mdef": 0.9,
+        "pdef": 1.1,
+        "mdef": 1.2,
         "dipl": 527.25,
         "image": "https://cdn.pixabay.com/photo/2017/01/31/21/17/faun-2027325_960_720.png",
         "boss": false,
@@ -721,8 +721,8 @@
     },
     "Ascended Owlspider": {
         "hp": 507.5,
-        "pdef": 0.97,
-        "mdef": 0.9,
+        "pdef": 1.64,
+        "mdef": 1.2,
         "dipl": 510.0,
         "image": "https://cdn.pixabay.com/photo/2017/12/05/19/10/speule-3000150_960_720.jpg",
         "boss": false,
@@ -732,7 +732,7 @@
     "Ascended Reanimated Skeleton": {
         "hp": 523.75,
         "pdef": 1.31,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 533.75,
         "image": "https://cdn.pixabay.com/photo/2012/04/12/14/03/skeleton-30160_960_720.png",
         "boss": false,
@@ -752,7 +752,7 @@
     "Ascended Satyr": {
         "hp": 525.25,
         "pdef": 1.23,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 539.75,
         "image": "https://cdn.pixabay.com/photo/2016/05/22/21/44/mask-1409287_960_720.jpg",
         "boss": false,
@@ -762,7 +762,7 @@
     "Ascended Rabid Boar": {
         "hp": 508.25,
         "pdef": 2.9,
-        "mdef": 0.47,
+        "mdef": 1.47,
         "dipl": 539.5,
         "image": "https://cdn.pixabay.com/photo/2014/04/02/10/55/boar-304954_960_720.png",
         "boss": false,
@@ -772,7 +772,7 @@
     "Ascended Fire Spirit": {
         "hp": 516.25,
         "pdef": 1.72,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 508.5,
         "image": "https://cdn.pixabay.com/photo/2018/03/16/21/24/fantasy-3232570_960_720.jpg",
         "boss": false,
@@ -782,7 +782,7 @@
     "Ascended Giant Roc": {
         "hp": 506.0,
         "pdef": 1.67,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 509.0,
         "image": "https://cdn.pixabay.com/photo/2017/02/06/20/08/eagle-2044134_960_720.jpg",
         "boss": false,
@@ -801,7 +801,7 @@
     },
     "Ascended Jaguar": {
         "hp": 514.5,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.9,
         "dipl": 537.25,
         "image": "https://cdn.pixabay.com/photo/2017/09/07/04/02/jaguar-2723827_960_720.jpg",
@@ -811,7 +811,7 @@
     },
     "Ascended Sabre Cat": {
         "hp": 512.5,
-        "pdef": 0.78,
+        "pdef": 1.78,
         "mdef": 1.71,
         "dipl": 510.5,
         "image": "https://cdn.pixabay.com/photo/2017/05/07/13/49/tiger-2292496_960_720.jpg",
@@ -821,7 +821,7 @@
     },
     "Ascended Bog Beast": {
         "hp": 530.75,
-        "pdef": 0.86,
+        "pdef": 1.86,
         "mdef": 2.0,
         "dipl": 501.75,
         "image": "https://www.goodfreephotos.com/cache/art-and-illustrations/hand-coming-up-from-the-swamp_800.jpg",
@@ -831,8 +831,8 @@
     },
     "Ascended Elder Treant": {
         "hp": 506.5,
-        "pdef": 0.87,
-        "mdef": 0.99,
+        "pdef": 1.87,
+        "mdef": 1.99,
         "dipl": 549.0,
         "image": "https://cdn.pixabay.com/photo/2018/07/22/12/05/green-man-3554439_960_720.jpg",
         "boss": false,
@@ -841,8 +841,8 @@
     },
     "Ascended Wormwing Demon": {
         "hp": 522.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 504.0,
         "image": "http://pngimg.com/uploads/demon/demon_PNG20.png",
         "boss": false,
@@ -851,7 +851,7 @@
     },
     "Ascended Cultist Lord": {
         "hp": 528.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.9,
         "dipl": 507.75,
         "image": "https://cdn.pixabay.com/photo/2017/09/21/08/14/fantasy-2771073_960_720.jpg",
@@ -881,7 +881,7 @@
     },
     "Ascended Aether Wolf": {
         "hp": 550.5,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.48,
         "dipl": 526.5,
         "image": "https://cdn.pixabay.com/photo/2016/11/18/21/10/wolf-1836875_960_720.jpg",
@@ -891,8 +891,8 @@
     },
     "Ascended Abyssal Demon": {
         "hp": 507.75,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 523.0,
         "image": "https://www.maxpixel.net/static/photo/1x/Fire-Demon-Flames-Chaos-Burn-Inflamed-Devil-Hell-2708544.jpg",
         "boss": false,
@@ -901,8 +901,8 @@
     },
     "Ascended Rabid Cave Bear": {
         "hp": 550.75,
-        "pdef": 0.26,
-        "mdef": 0.9,
+        "pdef": 1.26,
+        "mdef": 1.2,
         "dipl": 539.0,
         "image": "https://cdn.pixabay.com/photo/2017/02/24/15/08/bear-2095379_960_720.jpg",
         "boss": false,
@@ -931,7 +931,7 @@
     },
     "Ascended Restless Ghost": {
         "hp": 517.5,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.94,
         "dipl": 522.0,
         "image": "https://cdn.pixabay.com/photo/2017/03/30/01/04/ghosts-2186959_960_720.jpg",
@@ -942,7 +942,7 @@
     "Ascended Tree Spirit": {
         "hp": 546.5,
         "pdef": 1.7,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 547.0,
         "image": "https://cdn.pixabay.com/photo/2017/06/09/21/02/tree-2388245_960_720.jpg",
         "boss": false,
@@ -961,7 +961,7 @@
     },
     "Ascended Sylvan Unicorn": {
         "hp": 539.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.58,
         "dipl": 533.25,
         "image": "https://cdn.pixabay.com/photo/2017/01/15/11/08/unicorn-1981219_960_720.jpg",
@@ -981,7 +981,7 @@
     },
     "Ascended Spriggan": {
         "hp": 511.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.04,
         "dipl": 503.5,
         "image": "https://wikia.lordofthecraft.net/images/thumb/a/a2/Spriggan1.png/300px-Spriggan1.png",
@@ -992,7 +992,7 @@
     "Ascended Celestial Unicorn": {
         "hp": 533.5,
         "pdef": 1.5,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 545.25,
         "image": "https://cdn.pixabay.com/photo/2017/02/03/13/54/unicorn-2035174_960_720.png",
         "boss": false,
@@ -1011,8 +1011,8 @@
     },
     "Ascended Harpy Matriarch": {
         "hp": 509.5,
-        "pdef": 0.9,
-        "mdef": 0.75,
+        "pdef": 1.2,
+        "mdef": 1.75,
         "dipl": 551.0,
         "image": "https://cdn.pixabay.com/photo/2017/07/10/22/17/harpy-2491774_960_720.jpg",
         "boss": false,
@@ -1031,7 +1031,7 @@
     },
     "Ascended Arcane-Touched Spriggan": {
         "hp": 511.75,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.55,
         "dipl": 510.0,
         "image": "https://cdn.pixabay.com/photo/2017/10/06/21/08/fantasy-2824654_960_720.jpg",
@@ -1041,8 +1041,8 @@
     },
     "Ascended Trickster Tree Spirit": {
         "hp": 546.25,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 536.0,
         "image": "https://cdn.pixabay.com/photo/2015/12/13/13/33/log-1091115_960_720.jpg",
         "boss": false,
@@ -1051,7 +1051,7 @@
     },
     "Ascended Spectral Kingfisher": {
         "hp": 531.75,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 2.21,
         "dipl": 529.0,
         "image": "https://cdn.pixabay.com/photo/2017/12/19/18/43/fantasy-3028475_960_720.jpg",
@@ -1062,7 +1062,7 @@
     "Ascended Fire Salamander": {
         "hp": 501.75,
         "pdef": 2.29,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 524.0,
         "image": "https://cdn.pixabay.com/photo/2012/08/18/14/00/fire-salamander-54533_960_720.jpg",
         "boss": false,
@@ -1071,7 +1071,7 @@
     },
     "Ascended Troll Captain": {
         "hp": 507.75,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.26,
         "dipl": 534.0,
         "image": "https://cdn.pixabay.com/photo/2018/04/18/17/26/say-gestalt-3331025_960_720.png",
@@ -1081,7 +1081,7 @@
     },
     "Ascended Corrupted Phoenix": {
         "hp": 521.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.99,
         "dipl": 567.5,
         "image": "https://cdn.pixabay.com/photo/2016/06/06/21/28/phoenix-1440452_960_720.jpg",
@@ -1091,8 +1091,8 @@
     },
     "Ascended Fel-Corrupted Satyr": {
         "hp": 518.0,
-        "pdef": 0.56,
-        "mdef": 0.86,
+        "pdef": 1.56,
+        "mdef": 1.86,
         "dipl": 535.25,
         "image": "https://banner2.kisspng.com/20180205/vjq/kisspng-demon-idea-demon-png-transparent-5a790f727e5a00.3066432715178832505175.jpg",
         "boss": false,
@@ -1101,7 +1101,7 @@
     },
     "Ascended Forest Kirin": {
         "hp": 539.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 2.16,
         "dipl": 509.25,
         "image": "https://cdn.pixabay.com/photo/2018/02/12/14/01/horse-3148414_960_720.png",
@@ -1111,7 +1111,7 @@
     },
     "Ascended Incubus": {
         "hp": 539.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.1,
         "dipl": 507.75,
         "image": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Incubus.jpg",
@@ -1121,7 +1121,7 @@
     },
     "Ascended Fire Fairy": {
         "hp": 545.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 2.2,
         "dipl": 527.5,
         "image": "https://www.maxpixel.net/static/photo/1x/Fee-Magic-Mystical-Fantasy-Fire-Surreal-Elf-3350952.jpg",
@@ -1131,7 +1131,7 @@
     },
     "Ascended Forest Spirit": {
         "hp": 509.0,
-        "pdef": 0.53,
+        "pdef": 1.53,
         "mdef": 2.21,
         "dipl": 517.0,
         "image": "https://cdn.pixabay.com/photo/2017/12/29/10/44/magician-3047235_960_720.jpg",
@@ -1142,7 +1142,7 @@
     "Ascended Skeleton Trooper": {
         "hp": 501.0,
         "pdef": 2.06,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 531.0,
         "image": "https://cdn.pixabay.com/photo/2019/02/18/19/02/halloween-4005104_960_720.png",
         "boss": false,
@@ -1151,8 +1151,8 @@
     },
     "Ascended Magma Giant": {
         "hp": 550.5,
-        "pdef": 0.9,
-        "mdef": 0.86,
+        "pdef": 1.2,
+        "mdef": 1.86,
         "dipl": 542.75,
         "image": "https://cdn.pixabay.com/photo/2014/07/30/09/00/arc-405098_960_720.jpg",
         "boss": false,
@@ -1162,7 +1162,7 @@
     "Ascended Elder Forest Spirit": {
         "hp": 509.5,
         "pdef": 2.16,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 521.5,
         "image": "https://cdn.pixabay.com/photo/2017/03/19/11/31/horror-2156302_960_720.jpg",
         "boss": false,
@@ -1191,7 +1191,7 @@
     },
     "Ascended Corrupted Dryad": {
         "hp": 502.5,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.49,
         "dipl": 541.5,
         "image": "https://cdn.pixabay.com/photo/2016/05/14/19/45/dryad-1392438_960_720.jpg",
@@ -1211,8 +1211,8 @@
     },
     "Ascended Frost Troll": {
         "hp": 509.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 524.0,
         "image": "https://cdn.pixabay.com/photo/2017/01/10/13/29/creature-1969074_960_720.png",
         "boss": false,
@@ -1231,8 +1231,8 @@
     },
     "Ascended Corrupted Unicorn": {
         "hp": 547.25,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 515.0,
         "image": "https://cdn.pixabay.com/photo/2016/04/02/04/53/colorful-1302152_960_720.png",
         "boss": false,
@@ -1242,7 +1242,7 @@
     "Ascended Reanimated Totemic Guardian": {
         "hp": 506.0,
         "pdef": 1.5,
-        "mdef": 0.46,
+        "mdef": 1.46,
         "dipl": 508.75,
         "image": "https://cdn.pixabay.com/photo/2018/02/28/03/02/sculpture-3187129_960_720.jpg",
         "boss": false,
@@ -1252,7 +1252,7 @@
     "Ascended Forest Troll": {
         "hp": 531.25,
         "pdef": 1.8,
-        "mdef": 0.72,
+        "mdef": 1.72,
         "dipl": 504.0,
         "image": "https://cdn.pixabay.com/photo/2017/07/20/00/00/ork-2520855_960_720.jpg",
         "boss": false,
@@ -1261,8 +1261,8 @@
     },
     "Ascended Restless Spirit": {
         "hp": 538.5,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 510.25,
         "image": "https://cdn.pixabay.com/photo/2017/05/11/15/03/spirit-2304469_960_720.jpg",
         "boss": false,
@@ -1282,7 +1282,7 @@
     "Ascended Charmed Wyrm Statue": {
         "hp": 544.5,
         "pdef": 1.32,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 601.5,
         "image": "https://s0.geograph.org.uk/geophotos/04/91/10/4911075_244f2d29.jpg",
         "boss": false,
@@ -1302,7 +1302,7 @@
     "Ascended Peacock Spirit": {
         "hp": 543.75,
         "pdef": 1.1,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 561.5,
         "image": "https://cdn.pixabay.com/photo/2017/10/25/12/53/peacock-2887882_960_720.jpg",
         "boss": false,
@@ -1312,7 +1312,7 @@
     "Ascended Pack of Wolves": {
         "hp": 550.0,
         "pdef": 1.98,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 621.5,
         "image": "https://cdn.pixabay.com/photo/2015/08/25/20/59/timber-wolves-907680_960_720.jpg",
         "boss": false,
@@ -1321,7 +1321,7 @@
     },
     "Ascended Fog Beast": {
         "hp": 512.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.42,
         "dipl": 585.0,
         "image": "https://cdn.pixabay.com/photo/2017/10/13/14/15/fantasy-2847724_960_720.jpg",
@@ -1331,8 +1331,8 @@
     },
     "Ascended Fog Beast Minion": {
         "hp": 505.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 527.0,
         "image": "https://cdn.pixabay.com/photo/2017/10/22/18/30/anxiety-2878767_960_720.jpg",
         "boss": false,
@@ -1342,7 +1342,7 @@
     "Ascended Ancient Tree Spirit": {
         "hp": 512.25,
         "pdef": 1.78,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 573.25,
         "image": "https://cdn.pixabay.com/photo/2017/03/08/20/12/tree-2127699_960_720.jpg",
         "boss": false,
@@ -1351,8 +1351,8 @@
     },
     "Ascended Reanimated Statue": {
         "hp": 564.0,
-        "pdef": 0.9,
-        "mdef": 0.96,
+        "pdef": 1.2,
+        "mdef": 1.54,
         "dipl": 627.0,
         "image": "https://cdn.pixabay.com/photo/2013/10/27/14/28/face-201442_960_720.jpg",
         "boss": false,
@@ -1362,7 +1362,7 @@
     "Ascended Skull Spirit": {
         "hp": 526.0,
         "pdef": 1.9,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 539.0,
         "image": "https://cdn.pixabay.com/photo/2018/02/17/22/25/skull-3161081_960_720.jpg",
         "boss": false,
@@ -1371,8 +1371,8 @@
     },
     "Ascended Centaur Mage": {
         "hp": 566.25,
-        "pdef": 0.75,
-        "mdef": 0.9,
+        "pdef": 1.75,
+        "mdef": 1.2,
         "dipl": 640.0,
         "image": "https://cdn.pixabay.com/photo/2013/07/13/12/16/centaur-159538_960_720.png",
         "boss": false,
@@ -1381,8 +1381,8 @@
     },
     "Ascended Vapor Spirit": {
         "hp": 534.5,
-        "pdef": 0.9,
-        "mdef": 0.35,
+        "pdef": 1.2,
+        "mdef": 1.35,
         "dipl": 544.0,
         "image": "https://cdn.pixabay.com/photo/2015/09/23/14/46/yellowstone-953835_960_720.jpg",
         "boss": false,
@@ -1392,7 +1392,7 @@
     "Ascended Totem Spirit": {
         "hp": 522.5,
         "pdef": 1.2,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 515.5,
         "image": "https://cdn.pixabay.com/photo/2016/10/25/18/18/book-1769625_960_720.png",
         "boss": false,
@@ -1411,8 +1411,8 @@
     },
     "Ascended Pterosaur": {
         "hp": 562.75,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 539.5,
         "image": "https://cdn.pixabay.com/photo/2017/09/10/13/06/pterosaur-2735500_960_720.jpg",
         "boss": false,
@@ -1422,7 +1422,7 @@
     "Ascended Ancient Earth Spirit": {
         "hp": 540.75,
         "pdef": 2.01,
-        "mdef": 0.75,
+        "mdef": 1.75,
         "dipl": 620.75,
         "image": "https://cdn.pixabay.com/photo/2015/05/26/21/32/control-785555_960_720.jpg",
         "boss": false,
@@ -1432,7 +1432,7 @@
     "Ascended Fire Elemental": {
         "hp": 560.75,
         "pdef": 1.32,
-        "mdef": 0.85,
+        "mdef": 1.85,
         "dipl": 516.5,
         "image": "https://cdn.pixabay.com/photo/2015/04/16/21/32/flame-726268_960_720.jpg",
         "boss": false,
@@ -1441,7 +1441,7 @@
     },
     "Ascended Ice Elemental": {
         "hp": 563.0,
-        "pdef": 0.96,
+        "pdef": 1.96,
         "mdef": 1.9,
         "dipl": 614.75,
         "image": "https://cdn.pixabay.com/photo/2017/11/07/00/07/fantasy-2925250_960_720.jpg",
@@ -1452,7 +1452,7 @@
     "Ascended Earth Elemental": {
         "hp": 546.0,
         "pdef": 1.23,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 613.5,
         "image": "https://cdn.pixabay.com/photo/2015/11/03/10/19/garden-1020507_960_720.jpg",
         "boss": false,
@@ -1462,7 +1462,7 @@
     "Ascended Frost Elemental": {
         "hp": 565.0,
         "pdef": 1.04,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 628.0,
         "image": "https://cdn.pixabay.com/photo/2017/01/06/19/15/soap-bubble-1958650_960_720.jpg",
         "boss": false,
@@ -1471,7 +1471,7 @@
     },
     "Ascended Air Elemental": {
         "hp": 605.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.51,
         "dipl": 537.0,
         "image": "https://cdn.pixabay.com/photo/2015/03/26/09/47/sky-690293_960_720.jpg",
@@ -1481,7 +1481,7 @@
     },
     "Ascended Lava Spirit": {
         "hp": 601.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 2.1,
         "dipl": 590.5,
         "image": "https://cdn.pixabay.com/photo/2012/11/28/09/46/lava-67574_960_720.jpg",
@@ -1492,7 +1492,7 @@
     "Ascended Cursed Tentacle": {
         "hp": 599.25,
         "pdef": 1.67,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 567.25,
         "image": "https://cdn.pixabay.com/photo/2016/08/03/10/15/tail-1566250_960_720.jpg",
         "boss": false,
@@ -1501,8 +1501,8 @@
     },
     "Ascended Forest Witch": {
         "hp": 569.5,
-        "pdef": 0.73,
-        "mdef": 0.9,
+        "pdef": 1.73,
+        "mdef": 1.2,
         "dipl": 602.25,
         "image": "https://cdn.pixabay.com/photo/2017/10/25/00/50/third-eye-2886688_960_720.jpg",
         "boss": false,
@@ -1521,8 +1521,8 @@
     },
     "Ascended Minotaur": {
         "hp": 584.75,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 649.0,
         "image": "https://i.imgur.com/k3fQO6t.png",
         "boss": false,
@@ -1532,7 +1532,7 @@
     "Ascended Pack of Sabre Cats": {
         "hp": 630.0,
         "pdef": 1.27,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 689.75,
         "image": "https://www.nps.gov/whsa/learn/nature/images/Saber_Tooth.jpg",
         "boss": false,
@@ -1561,8 +1561,8 @@
     },
     "Ascended Obsidian Vapor Spirit": {
         "hp": 641.5,
-        "pdef": 0.77,
-        "mdef": 0.65,
+        "pdef": 1.77,
+        "mdef": 1.65,
         "dipl": 545.0,
         "image": "https://cdn.pixabay.com/photo/2016/11/08/05/13/acid-1807514_960_720.jpg",
         "boss": false,
@@ -1571,8 +1571,8 @@
     },
     "Ascended Enraged Oracle": {
         "hp": 648.5,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 619.5,
         "image": "https://cdn.pixabay.com/photo/2017/03/10/23/13/oracle-girl-2133976_960_720.jpg",
         "boss": false,
@@ -1582,7 +1582,7 @@
     "Ascended Pack of Frost Wolves": {
         "hp": 653.0,
         "pdef": 1.23,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 628.5,
         "image": "https://cdn.pixabay.com/photo/2017/10/18/16/08/wolf-2864647_960_720.jpg",
         "boss": false,
@@ -1591,7 +1591,7 @@
     },
     "Ascended Wizard": {
         "hp": 678.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.96,
         "dipl": 613.5,
         "image": "https://cdn.pixabay.com/photo/2015/05/18/16/58/abstract-772508_960_720.jpg",
@@ -1602,7 +1602,7 @@
     "Ascended Minotaur Berserker": {
         "hp": 742.5,
         "pdef": 1.18,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 701.5,
         "image": "https://cdn.pixabay.com/photo/2017/01/03/17/11/minotaur-1950012_960_720.png",
         "boss": false,
@@ -1631,7 +1631,7 @@
     },
     "Ascended Ethereal Bird Spirit": {
         "hp": 747.75,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.38,
         "dipl": 788.75,
         "image": "https://cdn.pixabay.com/photo/2018/05/17/18/49/pentecost-3409407_960_720.jpg",
@@ -1641,7 +1641,7 @@
     },
     "Ascended Three-Headed Hydra": {
         "hp": 787.0,
-        "pdef": 0.58,
+        "pdef": 1.58,
         "mdef": 1.2,
         "dipl": 714.75,
         "image": "https://cdn.pixabay.com/photo/2017/04/24/10/05/monster-2255973_960_720.png",
@@ -1656,7 +1656,7 @@
     "Ascended Primal Light Elemental": {
         "hp": 933.0,
         "pdef": 1.7,
-        "mdef": 0.99,
+        "mdef": 1.99,
         "dipl": 1029.0,
         "image": "https://cdn.pixabay.com/photo/2018/01/22/12/19/travel-3098815_960_720.jpg",
         "boss": false,
@@ -1666,7 +1666,7 @@
     "Ascended Primal Forest Elemental": {
         "hp": 928.0,
         "pdef": 1.34,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 1014.0,
         "image": "https://cdn.pixabay.com/photo/2019/03/09/02/12/eyes-4043559_960_720.jpg",
         "boss": false,
@@ -1675,7 +1675,7 @@
     },
     "Ascended Basilisk": {
         "hp": 745.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.52,
         "dipl": 819.0,
         "image": "http://mythicalarchive.com/wp-content/uploads/2015/12/basilisk_by_wretchedspawn2012-d8sc6ps-1024x921.jpg",
@@ -1690,7 +1690,7 @@
     "Ascended Fire Wyvern": {
         "hp": 607.25,
         "pdef": 1.8,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 575.0,
         "image": "https://barakabe.files.wordpress.com/2013/05/dragon5.jpg",
         "boss": true,
@@ -1699,7 +1699,7 @@
     },
     "Ascended Golden Draconid": {
         "hp": 650.5,
-        "pdef": 0.8,
+        "pdef": 1.8,
         "mdef": 1.9,
         "dipl": 645.25,
         "image": "https://cdn.pixabay.com/photo/2018/05/18/22/52/dragon-3412281_960_720.png",
@@ -1709,8 +1709,8 @@
     },
     "Ascended Black Wyrm": {
         "hp": 660.75,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 660.75,
         "image": "https://kagesatsuki.files.wordpress.com/2017/05/170531_02.jpg",
         "boss": true,
@@ -1719,8 +1719,8 @@
     },
     "Ascended Ice Wyvern": {
         "hp": 666.75,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 664.25,
         "image": "https://gourmetpapermache.files.wordpress.com/2018/10/1a.jpg",
         "boss": true,
@@ -1729,8 +1729,8 @@
     },
     "Ascended Bronze Dragon": {
         "hp": 664.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 639.5,
         "image": "https://cdn.pixabay.com/photo/2017/01/13/07/57/dragon-1976596_960_720.jpg",
         "boss": true,
@@ -1739,7 +1739,7 @@
     },
     "Ascended Ice Dragon": {
         "hp": 663.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.07,
         "dipl": 663.0,
         "image": "https://gourmetpapermache.files.wordpress.com/2018/10/1a.jpg",
@@ -1749,7 +1749,7 @@
     },
     "Ascended Aether Dragon": {
         "hp": 683.25,
-        "pdef": 0.97,
+        "pdef": 1.97,
         "mdef": 2.06,
         "dipl": 725.25,
         "image": "https://vignette.wikia.nocookie.net/fairytailfanon/images/8/83/Beltazlel_HS.jpg",
@@ -1759,7 +1759,7 @@
     },
     "Ascended Emerald Wyrm": {
         "hp": 676.25,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.95,
         "dipl": 711.5,
         "image": "https://cdn.pixabay.com/photo/2016/08/05/00/10/dragon-1571287_960_720.png",
@@ -1769,8 +1769,8 @@
     },
     "Ascended Nether Dragon": {
         "hp": 684.25,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 645.25,
         "image": "https://i.imgur.com/Y3fFqUX.jpg",
         "boss": true,
@@ -1799,8 +1799,8 @@
     },
     "Ascended Ruby Dragon": {
         "hp": 711.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 757.0,
         "image": "https://cdn.pixabay.com/photo/2016/12/30/11/17/dragon-1940366_960_720.png",
         "boss": true,
@@ -1810,7 +1810,7 @@
     "Ascended Red Dragon": {
         "hp": 706.0,
         "pdef": 1.53,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 790.0,
         "image": "https://i.imgur.com/KN0FcNT.jpg",
         "boss": true,
@@ -1820,7 +1820,7 @@
     "Ascended Emerald Drake": {
         "hp": 712.5,
         "pdef": 1.8,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 741.0,
         "image": "https://i.imgur.com/cZZ6RJh.png",
         "boss": true,
@@ -1839,7 +1839,7 @@
     },
     "Ascended Silver Wyrm": {
         "hp": 744.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.1,
         "dipl": 691.25,
         "image": "https://cdn.pixabay.com/photo/2017/01/03/17/04/dragon-1949993_960_720.png",
@@ -1849,7 +1849,7 @@
     },
     "Ascended Elder Dragon": {
         "hp": 738.25,
-        "pdef": 0.14,
+        "pdef": 1.14,
         "mdef": 1.8,
         "dipl": 830.0,
         "image": "https://vignette.wikia.nocookie.net/monster/images/6/6e/DragonRed.jpg",
@@ -1859,8 +1859,8 @@
     },
     "Ascended Blood Wyrm": {
         "hp": 767.5,
-        "pdef": 0.75,
-        "mdef": 0.9,
+        "pdef": 1.75,
+        "mdef": 1.2,
         "dipl": 784.0,
         "image": "https://cdn.pixabay.com/photo/2017/08/20/16/43/dragon-2662375_960_720.jpg",
         "boss": true,
@@ -1880,7 +1880,7 @@
     "Ascended Sea Dragon": {
         "hp": 806.0,
         "pdef": 1.96,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 735.5,
         "image": "https://cdn.pixabay.com/photo/2019/03/03/22/27/fantasy-4033001_960_720.jpg",
         "boss": true,
@@ -1889,7 +1889,7 @@
     },
     "Ascended Night Dragon": {
         "hp": 770.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.74,
         "dipl": 864.0,
         "image": "https://cdn.pixabay.com/photo/2015/02/28/11/35/dragons-653439_960_720.jpg",
@@ -1899,7 +1899,7 @@
     },
     "Ascended Golden Dragon": {
         "hp": 777.0,
-        "pdef": 0.9,
+        "pdef": 1.2,
         "mdef": 1.01,
         "dipl": 876.5,
         "image": "https://cdn.pixabay.com/photo/2014/01/05/01/19/dragon-238931_960_720.jpg",
@@ -1909,7 +1909,7 @@
     },
     "Ascended Reanimated Dragon": {
         "hp": 803.5,
-        "pdef": 0.93,
+        "pdef": 1.93,
         "mdef": 1.42,
         "dipl": 879.0,
         "image": "https://cdn.pixabay.com/photo/2017/01/06/14/14/dragon-1957809_960_720.png",
@@ -1920,7 +1920,7 @@
     "Ascended Bronze Wyrm": {
         "hp": 817.5,
         "pdef": 2.23,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 859.5,
         "image": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Dragon-Linda_BlackWin24_Jansson.jpg",
         "boss": true,
@@ -1930,7 +1930,7 @@
     "Ascended Fire Dragon": {
         "hp": 844.0,
         "pdef": 1.05,
-        "mdef": 0.97,
+        "mdef": 1.97,
         "dipl": 792.5,
         "image": "https://live.staticflickr.com/3156/2806388133_4332cc63b1_z.jpg",
         "boss": true,
@@ -1940,7 +1940,7 @@
     "Ascended Jade Drake": {
         "hp": 819.0,
         "pdef": 1.5,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 855.25,
         "image": "https://cdn.pixabay.com/photo/2016/10/25/22/55/dragon-1770252_960_720.jpg",
         "boss": true,
@@ -1959,8 +1959,8 @@
     },
     "Ascended Enraged Drake": {
         "hp": 894.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 893.0,
         "image": "https://i.imgur.com/rCHhnqt.jpg",
         "boss": true,
@@ -1970,7 +1970,7 @@
     "Ascended Crystal Drake": {
         "hp": 911.0,
         "pdef": 1.7,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 986.0,
         "image": "https://i.imgur.com/4HWOp15.jpg",
         "boss": true,
@@ -1980,7 +1980,7 @@
     "Ascended Abyssal Drake": {
         "hp": 937.0,
         "pdef": 1.9,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 986.0,
         "image": "https://cdn.pixabay.com/photo/2018/01/21/06/04/dragon-3095910_960_720.png",
         "boss": true,
@@ -1999,8 +1999,8 @@
     },
     "Ascended Earth Dragon": {
         "hp": 977.0,
-        "pdef": 0.84,
-        "mdef": 0.9,
+        "pdef": 1.84,
+        "mdef": 1.2,
         "dipl": 892.0,
         "image": "https://cdn.pixabay.com/photo/2017/08/13/23/08/dragon-2638881_960_720.jpg",
         "boss": true,
@@ -2009,8 +2009,8 @@
     },
     "Ascended Viridian Amphithere": {
         "hp": 976.0,
-        "pdef": 0.9,
-        "mdef": 0.9,
+        "pdef": 1.2,
+        "mdef": 1.2,
         "dipl": 908.0,
         "image": "https://i.imgur.com/oTi3K3q.jpg",
         "boss": true,
@@ -2020,7 +2020,7 @@
     "Ascended Golden Amphitere": {
         "hp": 1028.0,
         "pdef": 1.01,
-        "mdef": 0.9,
+        "mdef": 1.2,
         "dipl": 913.5,
         "image": "https://i.imgur.com/k5BWr2K.jpg",
         "boss": true,
@@ -2039,8 +2039,8 @@
     },
     "Ascended Golden Guardian Wyrm": {
         "hp": 1283.5,
-        "pdef": 0.8,
-        "mdef": 0.9,
+        "pdef": 1.8,
+        "mdef": 1.2,
         "dipl": 1229.0,
         "image": "https://cdn.pixabay.com/photo/2013/10/19/05/21/sculpture-197772_960_720.jpg",
         "boss": true,

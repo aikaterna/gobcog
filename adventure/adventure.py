@@ -1565,7 +1565,6 @@ class Adventure(BaseCog):
             del self._sessions[ctx.guild.id]
         await ctx.tick()
 
-
     @adventureset.command()
     @checks.is_owner()
     async def restrict(self, ctx: Context):
@@ -2203,7 +2202,11 @@ class Adventure(BaseCog):
         newint = round((int(item1.int) + int(item2.int)) * modifier)
         newdex = round((int(item1.dex) + int(item2.dex)) * modifier)
         newluck = round((int(item1.luck) + int(item2.luck)) * modifier)
-        newslot = random.choice([item1.slot, item2.slot])
+        newslot = random.choice(ORDER)
+        if newslot == "two handed":
+            newslot = ["right", "left"]
+        else:
+            newslot = [newslot]
         if len(newslot) == 2:  # two handed weapons add their bonuses twice
             hand = "two handed"
         else:
@@ -2909,9 +2912,9 @@ class Adventure(BaseCog):
                 with contextlib.suppress(discord.HTTPException):
                     ctx.command.reset_cooldown(ctx)
                     await nv_msg.edit(
-                        content=_("**{}** decides against visiting the negaverse... for now.").format(
-                            self.escape(ctx.author.display_name)
-                        )
+                        content=_(
+                            "**{}** decides against visiting the negaverse... for now."
+                        ).format(self.escape(ctx.author.display_name))
                     )
                     lock.release()
                     return await self._clear_react(nv_msg)
@@ -3937,29 +3940,34 @@ class Adventure(BaseCog):
 
     def _dynamic_monster_stats(self, choice: MutableMapping):
         stat_range = self._adv_results.get_stat_range()
-        maxstat = stat_range["max_stat"] or 100
-        minsta = stat_range["min_stat"] or 1
-        multiplier = minsta / maxstat
+        monster_hp = choice["hp"]
+        monster_diplo = choice["dipl"]
+        monster_pdef = choice["pdef"]
+        monster_mdef = choice["mdef"]
+        multiplier = max(random.random(), random.random())
         if bool(random.getrandbits(1)):  # Dynamically strength
-            choice["hp"] += choice["hp"] * multiplier
+            new_hp = monster_hp + (monster_hp * multiplier)
         else:  # Dynamically Weaken
-            choice["hp"] -= choice["hp"] * multiplier
+            new_hp = max(monster_hp - (monster_hp * multiplier), monster_hp * 0.7)
 
         if bool(random.getrandbits(1)):  # Dynamically strength
-            choice["dipl"] += choice["dipl"] * multiplier
+            new_diplo = monster_diplo + (monster_diplo * multiplier)
         else:  # Dynamically Weaken
-            choice["dipl"] -= choice["dipl"] * multiplier
+            new_diplo = max(monster_diplo - (monster_diplo * multiplier), monster_diplo * 0.7)
 
         if bool(random.getrandbits(1)):  # Dynamically strength
-            choice["pdef"] += choice["pdef"] * multiplier
+            new_pdef = monster_pdef + (monster_pdef * multiplier)
         else:  # Dynamically Weaken
-            choice["pdef"] -= choice["pdef"] * multiplier
+            new_pdef = max(monster_pdef - (monster_pdef * multiplier), 0.5)
 
         if bool(random.getrandbits(1)):  # Dynamically strength
-            choice["mdef"] += choice["mdef"] * multiplier
+            new_mdef = monster_mdef + (monster_mdef * multiplier)
         else:  # Dynamically Weaken
-            choice["mdef"] -= choice["mdef"] * multiplier
-
+            new_mdef = max(monster_mdef - (monster_mdef * multiplier), 0.5)
+        choice["hp"] = new_hp
+        choice["dipl"] = new_diplo
+        choice["pdef"] = new_pdef
+        choice["mdef"] = new_mdef
         return choice
 
     async def update_monster_roster(self, user):
@@ -3968,21 +3976,12 @@ class Adventure(BaseCog):
             c = await Character.from_json(self.config, user)
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
-            return (self.MONSTERS, 1)
-        else:
-            monster_stats = 1
+            return ({**self.MONSTERS, **self.AS_MONSTERS}, 1)
 
-        if c.rebirths >= 25:
-            monsters = self.AS_MONSTERS
-            monster_stats = 1 + max((c.rebirths // 25) - 1, 0)
-        elif c.rebirths >= 15:
-            monsters = {**self.AS_MONSTERS}
-        elif c.rebirths >= 10:
-            monsters = {**self.MONSTERS, **self.AS_MONSTERS}
-        else:
-            monster_stats = 1
-            monsters = self.MONSTERS
-
+        monster_stats = 1
+        monsters = {**self.MONSTERS, **self.AS_MONSTERS}
+        if c.rebirths >= 10:
+            monster_stats = 1 + max((c.rebirths // 10) - 1, 0) / 2
         return (monsters, monster_stats)
 
     async def _simple(
@@ -4654,7 +4653,7 @@ class Adventure(BaseCog):
                 )
                 text += await self._reward(
                     ctx,
-                    fight_list + magic_list + pray_list,
+                    [u for u in fight_list + magic_list + pray_list if u not in fumblelist],
                     amount,
                     round(((attack if group == fighters_final_string else magic) / hp) * 0.25),
                     treasure,
@@ -4665,7 +4664,11 @@ class Adventure(BaseCog):
                     "{b_talkers} almost died in battle, but confounded the {chall} in the last second."
                 ).format(b_talkers=talkers_final_string, chall=session.challenge)
                 text += await self._reward(
-                    ctx, talk_list + pray_list, amount, round((diplomacy / dipl) * 0.25), treasure
+                    ctx,
+                    [u for u in talk_list + pray_list if u not in fumblelist],
+                    amount,
+                    round((diplomacy / dipl) * 0.25),
+                    treasure,
                 )
 
             if not slain and not persuaded:
@@ -4780,7 +4783,11 @@ class Adventure(BaseCog):
                         )
                 text += await self._reward(
                     ctx,
-                    fight_list + magic_list + talk_list + pray_list,
+                    [
+                        u
+                        for u in fight_list + magic_list + pray_list + talk_list
+                        if u not in fumblelist
+                    ],
                     amount,
                     round(((dmg_dealt / hp) + (diplomacy / dipl)) * 0.25),
                     treasure,
@@ -4800,7 +4807,11 @@ class Adventure(BaseCog):
                         b_talkers=talkers_final_string, chall=session.challenge
                     )
                 text += await self._reward(
-                    ctx, talk_list + pray_list, amount, round((diplomacy / dipl) * 0.25), treasure
+                    ctx,
+                    [u for u in talk_list + pray_list if u not in fumblelist],
+                    amount,
+                    round((diplomacy / dipl) * 0.25),
+                    treasure,
                 )
 
             if slain and not persuaded:
@@ -4847,7 +4858,7 @@ class Adventure(BaseCog):
                         )
                 text += await self._reward(
                     ctx,
-                    fight_list + magic_list + pray_list,
+                    [u for u in fight_list + magic_list + pray_list if u not in fumblelist],
                     amount,
                     round((dmg_dealt / hp) * 0.25),
                     treasure,
@@ -4988,8 +4999,8 @@ class Adventure(BaseCog):
         fight_list = list(set(session.fight))
         magic_list = list(set(session.magic))
         attack_list = list(set(fight_list + magic_list))
-        pdef = max(session.monster_modified_stats["pdef"], 0.1)
-        mdef = max(session.monster_modified_stats["mdef"], 0.1)
+        pdef = max(session.monster_modified_stats["pdef"], 0.5)
+        mdef = max(session.monster_modified_stats["mdef"], 0.5)
 
         fumble_count = 0
         # make sure we pass this check first
@@ -5036,20 +5047,25 @@ class Adventure(BaseCog):
                 continue
             crit_mod = max(c.dex, c.luck) + (c.total_att // 20)  # Thanks GoaFan77
             mod = 0
+            max_roll = 50
             if crit_mod != 0:
                 mod = round(crit_mod / 10)
-            if (mod + 1) > 20:
-                mod = 19
-            roll = random.randint((1 + mod), 20)
+            if (mod + 1) > 45:
+                mod = 45
+            elif c.rebirths < 15 and mod > 20:
+                mod = 15
+                max_roll = 20
+
+            roll = random.randint((1 + mod), max_roll)
             if c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", False):
                 pet_crit = c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", 0)
                 pet_crit = random.randint(pet_crit, 100)
                 if pet_crit == 100:
-                    roll = 20
-                elif roll <= 15 and pet_crit >= 95:
-                    roll = random.randint(15, 20)
-                elif roll > 15 and pet_crit >= 95:
-                    roll = random.randint(roll, 20)
+                    roll = max_roll
+                elif roll <= 25 and pet_crit >= 95:
+                    roll = random.randint(25, max_roll)
+                elif roll > 25 and pet_crit >= 95:
+                    roll = random.randint(roll, max_roll)
 
             att_value = c.total_att
             rebirths = c.rebirths * 3 if c.heroclass["name"] == "Berserker" else 0
@@ -5067,11 +5083,11 @@ class Adventure(BaseCog):
                     msg += _("**{}** fumbled the attack.\n").format(self.escape(user.display_name))
                     fumblelist.append(user)
                     fumble_count += 1
-            elif roll == 20 or c.heroclass["name"] == "Berserker":
+            elif roll == max_roll or c.heroclass["name"] == "Berserker":
                 crit_str = ""
                 crit_bonus = 0
                 base_bonus = random.randint(5, 10) + c.rebirths // 3 + rebirths
-                if roll == 20:
+                if roll == max_roll:
                     msg += _("**{}** landed a critical hit.\n").format(
                         self.escape(user.display_name)
                     )
@@ -5098,20 +5114,24 @@ class Adventure(BaseCog):
                 continue
             crit_mod = max(c.dex, c.luck) + (c.total_int // 20)
             mod = 0
+            max_roll = 50
             if crit_mod != 0:
                 mod = round(crit_mod / 10)
-            if (mod + 1) > 20:
-                mod = 19
-            roll = random.randint((1 + mod), 20)
+            if (mod + 1) > 45:
+                mod = 45
+            elif c.rebirths < 15 and mod > 19:
+                mod = 15
+                max_roll = 20
+            roll = random.randint((1 + mod), max_roll)
             if c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", False):
                 pet_crit = c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", 0)
                 pet_crit = random.randint(pet_crit, 100)
                 if pet_crit == 100:
-                    roll = 20
-                elif roll <= 15 and pet_crit >= 95:
-                    roll = random.randint(15, 20)
-                elif roll > 15 and pet_crit >= 95:
-                    roll = random.randint(roll, 20)
+                    roll = max_roll
+                elif roll <= 25 and pet_crit >= 95:
+                    roll = random.randint(25, max_roll)
+                elif roll > 25 and pet_crit >= 95:
+                    roll = random.randint(roll, max_roll)
             int_value = c.total_int
             rebirths = c.rebirths * 3 if c.heroclass["name"] == "Wizard" else 0
             if roll == 1:
@@ -5129,7 +5149,7 @@ class Adventure(BaseCog):
                         f"**{self.escape(user.display_name)}**: "
                         f"{self.emojis.dice}({roll}) + {self.emojis.magic_crit}{humanize_number(bonus)} + {self.emojis.magic}{str(humanize_number(int_value))}\n"
                     )
-            elif roll == 20 or (c.heroclass["name"] == "Wizard"):
+            elif roll == max_roll or (c.heroclass["name"] == "Wizard"):
                 crit_str = ""
                 crit_bonus = 0
                 base_bonus = random.randint(5, 10) + c.rebirths // 3 + rebirths
@@ -5185,11 +5205,15 @@ class Adventure(BaseCog):
                 rebirths = c.rebirths * 3 if c.heroclass["name"] == "Cleric" else 0
                 crit_mod = max(c.dex, c.luck) + (c.total_int // 20)
                 mod = 0
+                max_roll = 50
                 if crit_mod != 0:
                     mod = round(crit_mod / 10)
-                if (mod + 1) > 20:
-                    mod = 19
-                roll = random.randint((1 + mod), 20)
+                if (mod + 1) > 50:
+                    mod = 45
+                elif c.rebirths < 15 and mod > 20:
+                    mod = 15
+                    max_roll = 20
+                roll = random.randint((1 + mod), max_roll)
                 if len(fight_list + talk_list + magic_list) == 0:
                     msg += _(
                         "**{}** blessed like a madman but nobody was there to receive it.\n"
@@ -5225,7 +5249,7 @@ class Adventure(BaseCog):
                     )
 
                 else:
-                    mod = roll if not c.heroclass["ability"] else roll * 2
+                    mod = roll // 3 if not c.heroclass["ability"] else roll
                     pray_att_bonus = int(
                         (mod * len(fight_list))
                         + ((mod * len(fight_list)) * max(c.rebirths * 0.01, 1.5))
@@ -5266,13 +5290,13 @@ class Adventure(BaseCog):
                         len_m_list=humanize_number(pray_magic_bonus),
                     )
             else:
-                roll = random.randint(1, 4)
+                roll = random.randint(1, 10)
                 if len(fight_list + talk_list + magic_list) == 0:
                     msg += _("**{}** prayed like a madman but nobody else helped them.\n").format(
                         self.escape(user.display_name)
                     )
 
-                elif roll == 4:
+                elif roll == 5:
                     attack += 10 * (len(fight_list) + c.rebirths // 15)
                     diplomacy += 10 * (len(talk_list) + c.rebirths // 15)
                     magic += 10 * (len(magic_list) + c.rebirths // 15)
@@ -5317,11 +5341,15 @@ class Adventure(BaseCog):
                 continue
             crit_mod = max(c.dex, c.luck) + (c.total_int // 50) + (c.total_cha // 20)
             mod = 0
+            max_roll = 50
             if crit_mod != 0:
                 mod = round(crit_mod / 10)
-            if (mod + 1) > 20:
-                mod = 19
-            roll = random.randint((1 + mod), 20)
+            if (mod + 1) > 50:
+                mod = 45
+            elif c.rebirths < 15 and mod > 20:
+                mod = 15
+                max_roll = 20
+            roll = random.randint((1 + mod), max_roll)
             dipl_value = c.total_cha
             rebirths = c.rebirths * 3 if c.heroclass["name"] == "Bard" else 0
             if roll == 1:
@@ -5338,7 +5366,7 @@ class Adventure(BaseCog):
                     )
                     fumblelist.append(user)
                     fumble_count += 1
-            elif roll == 20 or c.heroclass["name"] == "Bard":
+            elif roll == max_roll or c.heroclass["name"] == "Bard":
                 crit_str = ""
                 crit_bonus = 0
                 base_bonus = random.randint(5, 10) + c.rebirths // 3 + rebirths
