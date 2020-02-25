@@ -1544,6 +1544,28 @@ class Adventure(BaseCog):
         await self.config.guild(ctx.guild).cartroom.set(room.id)
         await smart_embed(ctx, _("Done, carts will now show in {room.mention}").format(room=room))
 
+    @adventureset.group(name="locks")
+    @checks.admin_or_permissions(administrator=True)
+    async def adventureset_locks(self, ctx: Context):
+        """Reset Adventure locks"""
+
+    @adventureset_locks.command(name="user")
+    async def adventureset_locks_user(self, ctx: Context, user: discord.member):
+        """Reset the user lock"""
+        lock = self.get_lock(user)
+        with contextlib.suppress(Exception):
+            lock.release()
+        await ctx.tick()
+
+    @commands.guild_only()
+    @adventureset_locks.command(name="adventure")
+    async def adventureset_locks_adventure(self, ctx: Context):
+        """Reset the adventure lock"""
+        while ctx.guild.id in self._sessions:
+            del self._sessions[ctx.guild.id]
+        await ctx.tick()
+
+
     @adventureset.command()
     @checks.is_owner()
     async def restrict(self, ctx: Context):
