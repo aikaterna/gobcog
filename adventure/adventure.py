@@ -3939,42 +3939,41 @@ class Adventure(BaseCog):
         return choice
 
     def _dynamic_monster_stats(self, choice: MutableMapping):
-        stat_range = self._adv_results.get_stat_range()
-        stat_type = stat_range["stat_type"]
-        monster_hp = choice["hp"]
-        monster_diplo = choice["dipl"]
-
-        monster_pdef = choice["pdef"]
-        monster_mdef = choice["mdef"]
-
-        if stat_type == "hp":
-            min_stat, max_stat = (
-                stat_range["min_stat"] or monster_hp,
-                stat_range["max_stat"] or monster_hp,
-            )
-            min_stat_percent = min(abs(min_stat / monster_hp), monster_hp)
-            max_stat_percent = max(abs(max_stat / monster_hp), monster_hp)
-            hp_range = [min_stat_percent * monster_hp, max_stat_percent * monster_hp]
-            diplo_range = [monster_diplo, monster_diplo]
-        else:
-            min_stat, max_stat = (
-                stat_range["min_stat"] or monster_diplo,
-                stat_range["max_stat"] or monster_diplo,
-            )
-            min_stat_percent = min(abs(min_stat / monster_diplo), monster_diplo)
-            max_stat_percent = max(abs(max_stat / monster_diplo), monster_diplo)
-            diplo_range = [min_stat_percent * monster_diplo, max_stat_percent * monster_diplo]
-            hp_range = [monster_hp, monster_hp]
-
-        new_hp = random.choice(hp_range)
-        new_diplo = random.choice(diplo_range)
-        new_pdef = monster_pdef + (monster_pdef * random.random())
-        new_mdef = monster_mdef + (monster_mdef * random.random())
-        choice["hp"] = new_hp
-        choice["dipl"] = new_diplo
-        choice["pdef"] = new_pdef
-        choice["mdef"] = new_mdef
-        print(choice)
+        # stat_range = self._adv_results.get_stat_range()
+        # stat_type = stat_range["stat_type"]
+        # monster_hp = choice["hp"]
+        # monster_diplo = choice["dipl"]
+        #
+        # monster_pdef = choice["pdef"]
+        # monster_mdef = choice["mdef"]
+        #
+        # if stat_type == "hp":
+        #     min_stat, max_stat = (
+        #         stat_range["min_stat"] or monster_hp,
+        #         stat_range["max_stat"] or monster_hp,
+        #     )
+        #     min_stat_percent = min(abs(min_stat / monster_hp), monster_hp)
+        #     max_stat_percent = max(abs(max_stat / monster_hp), monster_hp)
+        #     hp_range = [min_stat_percent * monster_hp, max_stat_percent * monster_hp]
+        #     diplo_range = [monster_diplo, monster_diplo]
+        # else:
+        #     min_stat, max_stat = (
+        #         stat_range["min_stat"] or monster_diplo,
+        #         stat_range["max_stat"] or monster_diplo,
+        #     )
+        #     min_stat_percent = min(abs(min_stat / monster_diplo), monster_diplo)
+        #     max_stat_percent = max(abs(max_stat / monster_diplo), monster_diplo)
+        #     diplo_range = [min_stat_percent * monster_diplo, max_stat_percent * monster_diplo]
+        #     hp_range = [monster_hp, monster_hp]
+        #
+        # new_hp = random.choice(hp_range)
+        # new_diplo = random.choice(diplo_range)
+        # new_pdef = monster_pdef + (monster_pdef * random.random())
+        # new_mdef = monster_mdef + (monster_mdef * random.random())
+        # choice["hp"] = new_hp
+        # choice["dipl"] = new_diplo
+        # choice["pdef"] = new_pdef
+        # choice["mdef"] = new_mdef
         return choice
 
     async def update_monster_roster(self, user):
