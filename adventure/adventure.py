@@ -3949,7 +3949,7 @@ class Adventure(BaseCog):
     def _dynamic_monster_stats(self, ctx: Context, choice: MutableMapping):
         stat_range = self._adv_results.get_stat_range(ctx)
         win_percentage = stat_range.get("win_percent", 0.5)
-        if win_percentage >= 90:
+        if win_percentage >= 0.90:
             monster_hp_min = int(choice["hp"] * 1.45)
             monster_hp_max = int(choice["hp"] * 1.5)
             monster_diplo_min = int(choice["dipl"] * 1.45)
@@ -3958,7 +3958,7 @@ class Adventure(BaseCog):
             monster_pdef = choice["pdef"] * percent_pdef
             percent_mdef = random.randrange(25, 30) / 100
             monster_mdef = choice["mdef"] * percent_mdef
-        elif win_percentage >= 75:
+        elif win_percentage >= 0.75:
             monster_hp_min = int(choice["hp"] * 1.25)
             monster_hp_max = int(choice["hp"] * 1.45)
             monster_diplo_min = int(choice["dipl"] * 1.25)
@@ -3967,7 +3967,7 @@ class Adventure(BaseCog):
             monster_pdef = choice["pdef"] * percent_pdef
             percent_mdef = random.randrange(15, 25) / 100
             monster_mdef = choice["mdef"] * percent_mdef
-        elif win_percentage >= 50:
+        elif win_percentage >= 0.50:
             monster_hp_min = int(choice["hp"])
             monster_hp_max = int(choice["hp"] * 1.25)
             monster_diplo_min = int(choice["dipl"])
@@ -3976,7 +3976,7 @@ class Adventure(BaseCog):
             monster_pdef = choice["pdef"] * percent_pdef
             percent_mdef = random.randrange(1, 15) / 100
             monster_mdef = choice["mdef"] * percent_mdef
-        elif win_percentage >= 35:
+        elif win_percentage >= 0.35:
             monster_hp_min = int(choice["hp"] * 0.9)
             monster_hp_max = int(choice["hp"])
             monster_diplo_min = int(choice["dipl"] * 0.9)
@@ -3985,7 +3985,7 @@ class Adventure(BaseCog):
             monster_pdef = choice["pdef"] * percent_pdef * -1
             percent_mdef = random.randrange(1, 15) / 100
             monster_mdef = choice["mdef"] * percent_mdef * -1
-        elif win_percentage >= 15:
+        elif win_percentage >= 0.15:
             monster_hp_min = int(choice["hp"] * 0.8)
             monster_hp_max = int(choice["hp"] * 0.9)
             monster_diplo_min = int(choice["dipl"] * 0.8)
