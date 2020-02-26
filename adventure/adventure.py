@@ -5297,7 +5297,7 @@ class Adventure(BaseCog):
                         (mod * len(fight_list))
                         + ((mod * len(fight_list)) * max(c.rebirths * 0.01, 1.5))
                     )
-                    attack += mod * pray_att_bonus
+                    attack += pray_att_bonus
                     pray_diplo_bonus = int(
                         (mod * (len(talk_list) + c.rebirths // 5))
                         + (
