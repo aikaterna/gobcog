@@ -519,6 +519,9 @@ class Character(Item):
                     elif key in ["cpmult", "xpmult", "statmult"]:
                         if value > 1:
                             base[key] += value
+                        elif value >= 0:
+                            base[key] -= (1 - value)
+
         self.gear_set_bonus = base
 
     def __str__(self):
