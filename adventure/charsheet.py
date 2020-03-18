@@ -13,7 +13,7 @@ from discord.ext.commands.errors import BadArgument
 
 from redbot.core import Config, bank, commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_list
+from redbot.core.utils.chat_formatting import box
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
@@ -520,7 +520,7 @@ class Character(Item):
                         if value > 1:
                             base[key] += value
                         elif value >= 0:
-                            base[key] -= (1 - value)
+                            base[key] -= 1 - value
 
         self.gear_set_bonus = base
 
@@ -1164,6 +1164,35 @@ class EquipmentConverter(Converter):
             except asyncio.TimeoutError:
                 raise BadArgument(_("Alright then."))
             return lookup[pred.result]
+
+
+class ThemeSetMonterConverter(Converter):
+    async def convert(self, ctx, argument) -> MutableMapping:
+        arguments = list(map(str.strip, argument.split("++")))
+        try:
+            theme = arguments[0]
+            name = arguments[1]
+            hp = float(arguments[2])
+            dipl = float(arguments[3])
+            pdef = float(arguments[4])
+            mdef = float(arguments[5])
+            image = arguments[7]
+            boss = True if arguments[6].lower() == "true" else False
+            if not image:
+                raise Exception
+        except Exception:
+            raise BadArgument("Invalid format, Excepted:\n" 
+                              "theme++name++hp++dipl++pdef++mdef++boss++image")
+        return {
+            "theme": theme,
+            "name": name,
+            "hp": hp,
+            "pdef": pdef,
+            "mdef": mdef,
+            "dipl": dipl,
+            "image": image,
+            "boss": boss,
+        }
 
 
 class SlotConverter(Converter):
