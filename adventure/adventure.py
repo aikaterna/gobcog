@@ -51,6 +51,7 @@ from .charsheet import (
     ORDER,
     RarityConverter,
     SlotConverter,
+    ThemeSetMonterConverter,
 )
 
 try:
@@ -336,6 +337,7 @@ class Adventure(BaseCog):
             "currentweek": date.today().isocalendar()[1],
             "schema_version": 1,
             "rebirth_cost": 100.0,
+            "themes": {},
         }
         self.RAISINS: list = None
         self.THREATEE: list = None
@@ -1873,6 +1875,52 @@ class Adventure(BaseCog):
             await self.config.theme.set(theme)
             await ctx.tick()
         await self.initialize()
+
+    @commands.group()
+    @commands.guild_only()
+    @checks.is_owner()
+    async def themeset(self, ctx: Context):
+        """[Admin] Modify themes."""
+
+    @themeset.group(name="add")
+    async def themeset_add(self, ctx: Context):
+        """[Admin] Add/Update objects in the specified theme."""
+
+    @themeset_add.command(name="monster")
+    async def themeset_add_monster(self, ctx: Context, *, theme_data: ThemeSetMonterConverter):
+        """[Admin] Add/Update a monster object in the specified theme."""
+        assert isinstance(theme_data, dict)
+        theme = theme_data.pop("theme", None)
+        if theme != "default" and theme not in os.listdir(cog_data_path(self)):
+            await smart_embed(ctx, _("That theme pack does not exist!"))
+            return
+        updated = False
+        monster = theme_data.pop("name", None)
+        async with self.config.themes.all() as config_data:
+            if theme not in config_data:
+                config_data[theme] = {}
+            if monster in config_data[theme]:
+                updated = True
+            config_data[theme][monster] = theme_data
+        image = theme_data.pop("image", None)
+        text = _(
+            "Monster: `{monster}` has been {status} the `{theme}` theme\n"
+            "```\n"
+            "HP:               {hp}\n"
+            "Diplomacy:        {dipl}\n"
+            "Physical defence: {pdef}\n"
+            "Magical defence:  {mdef}\n"
+            "Is a boss:        {boss}```"
+        ).format(
+            monster=monster,
+            theme=theme,
+            status=_("added to") if not updated else _("updated in"),
+            **theme_data,
+        )
+
+        embed = discord.Embed(description=text, colour=await ctx.embed_colour())
+        embed.set_image(url=image)
+        await ctx.send(embed=embed)
 
     @adventureset.command()
     @checks.admin_or_permissions(administrator=True)
@@ -4669,7 +4717,7 @@ class Adventure(BaseCog):
             monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
             if session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
                 avaliable_loot = [[0, 0, 3, 1, 0], [0, 0, 1, 2, 0], [0, 0, 0, 3, 0]]
-                if "Ascended" in session.challenge:
+                if "ascended" in session.challenge.lower():
                     avaliable_loot = [
                         [0, 0, 1, 5, 1],
                         [0, 0, 1, 3, 1],
