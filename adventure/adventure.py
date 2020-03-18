@@ -700,7 +700,7 @@ class Adventure(BaseCog):
                 return
             for i in range(num):
                 await c.add_to_backpack(await self._genitem(rarity, slot))
-            await self.config.user(ctx.author).set(c.to_json())
+            await self.config.user(ctx.author).set(await c.to_json(self.config))
         await ctx.invoke(self._backpack)
 
     @commands.command()
@@ -827,7 +827,7 @@ class Adventure(BaseCog):
                     )
                 await ctx.send(equip_msg)
                 c = await c.equip_item(equip, True, self.is_dev(ctx.author))  # FIXME:
-                await self.config.user(ctx.author).set(c.to_json())
+                await self.config.user(ctx.author).set(await c.to_json(self.config))
 
     @_backpack.command(name="disassemble")
     async def backpack_disassemble(self, ctx: Context, *, backpack_item: ItemConverter):
@@ -864,7 +864,7 @@ class Adventure(BaseCog):
                 item.owned -= 1
                 if item.owned <= 0:
                     del character.backpack[item.name]
-                await self.config.user(ctx.author).set(character.to_json())
+                await self.config.user(ctx.author).set(await character.to_json(self.config))
                 return await smart_embed(
                     ctx,
                     _("Your attempt at disassembling {} failed and it has been destroyed.").format(
@@ -876,7 +876,7 @@ class Adventure(BaseCog):
                 if item.owned <= 0:
                     del character.backpack[item.name]
                 character.treasure[3] += roll
-                await self.config.user(ctx.author).set(character.to_json())
+                await self.config.user(ctx.author).set(await character.to_json(self.config))
                 return await smart_embed(
                     ctx,
                     _(
@@ -963,7 +963,7 @@ class Adventure(BaseCog):
                 if item_price > 0:
                     with contextlib.suppress(BalanceTooHigh):
                         await bank.deposit_credits(ctx.author, item_price)
-            await self.config.user(ctx.author).set(c.to_json())
+            await self.config.user(ctx.author).set(await c.to_json(self.config))
         msg_list = []
         new_msg = _("{author} sold all their{rarity} items for {price}.\n\n{items}").format(
             author=self.escape(ctx.author.display_name),
@@ -1133,7 +1133,7 @@ class Adventure(BaseCog):
                 lock.release()
 
         if msg:
-            await self.config.user(ctx.author).set(character.to_json())
+            await self.config.user(ctx.author).set(await character.to_json(self.config))
             pages = [page for page in pagify(msg, delims=["\n"], page_length=1900)]
             if len(pages) > 1:
                 await menu(ctx, pages, DEFAULT_CONTROLS)
@@ -1275,8 +1275,12 @@ class Adventure(BaseCog):
                                 else:
                                     item.owned = 1
                                     buy_user.backpack[item.name] = item
-                                await self.config.user(ctx.author).set(c.to_json())
-                                await self.config.user(buyer).set(buy_user.to_json())
+                                await self.config.user(ctx.author).set(
+                                    await c.to_json(self.config)
+                                )
+                                await self.config.user(buyer).set(
+                                    await buy_user.to_json(self.config)
+                                )
 
                             await trade_msg.edit(
                                 content=(
@@ -1464,7 +1468,7 @@ class Adventure(BaseCog):
             c.heroclass["cooldown"] = 0
             if "catch_cooldown" in c.heroclass:
                 c.heroclass["catch_cooldown"] = 0
-            await self.config.user(target).set(c.to_json())
+            await self.config.user(target).set(await c.to_json(self.config))
         await ctx.tick()
 
     @commands.group(aliases=["loadouts"])
@@ -1499,7 +1503,7 @@ class Adventure(BaseCog):
                     return
                 loadout = await Character.save_loadout(c)
                 c.loadouts[name] = loadout
-                await self.config.user(ctx.author).set(c.to_json())
+                await self.config.user(ctx.author).set(await c.to_json(self.config))
                 await smart_embed(
                     ctx,
                     _("**{author}**, your current equipment has been saved to {name}.").format(
@@ -1529,7 +1533,7 @@ class Adventure(BaseCog):
                 return
             else:
                 del c.loadouts[name]
-                await self.config.user(ctx.author).set(c.to_json())
+                await self.config.user(ctx.author).set(await c.to_json(self.config))
                 await smart_embed(
                     ctx,
                     _("**{author}**, loadout {name} has been deleted.").format(
@@ -1628,7 +1632,7 @@ class Adventure(BaseCog):
                     lang="css",
                 )
                 await ctx.send(current_stats)
-                await self.config.user(ctx.author).set(c.to_json())
+                await self.config.user(ctx.author).set(await c.to_json(self.config))
 
     @commands.group()
     @commands.guild_only()
@@ -1823,7 +1827,7 @@ class Adventure(BaseCog):
                     )
             with contextlib.suppress(KeyError):
                 del c.backpack[item.name]
-            await self.config.user(user).set(c.to_json())
+            await self.config.user(user).set(await c.to_json(self.config))
         await ctx.send(
             _("{item} removed from {user}.").format(item=box(str(item), lang="css"), user=user)
         )
@@ -2194,7 +2198,7 @@ class Adventure(BaseCog):
                             lang="css",
                         )
                     )
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
                 else:
                     await smart_embed(
                         ctx,
@@ -2231,7 +2235,7 @@ class Adventure(BaseCog):
                             lang="css",
                         )
                     )
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
                 else:
                     await smart_embed(
                         ctx,
@@ -2267,7 +2271,7 @@ class Adventure(BaseCog):
                             lang="css",
                         )
                     )
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
                 else:
                     await smart_embed(
                         ctx,
@@ -2425,7 +2429,7 @@ class Adventure(BaseCog):
                     c.backpack[x.name].owned -= 1
                     if c.backpack[x.name].owned <= 0:
                         del c.backpack[x.name]
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
                 # save so the items are eaten up already
                 for item in c.get_current_equipment():
                     if item.rarity == "forged":
@@ -2469,10 +2473,10 @@ class Adventure(BaseCog):
                             del c.backpack[item.name]
                         await ctx.send(created_item)
                         c.backpack[newitem.name] = newitem
-                        await self.config.user(ctx.author).set(c.to_json())
+                        await self.config.user(ctx.author).set(await c.to_json(self.config))
                     else:
                         c.heroclass["cooldown"] = time.time() + cooldown_time
-                        await self.config.user(ctx.author).set(c.to_json())
+                        await self.config.user(ctx.author).set(await c.to_json(self.config))
                         mad_forge = box(
                             _(
                                 "{author}, {newitem} got mad at your rejection and blew itself up."
@@ -2483,7 +2487,7 @@ class Adventure(BaseCog):
                 else:
                     c.heroclass["cooldown"] = time.time() + cooldown_time
                     c.backpack[newitem.name] = newitem
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
                     forged_item = box(
                         _("{author}, your new {newitem} is lurking in your backpack.").format(
                             author=self.escape(ctx.author.display_name), newitem=newitem
@@ -2698,7 +2702,7 @@ class Adventure(BaseCog):
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
             await c.add_to_backpack(item)
-            await self.config.user(user).set(c.to_json())
+            await self.config.user(user).set(await c.to_json(self.config))
         await ctx.send(
             box(
                 _(
@@ -2743,7 +2747,7 @@ class Adventure(BaseCog):
                 c.treasure[4] += number
             else:
                 c.treasure[0] += number
-            await self.config.user(user).set(c.to_json())
+            await self.config.user(user).set(await c.to_json(self.config))
             await ctx.send(
                 box(
                     _(
@@ -2969,7 +2973,9 @@ class Adventure(BaseCog):
                                 for item in tinker_wep:
                                     del c.backpack[item.name]
                                 if c.heroclass["name"] == "Tinkerer":
-                                    await self.config.user(ctx.author).set(c.to_json())
+                                    await self.config.user(ctx.author).set(
+                                        await c.to_json(self.config)
+                                    )
                                     if tinker_wep:
                                         await class_msg.edit(
                                             content=box(
@@ -2985,7 +2991,9 @@ class Adventure(BaseCog):
                                     c.heroclass["pet"] = {}
                                     c.heroclass = classes[clz]
 
-                                    await self.config.user(ctx.author).set(c.to_json())
+                                    await self.config.user(ctx.author).set(
+                                        await c.to_json(self.config)
+                                    )
                                     await self._clear_react(class_msg)
                                     await class_msg.edit(
                                         content=box(
@@ -3027,7 +3035,7 @@ class Adventure(BaseCog):
                             c.heroclass["cooldown"] = (
                                 max(900, (3600 - (c.luck + c.total_int) * 2)) + time.time()
                             )
-                        await self.config.user(ctx.author).set(c.to_json())
+                        await self.config.user(ctx.author).set(await c.to_json(self.config))
                         await self._clear_react(class_msg)
                         await class_msg.edit(content=box(now_class_msg, lang="css"))
                         try:
@@ -3126,7 +3134,7 @@ class Adventure(BaseCog):
                     # atomically save reduced loot count then lock again when saving inside
                     # open chests
                     c.treasure[redux] -= number
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
                     items = await self._open_chests(ctx, ctx.author, box_type, number, character=c)
                     msg = _(
                         "{}, you've opened the following items:\n"
@@ -3162,7 +3170,7 @@ class Adventure(BaseCog):
                     # atomically save reduced loot count then lock again when saving inside
                     # open chests
                     c.treasure[redux] -= 1
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
 
                     await self._open_chest(
                         ctx, ctx.author, box_type, character=c
@@ -3457,13 +3465,17 @@ class Adventure(BaseCog):
                             ),
                         )
                     extra_dipl = 0
-                    pet_choices = list(self.PETS.keys())
+                    theme = await self.config.theme()
+                    extra_pets = await self.config.themes.all()
+                    extra_pets = extra_pets.get(theme, {}).get("pets", {})
+                    pet_list = {**self.PETS, **extra_pets}
+                    pet_choices = list(pet_list.keys())
                     pet = random.choice(pet_choices)
 
                     roll = random.randint(1, 20)
                     dipl_value = roll + c.total_cha + (c.total_int // 3) + (c.luck // 2)
                     dipl_value += extra_dipl
-                    pet_reqs = self.PETS[pet].get("bonuses", {}).get("req", {})
+                    pet_reqs = pet_list[pet].get("bonuses", {}).get("req", {})
                     pet_msg4 = ""
                     if pet_reqs.get("set", False):
                         if pet_reqs.get("set", None) in c.sets:
@@ -3515,7 +3527,7 @@ class Adventure(BaseCog):
                             await user_msg.edit(content=f"{pet_msg}\n{pet_msg2}\n{pet_msg3}")
                             c.heroclass["pet"] = self.PETS[pet]
                             c.heroclass["catch_cooldown"] = time.time()
-                            await self.config.user(ctx.author).set(c.to_json())
+                            await self.config.user(ctx.author).set(await c.to_json(self.config))
                         elif roll == 1:
                             bonus = _("But they stepped on a twig and scared it away.")
                             pet_msg3 = box(
@@ -3571,7 +3583,7 @@ class Adventure(BaseCog):
             if c.heroclass["cooldown"] + cooldown_time <= time.time():
                 await self._open_chest(ctx, c.heroclass["pet"]["name"], "pet", character=c)
                 c.heroclass["cooldown"] = time.time()
-                await self.config.user(ctx.author).set(c.to_json())
+                await self.config.user(ctx.author).set(await c.to_json(self.config))
             else:
                 cooldown_time = (c.heroclass["cooldown"] + 7200) - time.time()
                 return await smart_embed(
@@ -3607,7 +3619,7 @@ class Adventure(BaseCog):
                 )
             if c.heroclass["pet"]:
                 c.heroclass["pet"] = {}
-                await self.config.user(ctx.author).set(c.to_json())
+                await self.config.user(ctx.author).set(await c.to_json(self.config))
                 return await ctx.send(
                     box(
                         _("{} released their pet into the wild.").format(
@@ -3654,7 +3666,7 @@ class Adventure(BaseCog):
                 if c.heroclass["cooldown"] + cooldown_time <= time.time():
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time()
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
 
                     await smart_embed(
                         ctx,
@@ -3710,7 +3722,7 @@ class Adventure(BaseCog):
                 if c.heroclass["cooldown"] + cooldown_time <= time.time():
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time()
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
                     await smart_embed(
                         ctx,
                         _("{skill} **{c}** is starting to froth at the mouth... {skill}").format(
@@ -3767,7 +3779,7 @@ class Adventure(BaseCog):
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time()
 
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
                     await smart_embed(
                         ctx,
                         _("{skill} **{c}** is focusing all of their energy... {skill}").format(
@@ -3823,7 +3835,7 @@ class Adventure(BaseCog):
                 if c.heroclass["cooldown"] + cooldown_time <= time.time():
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time()
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
                     await smart_embed(
                         ctx,
                         _("{skill} **{c}** is whipping up a performance... {skill}").format(
@@ -3897,7 +3909,7 @@ class Adventure(BaseCog):
                     c.skill["att"] = 0
                     c.skill["cha"] = 0
                     c.skill["int"] = 0
-                    await self.config.user(ctx.author).set(c.to_json())
+                    await self.config.user(ctx.author).set(await c.to_json(self.config))
                     await self.config.user(ctx.author).last_skill_reset.set(int(time.time()))
                     await bank.withdraw_credits(ctx.author, offering)
                     await smart_embed(
@@ -3962,7 +3974,7 @@ class Adventure(BaseCog):
                     c.skill["pool"] -= amount
                     c.skill["int"] += amount
                     spend = "intelligence"
-                await self.config.user(ctx.author).set(c.to_json())
+                await self.config.user(ctx.author).set(await c.to_json(self.config))
                 await smart_embed(
                     ctx,
                     _("{author}, you permanently raised your {spend} value by {amount}.").format(
@@ -4101,7 +4113,7 @@ class Adventure(BaseCog):
                         break
             if msg:
                 await ctx.send(box(msg, lang="css"))
-                await self.config.user(ctx.author).set(c.to_json())
+                await self.config.user(ctx.author).set(await c.to_json(self.config))
             else:
                 await smart_embed(
                     ctx,
@@ -4221,7 +4233,7 @@ class Adventure(BaseCog):
                         continue
                     if c.heroclass["name"] != "Ranger" and c.heroclass["ability"]:
                         c.heroclass["ability"] = False
-                        await self.config.user(user).set(c.to_json())
+                        await self.config.user(user).set(await c.to_json(self.config))
 
         while ctx.guild.id in self._sessions:
             del self._sessions[ctx.guild.id]
@@ -4699,7 +4711,7 @@ class Adventure(BaseCog):
                 item = items["item"]
                 item.owned = pred.result
                 await c.add_to_backpack(item, number=pred.result)
-                await self.config.user(user).set(c.to_json())
+                await self.config.user(user).set(await c.to_json(self.config))
                 with contextlib.suppress(discord.HTTPException):
                     await to_delete.delete()
                     await msg.delete()
@@ -4938,7 +4950,7 @@ class Adventure(BaseCog):
                             await bank.set_balance(user, 0)
                 c.adventures.update({"loses": c.adventures.get("loses", 0) + 1})
                 c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
-                await self.config.user(user).set(c.to_json())
+                await self.config.user(user).set(await c.to_json(self.config))
             loss_list = []
             result_msg += session.miniboss["defeat"]
             if len(repair_list) > 0:
@@ -5345,7 +5357,7 @@ class Adventure(BaseCog):
                     c.adventures.update({special_action: current_val + 1})
                     c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
                     parsed_users.append(user)
-                await self.config.user(user).set(c.to_json())
+                await self.config.user(user).set(await c.to_json(self.config))
 
     async def handle_run(self, guild_id, attack, diplomacy, magic):
         runners = []
@@ -5895,7 +5907,7 @@ class Adventure(BaseCog):
                         special = False
             if special is not False:
                 c.treasure = [sum(x) for x in zip(c.treasure, special)]
-            await self.config.user(user).set(c.to_json())
+            await self.config.user(user).set(await c.to_json(self.config))
         finally:
             lock = self.get_lock(user)
             with contextlib.suppress(Exception):
@@ -6062,7 +6074,7 @@ class Adventure(BaseCog):
             else:
                 items[item_name] = item
             await character.add_to_backpack(item)
-        await self.config.user(ctx.author).set(character.to_json())
+        await self.config.user(ctx.author).set(await character.to_json(self.config))
         return items
 
     async def _open_chest(self, ctx: Context, user, chest_type, character):
@@ -6200,7 +6212,7 @@ class Adventure(BaseCog):
                     )
                 )
             )
-            await self.config.user(ctx.author).set(character.to_json())
+            await self.config.user(ctx.author).set(await character.to_json(self.config))
             return
         await self._clear_react(open_msg)
         if self._treasure_controls[react.emoji] == "sell":
@@ -6226,7 +6238,7 @@ class Adventure(BaseCog):
                 )
             )
             await self._clear_react(open_msg)
-            await self.config.user(ctx.author).set(character.to_json())
+            await self.config.user(ctx.author).set(await character.to_json(self.config))
             return
         elif self._treasure_controls[react.emoji] == "equip":
             equiplevel = equip_level(character, item)
@@ -6234,7 +6246,7 @@ class Adventure(BaseCog):
                 equiplevel = 0
             if not can_equip(character, item):
                 await character.add_to_backpack(item)
-                await self.config.user(ctx.author).set(character.to_json())
+                await self.config.user(ctx.author).set(await character.to_json(self.config))
                 return await smart_embed(
                     ctx,
                     f"**{self.escape(ctx.author.display_name)}**, You need to be level `{equiplevel}` to equip this item, I've put it in your backpack",
@@ -6261,7 +6273,7 @@ class Adventure(BaseCog):
                 )
             await open_msg.edit(content=equip_msg)
             character = await character.equip_item(item, False, self.is_dev(ctx.author))
-            await self.config.user(ctx.author).set(character.to_json())
+            await self.config.user(ctx.author).set(await character.to_json(self.config))
             return
         else:
             await character.add_to_backpack(item)
@@ -6276,7 +6288,7 @@ class Adventure(BaseCog):
                 )
             )
             await self._clear_react(open_msg)
-            await self.config.user(ctx.author).set(character.to_json())
+            await self.config.user(ctx.author).set(await character.to_json(self.config))
             return
 
     @staticmethod
