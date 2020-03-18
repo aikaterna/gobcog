@@ -1176,13 +1176,18 @@ class ThemeSetMonterConverter(Converter):
             dipl = float(arguments[3])
             pdef = float(arguments[4])
             mdef = float(arguments[5])
+            if any([i < 0 for i in [hp, dipl, pdef, mdef]]):
+                raise BadArgument(
+                    "HP, Charisma, Magical defence and Physical defence cannot be negative."
+                )
+
             image = arguments[7]
             boss = True if arguments[6].lower() == "true" else False
             if not image:
                 raise Exception
         except Exception:
             raise BadArgument(
-                "Invalid format, Excepted:\ntheme++name++hp++dipl++pdef++mdef++boss++image"
+                "Invalid format, Excepted:\n`theme++name++hp++dipl++pdef++mdef++boss++image`"
             )
         return {
             "theme": theme,
@@ -1193,7 +1198,36 @@ class ThemeSetMonterConverter(Converter):
             "dipl": dipl,
             "image": image,
             "boss": boss,
-            "miniboss": {}
+            "miniboss": {},
+        }
+
+
+class ThemeSetPetConverter(Converter):
+    async def convert(self, ctx, argument) -> MutableMapping:
+        arguments = list(map(str.strip, argument.split("++")))
+        try:
+            theme = arguments[0]
+            name = arguments[1]
+            bonus = float(arguments[2])
+            cha = int(arguments[3])
+            crit = int(arguments[4])
+            if not (0 <= crit <= 100):
+                raise BadArgument("Critical chance needs to be between 0 and 100")
+            if not arguments[5]:
+                raise Exception
+            always = True if arguments[5].lower() == "true" else False
+        except BadArgument:
+            raise
+        except Exception:
+            raise BadArgument(
+                "Invalid format, Excepted:\n`theme++name++bonus_multiplier++required_cha++crit_chance++always_crit`"
+            )
+        return {
+            "theme": theme,
+            "name": name,
+            "bonus": bonus,
+            "cha": cha,
+            "bonuses": {"crit": crit, "always": always},
         }
 
 

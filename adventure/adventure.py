@@ -52,6 +52,7 @@ from .charsheet import (
     RarityConverter,
     SlotConverter,
     ThemeSetMonterConverter,
+    ThemeSetPetConverter,
 )
 
 try:
@@ -1898,10 +1899,12 @@ class Adventure(BaseCog):
         monster = theme_data.pop("name", None)
         async with self.config.themes.all() as config_data:
             if theme not in config_data:
-                config_data[theme] = {}
-            if monster in config_data[theme]:
+                config_data[theme] = {"monsters": {}}
+            if "monsters" not in config_data[theme]:
+                config_data[theme]["monsters"] = {}
+            if monster in config_data[theme]["monsters"]:
                 updated = True
-            config_data[theme][monster] = theme_data
+            config_data[theme]["monsters"][monster] = theme_data
         image = theme_data.pop("image", None)
         text = _(
             "Monster: `{monster}` has been {status} the `{theme}` theme\n"
@@ -1922,6 +1925,44 @@ class Adventure(BaseCog):
         embed.set_image(url=image)
         await ctx.send(embed=embed)
 
+    @themeset_add.command(name="pet")
+    async def themeset_add_pet(self, ctx: Context, *, pet_data: ThemeSetPetConverter):
+        """[Admin] Add/Update a pet object in the specified theme."""
+        assert isinstance(pet_data, dict)
+        theme = pet_data.pop("theme", None)
+        if theme != "default" and theme not in os.listdir(cog_data_path(self)):
+            await smart_embed(ctx, _("That theme pack does not exist!"))
+            return
+        updated = False
+        pet = pet_data.pop("name", None)
+        async with self.config.themes.all() as config_data:
+            if theme not in config_data:
+                config_data[theme] = {"pet": {}}
+            if "pet" not in config_data[theme]:
+                config_data[theme]["pet"] = {}
+            if pet in config_data[theme]["pet"]:
+                updated = True
+            config_data[theme]["pet"][pet] = pet_data
+
+        pet_bonuses = pet_data.pop("bonuses", {})
+        text = _(
+            "Pet: `{pet}` has been {status} the `{theme}` theme\n"
+            "```ini\n"
+            "Bonus Multiplier:  [{bonus}]\n"
+            "Required Charisma: [{cha}]\n"
+            "Pet always crits:  [{always}]\n"
+            "Critical Chance:   [{crit}/100]```"
+        ).format(
+            pet=pet,
+            theme=theme,
+            status=_("added to") if not updated else _("updated in"),
+            **pet_data,
+            **pet_bonuses,
+        )
+
+        embed = discord.Embed(description=text, colour=await ctx.embed_colour())
+        await ctx.send(embed=embed)
+
     @themeset.group(name="delete", aliases=["del", "rem", "remove"])
     async def themeset_delete(self, ctx: Context):
         """[Admin] Remove objects in the specified theme."""
@@ -1934,9 +1975,11 @@ class Adventure(BaseCog):
             return
         async with self.config.themes.all() as config_data:
             if theme not in config_data:
-                config_data[theme] = {}
-            if monster in config_data[theme]:
-                del config_data[theme][monster]
+                config_data[theme] = {"monsters": {}}
+            if "monsters" not in config_data[theme]:
+                config_data[theme]["monsters"] = {}
+            if monster in config_data[theme]["monsters"]:
+                del config_data[theme]["monsters"][monster]
             else:
                 text = _("Monster: `{monster}` does not exist in `{theme}` theme").format(
                     monster=monster, theme=theme
@@ -1946,6 +1989,31 @@ class Adventure(BaseCog):
 
         text = _("Monster: `{monster}` has been deleted from the `{theme}` theme").format(
             monster=monster, theme=theme
+        )
+        await smart_embed(ctx, text)
+
+    @themeset_delete.command(name="pet")
+    async def themeset_delete_pet(self, ctx: Context, theme: str, *, pet: str):
+        """[Admin] Remove a pet object in the specified theme."""
+        if theme != "default" and theme not in os.listdir(cog_data_path(self)):
+            await smart_embed(ctx, _("That theme pack does not exist!"))
+            return
+        async with self.config.themes.all() as config_data:
+            if theme not in config_data:
+                config_data[theme] = {"pet": {}}
+            if "pet" not in config_data[theme]:
+                config_data[theme]["pet"] = {}
+            if pet in config_data[theme]["pet"]:
+                del config_data[theme]["pet"][pet]
+            else:
+                text = _("Pet: `{pet}` does not exist in `{theme}` theme").format(
+                    pet=pet, theme=theme
+                )
+                await smart_embed(ctx, text)
+                return
+
+        text = _("Pet: `{pet}` has been deleted from the `{theme}` theme").format(
+            pet=pet, theme=theme
         )
         await smart_embed(ctx, text)
 
@@ -1962,7 +2030,7 @@ class Adventure(BaseCog):
         async with self.config.themes.all() as config_data:
             if theme not in config_data:
                 return await smart_embed(ctx, _("No custom monsters exist in this theme"))
-            monster_data = config_data.get(theme)
+            monster_data = config_data.get(theme, {}).get("monsters", {})
         embed_list = []
         for monster, monster_stats in monster_data.items():
             image = monster_stats.get("image")
@@ -1973,16 +2041,37 @@ class Adventure(BaseCog):
                 "Physical defence: [{pdef}]\n"
                 "Magical defence:  [{mdef}]\n"
                 "Is a boss:        [{boss}]```"
-            ).format(
-                **monster_stats,
-            )
+            ).format(**monster_stats)
             embed = discord.Embed(title=monster, description=text)
             embed.set_image(url=image)
             embed_list.append(embed)
         if embed_list:
             await menu(ctx, embed_list, DEFAULT_CONTROLS)
 
-
+    @themeset_list.command(name="pet")
+    async def themeset_list_pet(self, ctx: Context, *, theme: str):
+        """[Admin] Show pet objects in the specified theme."""
+        if theme != "default" and theme not in os.listdir(cog_data_path(self)):
+            await smart_embed(ctx, _("That theme pack does not exist!"))
+            return
+        async with self.config.themes.all() as config_data:
+            if theme not in config_data:
+                return await smart_embed(ctx, _("No custom monsters exist in this theme"))
+            monster_data = config_data.get(theme, {}).get("pet", {})
+        embed_list = []
+        for pet, pet_stats in monster_data.items():
+            pet_bonuses = pet_stats.pop("bonuses", {})
+            text = _(
+                "```ini\n"
+                "Bonus Multiplier:  [{bonus}]\n"
+                "Required Charisma: [{cha}]\n"
+                "Pet always crits:  [{always}]\n"
+                "Critical Chance:   [{crit}/100]```"
+            ).format(theme=theme, **pet_stats, **pet_bonuses)
+            embed = discord.Embed(title=pet, description=text)
+            embed_list.append(embed)
+        if embed_list:
+            await menu(ctx, embed_list, DEFAULT_CONTROLS)
 
     @adventureset.command()
     @checks.admin_or_permissions(administrator=True)
@@ -3401,7 +3490,7 @@ class Adventure(BaseCog):
                         ).format(
                             dice=self.emojis.dice,
                             author=self.escape(ctx.author.display_name),
-                            pet_name=self.PETS[pet]["name"],
+                            pet_name=pet,
                             roll=roll,
                         ),
                         lang="css",
@@ -3419,7 +3508,7 @@ class Adventure(BaseCog):
                         if roll == 0:
                             pet_msg3 = box(
                                 _("{bonus}\nThey successfully tamed the {pet}.").format(
-                                    bonus=bonus, pet=self.PETS[pet]["name"]
+                                    bonus=bonus, pet=pet
                                 ),
                                 lang="css",
                             )
@@ -3430,9 +3519,7 @@ class Adventure(BaseCog):
                         elif roll == 1:
                             bonus = _("But they stepped on a twig and scared it away.")
                             pet_msg3 = box(
-                                _("{bonus}\nThe {pet} escaped.").format(
-                                    bonus=bonus, pet=self.PETS[pet]["name"]
-                                ),
+                                _("{bonus}\nThe {pet} escaped.").format(bonus=bonus, pet=pet),
                                 lang="css",
                             )
                             await user_msg.edit(
@@ -3441,9 +3528,7 @@ class Adventure(BaseCog):
                         else:
                             bonus = ""
                             pet_msg3 = box(
-                                _("{bonus}\nThe {pet} escaped.").format(
-                                    bonus=bonus, pet=self.PETS[pet]["name"]
-                                ),
+                                _("{bonus}\nThe {pet} escaped.").format(bonus=bonus, pet=pet),
                                 lang="css",
                             )
                             await user_msg.edit(
@@ -3451,9 +3536,7 @@ class Adventure(BaseCog):
                             )
                     else:
                         pet_msg3 = box(
-                            _("{bonus}\nThe {pet} escaped.").format(
-                                bonus=bonus, pet=self.PETS[pet]["name"]
-                            ),
+                            _("{bonus}\nThe {pet} escaped.").format(bonus=bonus, pet=pet),
                             lang="css",
                         )
                         await user_msg.edit(content=f"{pet_msg}\n{pet_msg2}\n{pet_msg3}{pet_msg4}")
@@ -4279,7 +4362,7 @@ class Adventure(BaseCog):
             return ({**self.MONSTERS, **self.AS_MONSTERS}, 1)
         theme = await self.config.theme()
         extra_monsters = await self.config.themes.all()
-        extra_monsters = extra_monsters.get(theme, {})
+        extra_monsters = extra_monsters.get(theme, {}).get("monsters", {})
         monster_stats = 1
         monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
         if c.rebirths >= 10:
