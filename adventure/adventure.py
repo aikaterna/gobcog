@@ -2230,7 +2230,7 @@ class Adventure(BaseCog):
                             timeout=30,
                         )
                         if reply.content.lower() in ["cancel", "exit"]:
-                            return await smart_embed(ctx, _("Forging process has been cancelled"))
+                            return await smart_embed(ctx, _("Forging process has been cancelled."))
                         new_ctx = await self.bot.get_context(reply)
                         with contextlib.suppress(BadArgument):
                             item = None
