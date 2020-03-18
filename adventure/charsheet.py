@@ -883,7 +883,11 @@ class Character(Item):
 
         if heroclass["name"] == "Ranger":
             if heroclass.get("pet"):
-                heroclass["pet"] = PETS.get(heroclass["pet"]["name"], heroclass["pet"])
+                theme = await config.theme()
+                extra_pets = await config.themes.all()
+                extra_pets = extra_pets.get(theme, {}).get("pets", {})
+                pet_list = {**PETS, **extra_pets}
+                heroclass["pet"] = pet_list.get(heroclass["pet"]["name"], heroclass["pet"])
         if "adventures" in data:
             adventures = data["adventures"]
         else:
@@ -946,14 +950,20 @@ class Character(Item):
                     count_set += 1
         return count_set
 
-    def to_json(self) -> dict:
+    async def to_json(self, config) -> dict:
         backpack = {}
         for (k, v) in self.backpack.items():
             for (n, i) in v.to_json().items():
                 backpack[n] = i
 
         if self.heroclass["name"] == "Ranger" and self.heroclass.get("pet"):
-            self.heroclass["pet"] = PETS.get(self.heroclass["pet"]["name"], self.heroclass["pet"])
+            theme = await config.theme()
+            extra_pets = await config.themes.all()
+            extra_pets = extra_pets.get(theme, {}).get("pets", {})
+            pet_list = {**PETS, **extra_pets}
+            self.heroclass["pet"] = pet_list.get(
+                self.heroclass["pet"]["name"], self.heroclass["pet"]
+            )
 
         return {
             "adventures": self.adventures,
