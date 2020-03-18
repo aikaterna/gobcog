@@ -1,6 +1,6 @@
 {
     "Albedo": {"name": "Albedo", "bonus": 2.0, "cha": 150, "bonuses": {"always": true, "crit": 85}},
-    "Essence of Nazarick": {"name": "Guardians of Nazarick", "bonus": 25, "cha": 10000, "bonuses": {"always": true, "crit": 100, "req": {"set": "Ainz Ooal Gown"}}},
+    "Guardians of Nazarick": {"name": "Guardians of Nazarick", "bonus": 25, "cha": 10000, "bonuses": {"always": true, "crit": 100, "req": {"set": "Ainz Ooal Gown"}}},
     "Rubedo": {"name": "Rubedo", "bonus": 3.0, "cha": 250, "bonuses": {"always": true, "crit": 95}},
     "angry armadillo": {"name": "angry armadillo", "bonus": 1.17, "cha": 24, "bonuses": {"always": false, "crit": 3}},
     "angry bear": {"name": "angry bear", "bonus": 1.21, "cha": 91, "bonuses": {"always": false, "crit": 12}},
