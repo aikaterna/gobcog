@@ -1181,8 +1181,9 @@ class ThemeSetMonterConverter(Converter):
             if not image:
                 raise Exception
         except Exception:
-            raise BadArgument("Invalid format, Excepted:\n" 
-                              "theme++name++hp++dipl++pdef++mdef++boss++image")
+            raise BadArgument(
+                "Invalid format, Excepted:\ntheme++name++hp++dipl++pdef++mdef++boss++image"
+            )
         return {
             "theme": theme,
             "name": name,
@@ -1192,6 +1193,7 @@ class ThemeSetMonterConverter(Converter):
             "dipl": dipl,
             "image": image,
             "boss": boss,
+            "miniboss": {}
         }
 
 

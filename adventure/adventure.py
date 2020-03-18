@@ -1905,12 +1905,12 @@ class Adventure(BaseCog):
         image = theme_data.pop("image", None)
         text = _(
             "Monster: `{monster}` has been {status} the `{theme}` theme\n"
-            "```\n"
-            "HP:               {hp}\n"
-            "Diplomacy:        {dipl}\n"
-            "Physical defence: {pdef}\n"
-            "Magical defence:  {mdef}\n"
-            "Is a boss:        {boss}```"
+            "```ini\n"
+            "HP:               [{hp}]\n"
+            "Diplomacy:        [{dipl}]\n"
+            "Physical defence: [{pdef}]\n"
+            "Magical defence:  [{mdef}]\n"
+            "Is a boss:        [{boss}]```"
         ).format(
             monster=monster,
             theme=theme,
@@ -1921,6 +1921,68 @@ class Adventure(BaseCog):
         embed = discord.Embed(description=text, colour=await ctx.embed_colour())
         embed.set_image(url=image)
         await ctx.send(embed=embed)
+
+    @themeset.group(name="delete", aliases=["del", "rem", "remove"])
+    async def themeset_delete(self, ctx: Context):
+        """[Admin] Remove objects in the specified theme."""
+
+    @themeset_delete.command(name="monster")
+    async def themeset_delete_monster(self, ctx: Context, theme: str, *, monster: str):
+        """[Admin] Remove a monster object in the specified theme."""
+        if theme != "default" and theme not in os.listdir(cog_data_path(self)):
+            await smart_embed(ctx, _("That theme pack does not exist!"))
+            return
+        async with self.config.themes.all() as config_data:
+            if theme not in config_data:
+                config_data[theme] = {}
+            if monster in config_data[theme]:
+                del config_data[theme][monster]
+            else:
+                text = _("Monster: `{monster}` does not exist in `{theme}` theme").format(
+                    monster=monster, theme=theme
+                )
+                await smart_embed(ctx, text)
+                return
+
+        text = _("Monster: `{monster}` has been deleted from the `{theme}` theme").format(
+            monster=monster, theme=theme
+        )
+        await smart_embed(ctx, text)
+
+    @themeset.group(name="list", aliases=["show"])
+    async def themeset_list(self, ctx: Context):
+        """[Admin] Show custom objects in the specified theme."""
+
+    @themeset_list.command(name="monster")
+    async def themeset_list_monster(self, ctx: Context, *, theme: str):
+        """[Admin] Show monster objects in the specified theme."""
+        if theme != "default" and theme not in os.listdir(cog_data_path(self)):
+            await smart_embed(ctx, _("That theme pack does not exist!"))
+            return
+        async with self.config.themes.all() as config_data:
+            if theme not in config_data:
+                return await smart_embed(ctx, _("No custom monsters exist in this theme"))
+            monster_data = config_data.get(theme)
+        embed_list = []
+        for monster, monster_stats in monster_data.items():
+            image = monster_stats.get("image")
+            text = _(
+                "```ini\n"
+                "HP:               [{hp}]\n"
+                "Diplomacy:        [{dipl}]\n"
+                "Physical defence: [{pdef}]\n"
+                "Magical defence:  [{mdef}]\n"
+                "Is a boss:        [{boss}]```"
+            ).format(
+                **monster_stats,
+            )
+            embed = discord.Embed(title=monster, description=text)
+            embed.set_image(url=image)
+            embed_list.append(embed)
+        if embed_list:
+            await menu(ctx, embed_list, DEFAULT_CONTROLS)
+
+
 
     @adventureset.command()
     @checks.admin_or_permissions(administrator=True)
@@ -4215,9 +4277,11 @@ class Adventure(BaseCog):
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             return ({**self.MONSTERS, **self.AS_MONSTERS}, 1)
-
+        theme = await self.config.theme()
+        extra_monsters = await self.config.themes.all()
+        extra_monsters = extra_monsters.get(theme, {})
         monster_stats = 1
-        monsters = {**self.MONSTERS, **self.AS_MONSTERS}
+        monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
         if c.rebirths >= 10:
             monster_stats = 1 + max((c.rebirths // 10) - 1, 0) / 2
         return (monsters, monster_stats)
