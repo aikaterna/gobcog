@@ -468,8 +468,7 @@ class Character(Item):
             except Exception as exc:
                 log.error(f"error calculating {stat}", exc_info=exc)
         return (
-            int(stats * self.gear_set_bonus.get("statmult", 1))
-            + self.gear_set_bonus.get(stat, 0),
+            int(stats * self.gear_set_bonus.get("statmult", 1)) + self.gear_set_bonus.get(stat, 0),
             stats,
         )
 

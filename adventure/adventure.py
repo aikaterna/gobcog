@@ -2407,10 +2407,7 @@ class Adventure(BaseCog):
                         self.escape(ctx.author.display_name)
                     )
                     task.cancel()
-                    return await smart_embed(
-                        ctx,
-                        timeout_msg,
-                    )
+                    return await smart_embed(ctx, timeout_msg)
                 if item.rarity in ["forged", "set"]:
                     return await smart_embed(
                         ctx,
@@ -2460,10 +2457,7 @@ class Adventure(BaseCog):
                     timeout_msg = _("I don't have all day you know, **{}**.").format(
                         self.escape(ctx.author.display_name)
                     )
-                    return await smart_embed(
-                        ctx,
-                        timeout_msg,
-                    )
+                    return await smart_embed(ctx, timeout_msg)
                 finally:
                     task.cancel()
                 if item.rarity in ["forged", "set"]:
@@ -3336,7 +3330,7 @@ class Adventure(BaseCog):
             weekend = datetime.today().weekday() in [5, 6]
             wedfriday = datetime.today().weekday() in [2, 4]
             daymult = 2 if weekend else 1.5 if wedfriday else 1
-            xp_won = int((offering / xp_mod) * daymult)
+            xp_won = int((offering / xp_mod))
             try:
                 c = await Character.from_json(self.config, ctx.message.author)
             except Exception as exc:
@@ -3347,6 +3341,7 @@ class Adventure(BaseCog):
             ten_percent = xp_to_max * 0.1
             xp_won = ten_percent if xp_won > ten_percent else xp_won
             xp_won = int(xp_won * (min(max(random.randint(0, c.rebirths), 1), 50) / 100 + 1))
+            xp_won = int(xp_won * (c.gear_set_bonus.get("xpmult", 1) + daymult - 1))
             if roll < 10:
                 loss = round(bal // 3)
                 try:
@@ -6370,8 +6365,8 @@ class Adventure(BaseCog):
         weekend = datetime.today().weekday() in [5, 6]
         wedfriday = datetime.today().weekday() in [2, 4]
         daymult = 3 if weekend else 2 if wedfriday else 1
-        xp = max(1, round(amount)) * daymult
-        cp = max(1, round(amount)) * daymult
+        xp = max(1, round(amount))
+        cp = max(1, round(amount))
         newxp = 0
         newcp = 0
         rewards_list = []
@@ -6388,8 +6383,8 @@ class Adventure(BaseCog):
             # To the point where you can spec into only INT and
             # Reach level 1000 in a matter of days
             usercp = int(cp + (cp * c.luck) // 2)
-            userxp = int(userxp * c.gear_set_bonus.get("xpmult", 1))
-            usercp = int(usercp * c.gear_set_bonus.get("cpmult", 1))
+            userxp = int(userxp * (c.gear_set_bonus.get("xpmult", 1) + daymult - 1))
+            usercp = int(usercp * (c.gear_set_bonus.get("cpmult", 1) + daymult - 1))
             newxp += userxp
             newcp += usercp
             roll = random.randint(1, 5)
