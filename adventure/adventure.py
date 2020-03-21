@@ -206,7 +206,7 @@ class AdventureResults:
 class Adventure(BaseCog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
-    __version__ = "3.1.3"
+    __version__ = "3.1.4"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -1894,15 +1894,15 @@ class Adventure(BaseCog):
     @commands.guild_only()
     @checks.is_owner()
     async def themeset(self, ctx: Context):
-        """[Admin] Modify themes."""
+        """[Owner] Modify themes."""
 
     @themeset.group(name="add")
     async def themeset_add(self, ctx: Context):
-        """[Admin] Add/Update objects in the specified theme."""
+        """[Owner] Add/Update objects in the specified theme."""
 
     @themeset_add.command(name="monster")
     async def themeset_add_monster(self, ctx: Context, *, theme_data: ThemeSetMonterConverter):
-        """[Admin] Add/Update a monster object in the specified theme."""
+        """[Owner] Add/Update a monster object in the specified theme."""
         assert isinstance(theme_data, dict)
         theme = theme_data.pop("theme", None)
         if theme != "default" and theme not in os.listdir(cog_data_path(self)):
@@ -1940,7 +1940,7 @@ class Adventure(BaseCog):
 
     @themeset_add.command(name="pet")
     async def themeset_add_pet(self, ctx: Context, *, pet_data: ThemeSetPetConverter):
-        """[Admin] Add/Update a pet object in the specified theme."""
+        """[Owner] Add/Update a pet object in the specified theme."""
         assert isinstance(pet_data, dict)
         theme = pet_data.pop("theme", None)
         if theme != "default" and theme not in os.listdir(cog_data_path(self)):
@@ -1978,11 +1978,11 @@ class Adventure(BaseCog):
 
     @themeset.group(name="delete", aliases=["del", "rem", "remove"])
     async def themeset_delete(self, ctx: Context):
-        """[Admin] Remove objects in the specified theme."""
+        """[Owner] Remove objects in the specified theme."""
 
     @themeset_delete.command(name="monster")
     async def themeset_delete_monster(self, ctx: Context, theme: str, *, monster: str):
-        """[Admin] Remove a monster object in the specified theme."""
+        """[Owner] Remove a monster object in the specified theme."""
         if theme != "default" and theme not in os.listdir(cog_data_path(self)):
             await smart_embed(ctx, _("That theme pack does not exist!"))
             return
@@ -2007,7 +2007,7 @@ class Adventure(BaseCog):
 
     @themeset_delete.command(name="pet")
     async def themeset_delete_pet(self, ctx: Context, theme: str, *, pet: str):
-        """[Admin] Remove a pet object in the specified theme."""
+        """[Owner] Remove a pet object in the specified theme."""
         if theme != "default" and theme not in os.listdir(cog_data_path(self)):
             await smart_embed(ctx, _("That theme pack does not exist!"))
             return
@@ -2032,11 +2032,11 @@ class Adventure(BaseCog):
 
     @themeset.group(name="list", aliases=["show"])
     async def themeset_list(self, ctx: Context):
-        """[Admin] Show custom objects in the specified theme."""
+        """[Owner] Show custom objects in the specified theme."""
 
     @themeset_list.command(name="monster")
     async def themeset_list_monster(self, ctx: Context, *, theme: str):
-        """[Admin] Show monster objects in the specified theme."""
+        """[Owner] Show monster objects in the specified theme."""
         if theme != "default" and theme not in os.listdir(cog_data_path(self)):
             await smart_embed(ctx, _("That theme pack does not exist!"))
             return
@@ -2063,7 +2063,7 @@ class Adventure(BaseCog):
 
     @themeset_list.command(name="pet")
     async def themeset_list_pet(self, ctx: Context, *, theme: str):
-        """[Admin] Show pet objects in the specified theme."""
+        """[Owner] Show pet objects in the specified theme."""
         if theme != "default" and theme not in os.listdir(cog_data_path(self)):
             await smart_embed(ctx, _("That theme pack does not exist!"))
             return
