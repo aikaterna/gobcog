@@ -469,7 +469,7 @@ class Character(Item):
                 log.error(f"error calculating {stat}", exc_info=exc)
         return (
             int(stats * self.gear_set_bonus.get("statmult", 1))
-            + self.gear_set_bonus.get(stats, 0),
+            + self.gear_set_bonus.get(stat, 0),
             stats,
         )
 
@@ -607,35 +607,30 @@ class Character(Item):
                     (item.att * 2 if slot_name == "two handed" else item.att)
                     * self.gear_set_bonus.get("statmult", 1)
                 )
-                + self.gear_set_bonus.get("att", 0)
             )
             inter = int(
                 (
                     (item.int * 2 if slot_name == "two handed" else item.int)
                     * self.gear_set_bonus.get("statmult", 1)
                 )
-                + self.gear_set_bonus.get("int", 0)
             )
             cha = int(
                 (
                     (item.cha * 2 if slot_name == "two handed" else item.cha)
                     * self.gear_set_bonus.get("statmult", 1)
                 )
-                + self.gear_set_bonus.get("cha", 0)
             )
             dex = int(
                 (
                     (item.dex * 2 if slot_name == "two handed" else item.dex)
                     * self.gear_set_bonus.get("statmult", 1)
                 )
-                + self.gear_set_bonus.get("dex", 0)
             )
             luck = int(
                 (
                     (item.luck * 2 if slot_name == "two handed" else item.luck)
                     * self.gear_set_bonus.get("statmult", 1)
                 )
-                + self.gear_set_bonus.get("luck", 0)
             )
             att_space = " " if len(str(att)) == 1 else ""
             cha_space = " " if len(str(cha)) == 1 else ""
