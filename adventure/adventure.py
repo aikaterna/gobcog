@@ -4446,7 +4446,7 @@ class Adventure(BaseCog):
         self.bot.dispatch("adventure", ctx)
         text = ""
         monster_roster, monster_stats = await self.update_monster_roster(ctx.author)
-        if challenge and challenge not in monster_roster:
+        if not challenge or challenge not in monster_roster:
             challenge = await self.get_challenge(ctx, monster_roster)
 
         if attribute and attribute.lower() in self.ATTRIBS:
