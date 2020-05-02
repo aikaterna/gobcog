@@ -30,7 +30,7 @@ except ImportError:
         return "{:,}".format(val)
 
 
-DEV_LIST = []
+DEV_LIST = [208903205982044161, 154497072148643840, 218773382617890828]
 
 ORDER = [
     "head",
@@ -1237,8 +1237,16 @@ class ThemeSetPetConverter(Converter):
             raise
         except Exception:
             raise BadArgument(
-                "Invalid format, Excepted:\n`theme++name++bonus_multiplier++required_cha++crit_chance++always_crit`"
+                "Invalid format, Excepted:\n`theme++name++bonus_multiplier"
+                "++required_cha++crit_chance++always_crit`"
             )
+        if not ctx.cog.is_dev(ctx.author):
+            if bonus > 2:
+                raise BadArgument("Pet bonus is too high.")
+            if always and cha < 500:
+                raise BadArgument("Charisma is too low for such a strong pet.")
+            if crit > 85 and cha < 500:
+                raise BadArgument("Charisma is too low for such a strong pet.")
         return {
             "theme": theme,
             "name": name,
@@ -1278,18 +1286,16 @@ def can_equip(char: Character, item: Item):
 
 def calculate_sp(lvl_end: int, c: Character):
     points = c.rebirths * 10
-
-    while lvl_end >= 200:
+    async for rc in AsyncIter(range(lvl_end)):
+        if lvl_end >= 300:
+            points += 1
+        elif lvl_end >= 200:
+            points += 5
+        elif lvl_end >= 100:
+            points += 1
+        elif lvl_end >= 0:
+            points += 0.5
         lvl_end -= 1
-        points += 5
-
-    while lvl_end >= 100:
-        lvl_end -= 1
-        points += 1
-
-    while lvl_end > 0:
-        lvl_end -= 1
-        points += 0.5
 
     return int(points)
 

@@ -1460,6 +1460,17 @@ class Adventure(BaseCog):
     ):
         """[Owner] Set a users rebirth level."""
         target = user or ctx.author
+
+        if not self.is_dev(ctx.author):
+            if rebirth_level > 100:
+                await ctx.send("Rebirth is too high.")
+                await ctx.send_help()
+                return
+            elif character_level > 1000:
+                await ctx.send("Level is too high.")
+                await ctx.send_help()
+                return
+
         async with self.get_lock(target):
             try:
                 c = await Character.from_json(self.config, target)
