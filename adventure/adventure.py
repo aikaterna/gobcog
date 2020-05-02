@@ -4487,7 +4487,7 @@ class Adventure(BaseCog):
         monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
         transcended = False
         if transcended_chance == 5:
-            monsters = {**self.AS_MONSTERS, **extra_monsters}
+            monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
             monster_stats = 3 + max((c.rebirths // 10) - 1, 0)
             transcended = True
         elif c.rebirths >= 10:
