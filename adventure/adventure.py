@@ -21,17 +21,19 @@ from redbot.core.commands import Context
 from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator, cog_i18n
+from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import (
     box,
     escape,
     humanize_list,
+    humanize_number,
     humanize_timedelta,
     pagify,
 )
 from redbot.core.utils.common_filters import filter_various_mentions
 from redbot.core.utils.menus import DEFAULT_CONTROLS, menu, start_adding_reactions
 from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
-
+from redbot.core.bank import get_max_balance
 import adventure.charsheet
 
 from .charsheet import (
@@ -54,24 +56,6 @@ from .charsheet import (
     ThemeSetMonterConverter,
     ThemeSetPetConverter,
 )
-
-try:
-    from redbot.core.utils.chat_formatting import humanize_number
-except ImportError:
-
-    def humanize_number(val: int) -> str:
-        if isinstance(val, int):
-            return "{:,}".format(val)
-        return f"{val}"
-
-
-try:
-    from redbot.core.bank import get_max_balance
-except ImportError:
-    from redbot.core.bank import MAX_BALANCE
-
-    async def get_max_balance(guild: discord.Guild = None) -> int:
-        return MAX_BALANCE
 
 BaseCog = getattr(commands, "Cog", object)
 
@@ -135,7 +119,6 @@ class AdventureResults:
     """Object to store recent adventure results."""
 
     def __init__(self, num_raids):
-        """TODO: to be defined1. """
         self._num_raids = num_raids
         self._last_raids: MutableMapping[int, List] = {}
 
@@ -231,12 +214,12 @@ class AdventureResults:
 class Adventure(BaseCog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
-    __version__ = "3.1.6"
+    __version__ = "3.2.0"
 
     def __init__(self, bot: Red):
         self.bot = bot
         self._last_trade = {}
-        self._adv_results = AdventureResults(10)
+        self._adv_results = AdventureResults(20)
         self.emojis = SimpleNamespace()
         self.emojis.fumble = "\N{EXCLAMATION QUESTION MARK}"
         self.emojis.level_up = "\N{BLACK UP-POINTING DOUBLE TRIANGLE}"
@@ -613,7 +596,7 @@ class Adventure(BaseCog):
             return True
         return bool(ctx.guild is None and await bank.is_global())
 
-    def get_lock(self, member: discord.Member):
+    def get_lock(self, member: discord.User):
         if member.id not in self.locks:
             self.locks[member.id] = asyncio.Lock()
         return self.locks[member.id]
@@ -956,6 +939,29 @@ class Adventure(BaseCog):
                 )
 
         async with self.get_lock(ctx.author):
+            if rarity and slot:
+                msg = await ctx.send(
+                    "Are you sure you want to sell all {rarity} {slot} items in your inventory?".format(
+                        rarity=rarity, slot=slot
+                    )
+                )
+            elif rarity or slot:
+                msg = await ctx.send(
+                    "Are you sure you want to sell all{rarity}{slot} items in your inventory?".format(
+                        rarity=f" {rarity}" if rarity else "", slot=f" {slot}" if slot else ""
+                    )
+                )
+            else:
+                msg = await ctx.send("Are you sure you want to sell all items in your inventory?")
+
+            start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
+            pred = ReactionPredicate.yes_or_no(msg, ctx.author)
+            try:
+                await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+            except asyncio.TimeoutError:
+                await self._clear_react(msg)
+                return
+
             msg = ""
             try:
                 c = await Character.from_json(self.config, ctx.author)
@@ -965,7 +971,7 @@ class Adventure(BaseCog):
             total_price = 0
             items = [i for n, i in c.backpack.items() if i.rarity not in ["forged", "set"]]
             count = 0
-            for item in items:
+            async for item in AsyncIter(items):
                 if rarity and item.rarity != rarity:
                     continue
                 if slot:
@@ -975,7 +981,7 @@ class Adventure(BaseCog):
                         continue
                 item_price = 0
                 old_owned = item.owned
-                for x in range(0, item.owned):
+                async for x in AsyncIter(range(0, item.owned)):
                     item.owned -= 1
                     item_price += self._sell(c, item)
                     if item.owned <= 0:
@@ -1719,8 +1725,9 @@ class Adventure(BaseCog):
         """[Admin] Reset Adventure locks."""
 
     @adventureset_locks.command(name="user")
-    async def adventureset_locks_user(self, ctx: Context, user: discord.Member):
-        """[Admin] Reset a guild member's user lock."""
+    @checks.is_owner()
+    async def adventureset_locks_user(self, ctx: Context, user: discord.User):
+        """[Owner] Reset a guild member's user lock."""
         lock = self.get_lock(user)
         with contextlib.suppress(Exception):
             lock.release()
@@ -2753,10 +2760,11 @@ class Adventure(BaseCog):
         )
 
     @give.command(name="item")
+    @checks.is_owner()
     async def _give_item(
         self, ctx: Context, user: discord.Member, item_name: str, *, stats: Stats
     ):
-        """[Admin] Adds a custom item to a specified member.
+        """[Owner] Adds a custom item to a specified member.
 
         Item names containing spaces must be enclosed in double quotes. `[p]give item @locastan
         "fine dagger" 1 att 1 charisma rare twohanded` will give a two handed .fine_dagger with 1
@@ -2789,6 +2797,7 @@ class Adventure(BaseCog):
         )
 
     @give.command(name="loot")
+    @checks.is_owner()
     async def _give_loot(
         self, ctx: Context, loot_type: str, user: discord.Member = None, number: int = 1
     ):
@@ -3219,8 +3228,7 @@ class Adventure(BaseCog):
                         "( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | LOOTED | SET (SET PIECES)"
                     ).format(self.escape(ctx.author.display_name))
                     rjust = max([len(str(i)) for i in items.values()])
-                    for item in items.values():
-                        await asyncio.sleep(0)
+                    async for item in AsyncIter(items.values()):
                         settext = ""
                         att_space = " " if len(str(item.att)) == 1 else ""
                         cha_space = " " if len(str(item.cha)) == 1 else ""
@@ -3241,7 +3249,7 @@ class Adventure(BaseCog):
                             f"{owned}{settext}"
                         )
                     msgs = []
-                    for page in pagify(msg, page_length=1900):
+                    async for page in AsyncIter(pagify(msg, page_length=1900)):
                         msgs.append(box(page, lang="css"))
                 else:
                     msgs = []
@@ -3551,18 +3559,17 @@ class Adventure(BaseCog):
                     pet_choices = list(pet_list.keys())
                     pet = random.choice(pet_choices)
 
-                    roll = random.randint(1, 20)
+                    roll = random.randint(1, 50)
                     dipl_value = roll + c.total_cha + (c.total_int // 3) + (c.luck // 2)
                     dipl_value += extra_dipl
                     pet_reqs = pet_list[pet].get("bonuses", {}).get("req", {})
                     pet_msg4 = ""
+                    can_catch = False
                     if pet_reqs.get("set", False):
                         if pet_reqs.get("set", None) in c.sets:
-                            if "Ainz Ooal Gown" == pet_reqs.get("set", None):
-                                dipl_value = 100000
-                                pet = "Guardians of Nazarick"
+                            can_catch = True
                         else:
-                            dipl_value = -100000
+                            dipl_value = -100000000
                             pet_msg4 = _(
                                 "\nPerhaps you're missing some requirements to tame {pet}."
                             ).format(pet=pet)
@@ -3591,11 +3598,11 @@ class Adventure(BaseCog):
                     bonus = ""
                     if roll == 1:
                         bonus = _("But they stepped on a twig and scared it away.")
-                    elif roll == 20:
+                    elif roll == 50:
                         bonus = _("They happen to have its favorite food.")
                         dipl_value += 10
-                    if dipl_value > self.PETS[pet]["cha"] and roll > 1:
-                        roll = random.randint(0, 2 if roll == 20 else 4)
+                    if dipl_value > self.PETS[pet]["cha"] and roll > 1 and can_catch:
+                        roll = random.randint(0, 3 if roll == 50 else 5)
                         if roll == 0:
                             pet_msg3 = box(
                                 _("{bonus}\nThey successfully tamed the {pet}.").format(
@@ -4347,11 +4354,13 @@ class Adventure(BaseCog):
             return
         possible_monsters = []
         stat_range = self._adv_results.get_stat_range(ctx)
-        for (e, (m, stats)) in enumerate(monsters.items(), 1):
-            appropriate_range = max(stats["hp"], stats["dipl"]) <= (max(c.att, c.int, c.cha) * 3)
+        async for (e, (m, stats)) in AsyncIter(monsters.items()).enumerate(start=1):
+            appropriate_range = max(stats["hp"], stats["dipl"]) <= (max(c.att, c.int, c.cha) * 5)
             if stat_range["max_stat"] > 0:
                 main_stat = stats["hp"] if (stat_range["stat_type"] == "attack") else stats["dipl"]
-                appropriate_range = main_stat <= stat_range["max_stat"]
+                appropriate_range = (
+                    (stat_range["min_stat"] * 0.75) <= main_stat <= (stat_range["max_stat"] * 1.2)
+                )
             if not appropriate_range:
                 continue
             if not stats["boss"] and not stats["miniboss"]:
@@ -4375,28 +4384,28 @@ class Adventure(BaseCog):
         stat_range = self._adv_results.get_stat_range(ctx)
         win_percentage = stat_range.get("win_percent", 0.5)
         if win_percentage >= 0.90:
-            monster_hp_min = int(choice["hp"] * 1.45)
-            monster_hp_max = int(choice["hp"] * 1.5)
-            monster_diplo_min = int(choice["dipl"] * 1.45)
-            monster_diplo_max = int(choice["dipl"] * 1.5)
+            monster_hp_min = int(choice["hp"] * 2)
+            monster_hp_max = int(choice["hp"] * 3)
+            monster_diplo_min = int(choice["dipl"] * 2)
+            monster_diplo_max = int(choice["dipl"] * 3)
             percent_pdef = random.randrange(25, 30) / 100
             monster_pdef = choice["pdef"] * percent_pdef
             percent_mdef = random.randrange(25, 30) / 100
             monster_mdef = choice["mdef"] * percent_mdef
         elif win_percentage >= 0.75:
-            monster_hp_min = int(choice["hp"] * 1.25)
-            monster_hp_max = int(choice["hp"] * 1.45)
-            monster_diplo_min = int(choice["dipl"] * 1.25)
-            monster_diplo_max = int(choice["dipl"] * 1.45)
+            monster_hp_min = int(choice["hp"] * 1.5)
+            monster_hp_max = int(choice["hp"] * 2)
+            monster_diplo_min = int(choice["dipl"] * 1.5)
+            monster_diplo_max = int(choice["dipl"] * 2)
             percent_pdef = random.randrange(15, 25) / 100
             monster_pdef = choice["pdef"] * percent_pdef
             percent_mdef = random.randrange(15, 25) / 100
             monster_mdef = choice["mdef"] * percent_mdef
         elif win_percentage >= 0.50:
             monster_hp_min = int(choice["hp"])
-            monster_hp_max = int(choice["hp"] * 1.25)
+            monster_hp_max = int(choice["hp"] * 1.5)
             monster_diplo_min = int(choice["dipl"])
-            monster_diplo_max = int(choice["dipl"] * 1.25)
+            monster_diplo_max = int(choice["dipl"] * 1.5)
             percent_pdef = random.randrange(1, 15) / 100
             monster_pdef = choice["pdef"] * percent_pdef
             percent_mdef = random.randrange(1, 15) / 100
@@ -4456,21 +4465,28 @@ class Adventure(BaseCog):
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             return ({**self.MONSTERS, **self.AS_MONSTERS}, 1)
+
+        transcended_chance = random.randint(0, 10)
         theme = await self.config.theme()
         extra_monsters = await self.config.themes.all()
         extra_monsters = extra_monsters.get(theme, {}).get("monsters", {})
         monster_stats = 1
         monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
-        if c.rebirths >= 10:
+        transcended = False
+        if transcended_chance == 5:
+            monsters = {**self.MONSTERS, **extra_monsters}
+            monster_stats = 3 + max((c.rebirths // 10) - 1, 0)
+            transcended = True
+        elif c.rebirths >= 10:
             monster_stats = 1 + max((c.rebirths // 10) - 1, 0) / 2
-        return (monsters, monster_stats)
+        return monsters, monster_stats, transcended
 
     async def _simple(
         self, ctx: Context, adventure_msg, challenge: str = None, attribute: str = None
     ):
         self.bot.dispatch("adventure", ctx)
         text = ""
-        monster_roster, monster_stats = await self.update_monster_roster(ctx.author)
+        monster_roster, monster_stats, transcended = await self.update_monster_roster(ctx.author)
         if not challenge or challenge not in monster_roster:
             challenge = await self.get_challenge(ctx, monster_roster)
 
@@ -4490,7 +4506,7 @@ class Adventure(BaseCog):
             timer = 60 * 2
 
         self._sessions[ctx.guild.id] = GameSession(
-            challenge=challenge,
+            challenge=f"Transcended {challenge}" if transcended else challenge,
             attribute=attribute,
             guild=ctx.guild,
             boss=monster_roster[challenge]["boss"],
@@ -4616,7 +4632,7 @@ class Adventure(BaseCog):
             timeout = 60 * 2
         session.message_id = adventure_msg.id
         session.message = adventure_msg
-        start_adding_reactions(adventure_msg, self._adventure_actions, ctx.bot.loop)
+        start_adding_reactions(adventure_msg, self._adventure_actions)
         timer = await self._adv_countdown(ctx, session.timer, "Time remaining")
         self.tasks[adventure_msg.id] = timer
         try:
@@ -4887,7 +4903,8 @@ class Adventure(BaseCog):
             * session.monster_stats
         )
 
-        dmg_dealt = attack + magic
+        dmg_dealt = round(attack + magic)
+        diplomacy = round(diplomacy)
         slain = dmg_dealt >= round(hp)
         persuaded = diplomacy >= round(dipl)
         damage_str = ""
@@ -4959,7 +4976,7 @@ class Adventure(BaseCog):
             monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
             if session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
                 avaliable_loot = [[0, 0, 3, 1, 0], [0, 0, 1, 2, 0], [0, 0, 0, 3, 0]]
-                if "ascended" in session.challenge.lower():
+                if "transcended" in session.challenge.lower():
                     avaliable_loot = [
                         [0, 0, 1, 5, 1],
                         [0, 0, 1, 3, 1],
@@ -6148,8 +6165,7 @@ class Adventure(BaseCog):
         character: Character,
     ):
         items = {}
-        for i in range(0, max(amount, 0)):
-            await asyncio.sleep(0)
+        async for i in AsyncIter(range(0, max(amount, 0))):
             item = await self._roll_chest(chest_type, character)
             item_name = str(item)
             if item_name in items:
@@ -6403,7 +6419,7 @@ class Adventure(BaseCog):
         newcp = 0
         rewards_list = []
         phrase = ""
-        for user in userlist:
+        async for user in AsyncIter(userlist):
             self._rewards[user.id] = {}
             try:
                 c = await Character.from_json(self.config, user)
@@ -6685,7 +6701,7 @@ class Adventure(BaseCog):
                 if not guild.get_member(acc):
                     del raw_accounts[acc]
         raw_accounts_new = {}
-        for (k, v) in raw_accounts.items():
+        async for (k, v) in AsyncIter(raw_accounts.items()):
             user_data = {}
             for item in ["lvl", "rebirths", "set_items"]:
                 if item not in v:
@@ -6754,7 +6770,7 @@ class Adventure(BaseCog):
                 if not guild.get_member(acc):
                     del raw_accounts[acc]
         raw_accounts_new = {}
-        for (k, v) in raw_accounts.items():
+        async for (k, v) in AsyncIter(raw_accounts.items()):
             user_data = {}
             for item in ["adventures", "rebirths"]:
                 if item not in v:
@@ -6868,7 +6884,7 @@ class Adventure(BaseCog):
                 if not guild.get_member(acc):
                     del raw_accounts[acc]
         raw_accounts_new = {}
-        for (k, v) in raw_accounts.items():
+        async for (k, v) in AsyncIter(raw_accounts.items()):
             user_data = {}
             for item in ["weekly_score"]:
                 if item not in v:
@@ -6918,7 +6934,7 @@ class Adventure(BaseCog):
             guild = None
         entries = [header]
         pages = []
-        for (pos, (user_id, account_data)) in enumerate(_accounts, start=1):
+        async for (pos, (user_id, account_data)) in AsyncIter(_accounts).enumerate(start=1):
             if guild is not None:
                 member = guild.get_member(user_id)
             else:
@@ -6980,7 +6996,7 @@ class Adventure(BaseCog):
             guild = None
         entries = [header]
         pages = []
-        for (pos, (user_id, account_data)) in enumerate(_accounts, start=1):
+        async for (pos, (user_id, account_data)) in AsyncIter(_accounts).enumerate(start=1):
             if guild is not None:
                 member = guild.get_member(user_id)
             else:

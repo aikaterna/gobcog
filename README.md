@@ -2,8 +2,6 @@ Hello! You found the adventure page!
 
 This cog was originally made by locastan and can be found at the fork link above.
 
-If you are an existing adventure user, make sure to read the [latest changes!](https://github.com/aikaterna/gobcog/blob/master/Change%20logs%20for%203.0.0.md)
-
 If you have something you would like to request for this cog, PLEASE OPEN AN ISSUE HERE AND DESCRIBE IT. I will not be taking requests for this via DMs or Discord messages. This cog is also on hold for improvements authored by me until I have more time for it, but nothing wrong with writing something yourself and PRing it!
 
 # Introduction to Adventure!
@@ -40,6 +38,7 @@ Note: some commands can be done in DM with the bot instead if the bot has a glob
 
 ## Change logs
 - [Changes between version bumps](change_logs/3.x.x.md)
+- [3.2.0 Update](change_logs/3.2.0.md)
 - [3.1.4 Update](change_logs/3.1.4.md)
 - [3.1.3 Update](change_logs/3.1.3.md)
 - [3.0.0 Update](change_logs/3.0.0.md)

@@ -13,6 +13,7 @@ from discord.ext.commands.errors import BadArgument
 
 from redbot.core import Config, bank, commands
 from redbot.core.i18n import Translator
+from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import box
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
@@ -416,7 +417,7 @@ class Character(Item):
         self.total_int = self.int + self.skill["int"]
         self.total_cha = self.cha + self.skill["cha"]
         self.total_stats = self.total_att + self.total_int + self.total_cha + self.dex + self.luck
-
+        self.remove_restrictions()
         self.adventures: dict = kwargs.pop("adventures")
         self.weekly_score: dict = kwargs.pop("weekly_score")
         self.pieces_to_keep: dict = {
@@ -434,25 +435,33 @@ class Character(Item):
         }
         self.last_skill_reset: int = kwargs.pop("last_skill_reset", 0)
 
+    def remove_restrictions(self):
+        if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
+            requriements = PETS[self.heroclass["pet"]["name"]].get("bonuses", {}).get("req", {})
+            if requriements:
+                if (
+                    requriements.get("set", False)
+                    and requriements.get("set", None) not in self.sets
+                ):
+                    self.heroclass["pet"] = {}
+            if self.heroclass["pet"]["cha"] < self.total_cha:
+                self.heroclass["pet"] = {}
+
     def get_stat_value(self, stat: str):
         """Calculates the stats dynamically for each slot of equipment."""
         extrapoints = 0
         rebirths = copy(self.rebirths)
-
         extrapoints += rebirths // 10 * 5
 
-        while rebirths >= 30:
-            extrapoints += 3
-            rebirths -= 1
-
-        while rebirths >= 20:
-            extrapoints += 5
-            rebirths -= 1
-        while rebirths >= 10:
-            extrapoints += 1
-            rebirths -= 1
-        while 0 < rebirths < 10:
-            extrapoints += 2
+        async for rc in AsyncIter(range(rebirths)):
+            if rebirths >= 30:
+                extrapoints += 3
+            elif rebirths >= 20:
+                extrapoints += 5
+            elif rebirths >= 10:
+                extrapoints += 1
+            elif rebirths < 10:
+                extrapoints += 2
             rebirths -= 1
 
         extrapoints = int(extrapoints)
@@ -661,17 +670,16 @@ class Character(Item):
         else:
             maxlevel = REBIRTH_LVL
 
-        while rebirths >= 20:
-            maxlevel += REBIRTH_STEP
+        async for rc in AsyncIter(range(rebirths)):
+            if rebirths >= 20:
+                maxlevel += REBIRTH_STEP
+            elif rebirths >= 10:
+                maxlevel += 10
+            elif rebirths < 10:
+                maxlevel += 5
             rebirths -= 1
-        while rebirths >= 10:
-            maxlevel += 10
-            rebirths -= 1
-        while 1 < rebirths < 10:
-            rebirths -= 1
-            maxlevel += 5
 
-        return min(maxlevel, 1000)
+        return min(maxlevel, 10000)
 
     @staticmethod
     def get_item_rarity(item):
@@ -688,7 +696,7 @@ class Character(Item):
 
     def get_sorted_backpack(self, backpack: dict):
         tmp = {}
-        for item in backpack:
+        async for item in AsyncIter(backpack, steps=5):
             slots = backpack[item].slot
             slot_name = slots[0]
             if len(slots) > 1:
@@ -882,6 +890,7 @@ class Character(Item):
                 extra_pets = extra_pets.get(theme, {}).get("pets", {})
                 pet_list = {**PETS, **extra_pets}
                 heroclass["pet"] = pet_list.get(heroclass["pet"]["name"], heroclass["pet"])
+
         if "adventures" in data:
             adventures = data["adventures"]
         else:
@@ -1195,6 +1204,8 @@ class ThemeSetMonterConverter(Converter):
             raise BadArgument(
                 "Invalid format, Excepted:\n`theme++name++hp++dipl++pdef++mdef++boss++image`"
             )
+        if "transcended" in name.lower() or "ascended" in name.lower():
+            raise BadArgument("You are not worthy.")
         return {
             "theme": theme,
             "name": name,
