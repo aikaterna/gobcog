@@ -682,7 +682,7 @@ class Character(Item):
 
     @staticmethod
     def get_item_rarity(item):
-        if item[0][0] == "{" and item[0][5] == "_":  # Set
+        if item[0][0] == "{" and item[0][1:4] == "Set":  # Set
             return 0
         elif item[0][0] == "{":  # legendary
             return 1
