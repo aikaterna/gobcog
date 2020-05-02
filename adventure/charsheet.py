@@ -453,7 +453,7 @@ class Character(Item):
         rebirths = copy(self.rebirths)
         extrapoints += rebirths // 10 * 5
 
-        async for rc in AsyncIter(range(rebirths)):
+        for rc in range(rebirths):
             if rebirths >= 30:
                 extrapoints += 3
             elif rebirths >= 20:
@@ -670,7 +670,7 @@ class Character(Item):
         else:
             maxlevel = REBIRTH_LVL
 
-        async for rc in AsyncIter(range(rebirths)):
+        for rc in range(rebirths):
             if rebirths >= 20:
                 maxlevel += REBIRTH_STEP
             elif rebirths >= 10:
@@ -678,7 +678,6 @@ class Character(Item):
             elif rebirths < 10:
                 maxlevel += 5
             rebirths -= 1
-
         return min(maxlevel, 10000)
 
     @staticmethod
@@ -694,7 +693,7 @@ class Character(Item):
         else:
             return 4  # common / normal
 
-    def get_sorted_backpack(self, backpack: dict):
+    async def get_sorted_backpack(self, backpack: dict):
         tmp = {}
         async for item in AsyncIter(backpack, steps=5):
             slots = backpack[item].slot
@@ -707,7 +706,7 @@ class Character(Item):
             tmp[slot_name].append((item, backpack[item]))
 
         final = []
-        for (idx, slot_name) in enumerate(tmp.keys()):
+        async for (idx, slot_name) in AsyncIter(tmp.keys()).enumerate():
             final.append(sorted(tmp[slot_name], key=self.get_item_rarity))
 
         final.sort(
@@ -717,7 +716,7 @@ class Character(Item):
         )
         return final
 
-    def get_backpack(self, forging: bool = False, consumed=None, rarity=None, slot=None):
+    async def get_backpack(self, forging: bool = False, consumed=None, rarity=None, slot=None):
         if consumed is None:
             consumed = []
         bkpk = self.get_sorted_backpack(self.backpack)
@@ -726,11 +725,11 @@ class Character(Item):
         )
         consumed_list = [i for i in consumed]
         rjust = max([len(str(i[1])) + 3 for slot_group in bkpk for i in slot_group] or [1, 3])
-        for slot_group in bkpk:
+        async for slot_group in AsyncIter(bkpk):
             slot_name_org = slot_group[0][1].slot
             slot_name = slot_name_org[0] if len(slot_name_org) < 2 else "two handed"
             form_string += f"\n\n {slot_name.title()} slot\n"
-            for item in slot_group:
+            async for item in AsyncIter(slot_group):
                 if forging and (item[1].rarity in ["forged", "set"] or item[1] in consumed_list):
                     continue
                 if rarity is not None and rarity != item[1].rarity:
@@ -1284,7 +1283,7 @@ def can_equip(char: Character, item: Item):
     return char.lvl >= equip_level(char, item)
 
 
-def calculate_sp(lvl_end: int, c: Character):
+async def calculate_sp(lvl_end: int, c: Character):
     points = c.rebirths * 10
     async for rc in AsyncIter(range(lvl_end)):
         if lvl_end >= 300:

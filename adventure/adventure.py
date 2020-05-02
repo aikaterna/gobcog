@@ -777,10 +777,12 @@ class Adventure(BaseCog):
 
             backpack_contents = _("[{author}'s backpack] \n\n{backpack}\n").format(
                 author=self.escape(ctx.author.display_name),
-                backpack=c.get_backpack(rarity=rarity, slot=slot),
+                backpack=await c.get_backpack(rarity=rarity, slot=slot),
             )
             msgs = []
-            for page in pagify(backpack_contents, delims=["\n"], shorten_by=20, page_length=1900):
+            async for page in AsyncIter(
+                pagify(backpack_contents, delims=["\n"], shorten_by=20, page_length=1900)
+            ):
                 msgs.append(box(page, lang="css"))
             return await menu(ctx, msgs, DEFAULT_CONTROLS)
 
@@ -2417,7 +2419,7 @@ class Adventure(BaseCog):
                         ).format(self.escape(ctx.author.display_name)),
                     )
                 forgeables = _("[{author}'s forgeables]\n{bc}\n").format(
-                    author=self.escape(ctx.author.display_name), bc=c.get_backpack(True)
+                    author=self.escape(ctx.author.display_name), bc=await c.get_backpack(True)
                 )
                 pages = pagify(forgeables, delims=["\n"], shorten_by=20, page_length=1900)
                 pages = [box(page, lang="css") for page in pages]
@@ -5975,8 +5977,8 @@ class Adventure(BaseCog):
                 # recalculate free skillpoint pool based on new level and already spent points.
                 c.lvl = lvl_end
                 assigned_stats = c.skill["att"] + c.skill["cha"] + c.skill["int"]
-                starting_points = calculate_sp(lvl_start, c) + assigned_stats
-                ending_points = calculate_sp(lvl_end, c) + assigned_stats
+                starting_points = await calculate_sp(lvl_start, c) + assigned_stats
+                ending_points = await calculate_sp(lvl_end, c) + assigned_stats
 
                 if c.skill["pool"] < 0:
                     c.skill["pool"] = 0
