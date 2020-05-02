@@ -4487,7 +4487,7 @@ class Adventure(BaseCog):
         monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
         transcended = False
         if transcended_chance == 5:
-            monsters = {**self.MONSTERS, **extra_monsters}
+            monsters = {**self.AS_MONSTERS, **extra_monsters}
             monster_stats = 3 + max((c.rebirths // 10) - 1, 0)
             transcended = True
         elif c.rebirths >= 10:
@@ -4517,9 +4517,13 @@ class Adventure(BaseCog):
             self.bot.dispatch("adventure_miniboss", ctx)
         else:
             timer = 60 * 2
+        if transcended:
+            new_challenge = challenge.replace("Ascended", "Transcended")
+        else:
+            new_challenge = challenge
 
         self._sessions[ctx.guild.id] = GameSession(
-            challenge=f"Transcended {challenge}" if transcended else challenge,
+            challenge=new_challenge,
             attribute=attribute,
             guild=ctx.guild,
             boss=monster_roster[challenge]["boss"],
@@ -4987,15 +4991,16 @@ class Adventure(BaseCog):
             success = True
             roll = random.randint(1, 10)
             monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
+            if "transcended" in session.challenge.lower():
+                avaliable_loot = [
+                    [0, 0, 1, 5, 1],
+                    [0, 0, 1, 3, 1],
+                    [0, 0, 1, 1, 1],
+                    [0, 0, 0, 0, 1],
+                ]
+                treasure = random.choice(avaliable_loot)
             if session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
                 avaliable_loot = [[0, 0, 3, 1, 0], [0, 0, 1, 2, 0], [0, 0, 0, 3, 0]]
-                if "transcended" in session.challenge.lower():
-                    avaliable_loot = [
-                        [0, 0, 1, 5, 1],
-                        [0, 0, 1, 3, 1],
-                        [0, 0, 1, 1, 1],
-                        [0, 0, 0, 0, 1],
-                    ]
                 treasure = random.choice(avaliable_loot)
             elif (
                 session.miniboss

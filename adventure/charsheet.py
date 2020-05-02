@@ -719,7 +719,7 @@ class Character(Item):
     async def get_backpack(self, forging: bool = False, consumed=None, rarity=None, slot=None):
         if consumed is None:
             consumed = []
-        bkpk = self.get_sorted_backpack(self.backpack)
+        bkpk = await self.get_sorted_backpack(self.backpack)
         form_string = _(
             "Items in Backpack: \n( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | OWNED | SET (SET PIECES)"
         )
