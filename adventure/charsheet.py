@@ -353,7 +353,7 @@ class GameSession:
         self.monsters: Mapping[str, Mapping] = kwargs.pop("monsters", [])
         self.monster_stats: int = kwargs.pop("monster_stats", 1)
         self.monster_modified_stats = kwargs.pop(
-            "monster_modified_stats", self.monsters[self.challenge]
+            "monster_modified_stats", self.monster
         )
         self.message = kwargs.pop("message", 1)
         self.message_id: int = 0
