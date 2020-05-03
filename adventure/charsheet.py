@@ -440,8 +440,8 @@ class Character(Item):
             requriements = PETS[self.heroclass["pet"]["name"]].get("bonuses", {}).get("req", {})
             if requriements:
                 if (
-                    requriements.get("set", False)
-                    and requriements.get("set", None) not in self.sets
+                    requriements.get("set")
+                    and requriements.get("set") not in self.sets
                 ):
                     self.heroclass["pet"] = {}
             if self.heroclass["pet"]["cha"] < self.total_cha:
