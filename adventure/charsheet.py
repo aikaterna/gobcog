@@ -340,6 +340,7 @@ class GameSession:
     pray: List[discord.Member] = []
     run: List[discord.Member] = []
     message: discord.Message = None
+    transcended: bool = False
     insight = (0, None)
 
     def __init__(self, **kwargs):
@@ -364,6 +365,7 @@ class GameSession:
         self.talk: List[discord.Member] = []
         self.pray: List[discord.Member] = []
         self.run: List[discord.Member] = []
+        self.transcended: bool = kwargs.pop("transcended", False)
 
 
 class Character(Item):

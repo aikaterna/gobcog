@@ -4536,6 +4536,7 @@ class Adventure(BaseCog):
             monsters=monster_roster,
             monster_stats=monster_stats,
             message=ctx.message,
+            transcended=transcended,
             monster_modified_stats=self._dynamic_monster_stats(ctx, monster_roster[challenge]),
         )
         adventure_msg = (
@@ -4990,11 +4991,11 @@ class Adventure(BaseCog):
         text = ""
         success = False
         treasure = [0, 0, 0, 0, 0]
-        if slain or persuaded and not failed:
+        if (slain or persuaded) and not failed:
             success = True
             roll = random.randint(1, 10)
             monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
-            if "transcended" in session.challenge.lower():
+            if session.transcended:
                 avaliable_loot = [
                     [0, 0, 1, 5, 1],
                     [0, 0, 1, 3, 1],
