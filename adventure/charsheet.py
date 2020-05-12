@@ -437,11 +437,11 @@ class Character(Item):
 
     def remove_restrictions(self):
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
-            requriements = PETS[self.heroclass["pet"]["name"]].get("bonuses", {}).get("req", {})
-            if requriements:
+            requirements = PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
+            if requirements:
                 if (
-                    requriements.get("set")
-                    and requriements.get("set") not in self.sets
+                    requirements.get("set")
+                    and requirements.get("set") not in self.sets
                 ):
                     self.heroclass["pet"] = {}
             if self.heroclass["pet"]["cha"] < self.total_cha:
@@ -682,16 +682,21 @@ class Character(Item):
 
     @staticmethod
     def get_item_rarity(item):
-        if item[0][0] == "{" and item[0][1:4] == "Set":  # Set
-            return 0
-        elif item[0][0] == "{":  # legendary
-            return 1
-        elif item[0][0] == "[":  # epic
-            return 2
-        elif item[0][0] == ".":  # rare
+        item_obj = item[1]
+        if item_obj.rarity == "normal":
+            return 5
+        elif item_obj.rarity == "rare":
+            return 4
+        elif item_obj.rarity == "epic":
             return 3
+        elif item_obj.rarity == "legendary":
+            return 2
+        elif item_obj.rarity == "set":
+            return 1
+        elif item_obj.rarity == "forged":
+            return 0
         else:
-            return 4  # common / normal
+            return 6  # common / normal
 
     async def get_sorted_backpack(self, backpack: dict):
         tmp = {}

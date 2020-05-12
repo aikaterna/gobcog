@@ -214,7 +214,7 @@ class AdventureResults:
 class Adventure(BaseCog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
-    __version__ = "3.2.1"
+    __version__ = "3.2.2"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -4491,8 +4491,7 @@ class Adventure(BaseCog):
         monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
         transcended = False
         if transcended_chance == 5:
-            monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
-            monster_stats = 3 + max((c.rebirths // 10) - 1, 0)
+            monster_stats = 2 + max((c.rebirths // 10) - 1, 0)
             transcended = True
         elif c.rebirths >= 10:
             monster_stats = 1 + max((c.rebirths // 10) - 1, 0) / 2
