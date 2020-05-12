@@ -26,8 +26,8 @@ To view your stats and equipment do `[p]stats` and `[p]backpack`.
 You can use earned credits to enter the negaverse and fight a nega version of someone on this server to earn more experience points and level up faster using `[p]negaverse <number_of_credits>`.
 
 ```css
-{Set:''Set items look like this''}
 {.:'Forged items look like this':.}
+{Set:''Set items look like this''}
 {Legendary:'Legendary items look like this'}
 [epic items look like this]
 .rare_items_look_like_this
