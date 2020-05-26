@@ -3615,7 +3615,7 @@ class Adventure(BaseCog):
                     elif roll in [50, 25]:
                         bonus = _("They happen to have its favorite food.")
                     if dipl_value > self.PETS[pet]["cha"] and roll > 1 and can_catch:
-                        roll = random.randint(0, 0 if roll in [50, 25] else 3)
+                        roll = random.randint(0, 2 if roll in [50, 25] else 5)
                         if roll == 0:
                             pet_msg3 = box(
                                 _("{bonus}\nThey successfully tamed the {pet}.").format(
