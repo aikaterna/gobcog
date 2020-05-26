@@ -3581,11 +3581,12 @@ class Adventure(BaseCog):
                     dipl_value += extra_dipl
                     pet_reqs = pet_list[pet].get("bonuses", {}).get("req", {})
                     pet_msg4 = ""
-                    can_catch = False
+                    can_catch = True
                     if pet_reqs.get("set", False):
                         if pet_reqs.get("set", None) in c.sets:
                             can_catch = True
                         else:
+                            can_catch = False
                             dipl_value = -100000000
                             pet_msg4 = _(
                                 "\nPerhaps you're missing some requirements to tame {pet}."
@@ -4527,7 +4528,8 @@ class Adventure(BaseCog):
             timer = 60 * 2
         if transcended:
             new_challenge = challenge.replace("Ascended", "Transcended")
-            self.bot.dispatch("adventure_transcended", ctx)
+            if "Transcended" in new_challenge:
+                self.bot.dispatch("adventure_transcended", ctx)
         else:
             new_challenge = challenge
 
