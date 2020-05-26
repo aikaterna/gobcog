@@ -5006,7 +5006,7 @@ class Adventure(BaseCog):
                     [0, 0, 0, 0, 1],
                 ]
                 treasure = random.choice(avaliable_loot)
-            if session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
+            elif session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
                 avaliable_loot = [[0, 0, 3, 1, 0], [0, 0, 1, 2, 0], [0, 0, 0, 3, 0]]
                 treasure = random.choice(avaliable_loot)
             elif (
@@ -5054,7 +5054,7 @@ class Adventure(BaseCog):
                 except Exception as exc:
                     log.exception("Error with the new character sheet", exc_info=exc)
                     continue
-                multiplier = 0.1
+                multiplier = 0.2
                 if c.dex != 0:
                     if c.dex < 0:
                         dex = min(1 / abs(c.dex), 1)
@@ -5106,7 +5106,7 @@ class Adventure(BaseCog):
                 except Exception as exc:
                     log.exception("Error with the new character sheet", exc_info=exc)
                     continue
-                multiplier = 0.1
+                multiplier = 0.2
                 if c.dex != 0:
                     if c.dex < 0:
                         dex = min(1 / abs(c.dex), 1)
@@ -5181,7 +5181,7 @@ class Adventure(BaseCog):
                     except Exception as exc:
                         log.exception("Error with the new character sheet", exc_info=exc)
                         continue
-                    multiplier = 0.1
+                    multiplier = 0.2
                     if c.dex != 0:
                         if c.dex < 0:
                             dex = min(1 / abs(c.dex), 1)
@@ -5374,7 +5374,7 @@ class Adventure(BaseCog):
                     except Exception as exc:
                         log.exception("Error with the new character sheet", exc_info=exc)
                         continue
-                    multiplier = 0.1
+                    multiplier = 0.2
                     if c.dex != 0:
                         if c.dex < 0:
                             dex = min(1 / abs(c.dex), 1)
@@ -5401,7 +5401,7 @@ class Adventure(BaseCog):
                         except Exception as exc:
                             log.exception("Error with the new character sheet", exc_info=exc)
                             continue
-                        multiplier = 0.05
+                        multiplier = 0.2
                         if c.dex != 0:
                             if c.dex < 0:
                                 dex = min(1 / abs(c.dex), 1)
