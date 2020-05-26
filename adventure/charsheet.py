@@ -446,7 +446,8 @@ class Character(Item):
                     and requirements.get("set") not in self.sets
                 ):
                     self.heroclass["pet"] = {}
-            if self.heroclass["pet"]["cha"] < self.total_cha:
+            if self.heroclass["pet"]["cha"] < (self.total_cha + (self.total_int // 3) + (self.luck // 2)):
+
                 self.heroclass["pet"] = {}
 
     def get_stat_value(self, stat: str):

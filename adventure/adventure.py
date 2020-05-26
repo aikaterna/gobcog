@@ -3568,17 +3568,14 @@ class Adventure(BaseCog):
                                 else _("1 second")
                             ),
                         )
-                    extra_dipl = 0
                     theme = await self.config.theme()
                     extra_pets = await self.config.themes.all()
                     extra_pets = extra_pets.get(theme, {}).get("pets", {})
                     pet_list = {**self.PETS, **extra_pets}
                     pet_choices = list(pet_list.keys())
                     pet = random.choice(pet_choices)
-
                     roll = random.randint(1, 50)
-                    dipl_value = roll + c.total_cha + (c.total_int // 3) + (c.luck // 2)
-                    dipl_value += extra_dipl
+                    dipl_value = c.total_cha + (c.total_int // 3) + (c.luck // 2)
                     pet_reqs = pet_list[pet].get("bonuses", {}).get("req", {})
                     pet_msg4 = ""
                     can_catch = True
@@ -3587,7 +3584,6 @@ class Adventure(BaseCog):
                             can_catch = True
                         else:
                             can_catch = False
-                            dipl_value = -100000000
                             pet_msg4 = _(
                                 "\nPerhaps you're missing some requirements to tame {pet}."
                             ).format(pet=pet)
@@ -3618,7 +3614,6 @@ class Adventure(BaseCog):
                         bonus = _("But they stepped on a twig and scared it away.")
                     elif roll in [50, 25]:
                         bonus = _("They happen to have its favorite food.")
-                        dipl_value += 10
                     if dipl_value > self.PETS[pet]["cha"] and roll > 1 and can_catch:
                         roll = random.randint(0, 0 if roll in [50, 25] else 3)
                         if roll == 0:
