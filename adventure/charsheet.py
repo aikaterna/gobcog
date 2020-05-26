@@ -545,9 +545,9 @@ class Character(Item):
             class_desc = self.heroclass["name"] + "\n\n" + self.heroclass["desc"]
             if self.heroclass["name"] == "Ranger":
                 if not self.heroclass["pet"]:
-                    class_desc += _("\n\n- Current pet: None")
+                    class_desc += _("\n\n- Current pet: [None]")
                 elif self.heroclass["pet"]:
-                    class_desc += _("\n\n- Current pet: {}").format(self.heroclass["pet"]["name"])
+                    class_desc += _("\n\n- Current pet: [{}]").format(self.heroclass["pet"]["name"])
         else:
             class_desc = _("Hero.")
         legend = _("( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | OWNED | SET (SET PIECES)")
