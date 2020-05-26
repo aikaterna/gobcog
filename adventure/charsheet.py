@@ -1121,7 +1121,7 @@ class ItemConverter(Converter):
                 raise BadArgument(
                     _(
                         "You have too many items matching the name `{}`,"
-                        " please be more specific"
+                        " please be more specific."
                     ).format(argument)
                 )
             items = ""
