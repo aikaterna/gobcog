@@ -4921,12 +4921,12 @@ class Adventure(BaseCog):
 
         result_msg = run_msg + pray_msg + talk_msg + fight_msg
         challenge_attrib = session.attribute
-        hp = (
+        hp = int(
             session.monster_modified_stats["hp"]
             * self.ATTRIBS[challenge_attrib][0]
             * session.monster_stats
         )
-        dipl = (
+        dipl = int(
             session.monster_modified_stats["dipl"]
             * self.ATTRIBS[challenge_attrib][1]
             * session.monster_stats
