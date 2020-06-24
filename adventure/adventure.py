@@ -418,13 +418,14 @@ class Adventure(BaseCog):
 
     async def cog_before_invoke(self, ctx: Context):
         await self._ready_event.wait()
-        if ctx.guild:
-            if self.antispam[ctx.command][ctx.guild.id].spammy:
-                raise CheckFailure(f"Guild is Spamming adventure commands ({ctx.guild.id})")
-            self.antispam[ctx.command][ctx.guild.id].stamp()
-        if self.antispam[ctx.command][ctx.author.id].spammy:
-            raise CheckFailure(f"User is Spamming adventure commands ({ctx.author.id})")
-        self.antispam[ctx.command][ctx.author.id].stamp()
+        if ctx.command in self.antispam:
+            if ctx.guild:
+                if self.antispam[ctx.command][ctx.guild.id].spammy:
+                    raise CheckFailure(f"Guild is Spamming adventure commands ({ctx.guild.id})")
+                self.antispam[ctx.command][ctx.guild.id].stamp()
+            if self.antispam[ctx.command][ctx.author.id].spammy:
+                raise CheckFailure(f"User is Spamming adventure commands ({ctx.author.id})")
+            self.antispam[ctx.command][ctx.author.id].stamp()
         if ctx.author.id in self.locks and self.locks[ctx.author.id].locked():
             raise CheckFailure(f"There's an active lock for this user ({ctx.author.id})")
         return True
