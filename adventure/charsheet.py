@@ -353,9 +353,7 @@ class GameSession:
         self.monster: dict = kwargs.pop("monster")
         self.monsters: Mapping[str, Mapping] = kwargs.pop("monsters", [])
         self.monster_stats: int = kwargs.pop("monster_stats", 1)
-        self.monster_modified_stats = kwargs.pop(
-            "monster_modified_stats", self.monster
-        )
+        self.monster_modified_stats = kwargs.pop("monster_modified_stats", self.monster)
         self.message = kwargs.pop("message", 1)
         self.message_id: int = 0
         self.reacted = False
@@ -439,17 +437,17 @@ class Character(Item):
 
     def remove_restrictions(self):
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
-            if self.heroclass["pet"]["cha"] > (self.total_cha + (self.total_int // 3) + (self.luck // 2)):
+            if self.heroclass["pet"]["cha"] > (
+                self.total_cha + (self.total_int // 3) + (self.luck // 2)
+            ):
                 self.heroclass["pet"] = {}
                 return
-            requirements = PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
+            requirements = (
+                PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
+            )
             if requirements:
-                if (
-                    requirements.get("set")
-                    and requirements.get("set") not in self.sets
-                ):
+                if requirements.get("set") and requirements.get("set") not in self.sets:
                     self.heroclass["pet"] = {}
-
 
     def get_stat_value(self, stat: str):
         """Calculates the stats dynamically for each slot of equipment."""
@@ -547,7 +545,9 @@ class Character(Item):
                 if not self.heroclass["pet"]:
                     class_desc += _("\n\n- Current pet: [None]")
                 elif self.heroclass["pet"]:
-                    class_desc += _("\n\n- Current pet: [{}]").format(self.heroclass["pet"]["name"])
+                    class_desc += _("\n\n- Current pet: [{}]").format(
+                        self.heroclass["pet"]["name"]
+                    )
         else:
             class_desc = _("Hero.")
         legend = _("( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | OWNED | SET (SET PIECES)")

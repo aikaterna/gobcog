@@ -8,7 +8,7 @@ import random
 import re
 import time
 from collections import namedtuple
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from operator import itemgetter
 from types import SimpleNamespace
 from typing import List, Optional, Union, MutableMapping
@@ -23,6 +23,7 @@ from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import AsyncIter
+from redbot.core.utils.antispam import AntiSpam
 from redbot.core.utils.chat_formatting import (
     box,
     escape,
@@ -217,6 +218,10 @@ class Adventure(BaseCog):
 
     __version__ = "3.2.12"
 
+    intervals = [
+        (timedelta(seconds=5), 1),
+    ]
+
     def __init__(self, bot: Red):
         self.bot = bot
         self._last_trade = {}
@@ -294,6 +299,7 @@ class Adventure(BaseCog):
         self.locks: MutableMapping[int, asyncio.Lock] = {}
 
         self.config = Config.get_conf(self, 2_710_801_001, force_registration=True)
+        self.antispam = {}
 
         default_user = {
             "exp": 0,
@@ -370,8 +376,11 @@ class Adventure(BaseCog):
 
     async def cog_before_invoke(self, ctx: Context):
         await self._ready_event.wait()
-
-    async def cog_before_invoke(self, ctx: Context):
+        if ctx.guild and ctx.command == self._adventure:
+            if ctx.guild.id not in self.antispam:
+                self.antispam[ctx.guild.id] = AntiSpam(self.intervals)
+            if self.antispam[ctx.guild.id].spammy:
+                raise CheckFailure(f"User if Spamming adventure commands ({ctx.author.id})")
         if ctx.author.id in self.locks and self.locks[ctx.author.id].locked():
             raise CheckFailure(f"There's an active lock for this user ({ctx.author.id})")
         return True
@@ -1196,7 +1205,12 @@ class Adventure(BaseCog):
 
     @_backpack.command(name="trade")
     async def backpack_trade(
-        self, ctx: Context, buyer: discord.Member, asking: Optional[int] = 1000, *, item: ItemConverter
+        self,
+        ctx: Context,
+        buyer: discord.Member,
+        asking: Optional[int] = 1000,
+        *,
+        item: ItemConverter,
     ):
         """Trade an item from your backpack to another user."""
         if self.in_adventure(ctx):
