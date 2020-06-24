@@ -577,7 +577,7 @@ class Character(Item):
         else:
             class_desc = _("Hero.")
         legend = _(
-            "( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE] | OWNED | SET (SET PIECES)"
+            "( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE#] | OWNED | SET (SET PIECES)"
         )
         return _(
             "[{user}'s Character Sheet]\n\n"
@@ -680,7 +680,7 @@ class Character(Item):
 
             owned = ""
             if item.rarity in ["legendary", "event"] and item.degrade > 0:
-                owned += f" | [{item.degrade}]"
+                owned += f" | [{item.degrade}#]"
             owned += f" | {item.owned}"
             if item.set:
                 settext += f" | Set `{item.set}` ({item.parts}pcs)"
@@ -691,7 +691,7 @@ class Character(Item):
                 f"{int_space}{inter} |"
                 f"{dex_space}{dex} |"
                 f"{luck_space}{luck} )"
-                f" | Lv { equip_level(self, item):<3}"
+                f" | Lvl { equip_level(self, item):<5}"
                 f"{owned}{settext}"
             )
 
@@ -767,10 +767,10 @@ class Character(Item):
             consumed = []
         bkpk = await self.get_sorted_backpack(self.backpack)
         form_string = _(
-            "Items in Backpack: \n( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE] | OWNED | SET (SET PIECES)"
+            "Items in Backpack: \n( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE#] | OWNED | SET (SET PIECES)"
         )
         consumed_list = [i for i in consumed]
-        rjust = max([len(str(i[1])) + 3 for slot_group in bkpk for i in slot_group] or [1, 3])
+        rjust = max([len(str(i[1])) + 4 for slot_group in bkpk for i in slot_group] or [1, 4])
         async for slot_group in AsyncIter(bkpk):
             slot_name_org = slot_group[0][1].slot
             slot_name = slot_name_org[0] if len(slot_name_org) < 2 else "two handed"
@@ -791,7 +791,7 @@ class Character(Item):
                 luck_space = " " if len(str(item[1].luck)) == 1 else ""
                 owned = ""
                 if item[1].rarity in ["legendary", "event"] and item[1].degrade > 0:
-                    owned += f" | [{item[1].degrade}]"
+                    owned += f" | [{item[1].degrade}#]"
                 owned += f" | {item[1].owned}"
                 if item[1].set:
                     settext += f" | Set `{item[1].set}` ({item[1].parts}pcs)"
@@ -799,7 +799,7 @@ class Character(Item):
                 if e_level > self.lvl:
                     level = f"[{e_level}]"
                 else:
-                    level = f"#{e_level}"
+                    level = f"{e_level}"
 
                 form_string += (
                     f"\n{str(item[1]):<{rjust}} - "
@@ -808,7 +808,7 @@ class Character(Item):
                     f"{int_space}{item[1].int if len(slot_name_org) < 2 else item[1].int * 2} |"
                     f"{dex_space}{item[1].dex if len(slot_name_org) < 2 else item[1].dex * 2} |"
                     f"{luck_space}{item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2} )"
-                    f" | Lv {level:<5}"
+                    f" | Lvl {level:<5}"
                     f"{owned}{settext}"
                 )
 
