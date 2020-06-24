@@ -215,7 +215,7 @@ class AdventureResults:
 class Adventure(BaseCog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
-    __version__ = "3.2.12"
+    __version__ = "3.2.13"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -746,6 +746,8 @@ class Adventure(BaseCog):
         Equip:       `[p]backpack equip item_name`
         Sell All:    `[p]backpack sellall rarity slot`
         Disassemble: `[p]backpack disassemble item_name`
+
+        Note: An item **degrade** level is how many rebirths it will last, before it is broken down.
         """
         assert isinstance(rarity, str) or rarity is None
         assert isinstance(slot, str) or slot is None
@@ -785,7 +787,25 @@ class Adventure(BaseCog):
                 pagify(backpack_contents, delims=["\n"], shorten_by=20, page_length=1900)
             ):
                 msgs.append(box(page, lang="css"))
-            return await menu(ctx, msgs, DEFAULT_CONTROLS)
+            controls = DEFAULT_CONTROLS.copy()
+
+            async def _backpack_info(
+                ctx: commands.Context,
+                pages: list,
+                controls: MutableMapping,
+                message: discord.Message,
+                page: int,
+                timeout: float,
+                emoji: str,
+            ):
+                if message:
+                    await ctx.send_help(self._backpack)
+                    with contextlib.suppress(discord.HTTPException):
+                        await message.delete()
+                    return None
+
+            controls["\N{INFORMATION SOURCE}\N{VARIATION SELECTOR-16}"] = _backpack_info
+            return await menu(ctx, msgs, controls)
 
     @_backpack.command(name="equip")
     async def backpack_equip(self, ctx: Context, *, equip_item: ItemConverter):
@@ -1196,7 +1216,12 @@ class Adventure(BaseCog):
 
     @_backpack.command(name="trade")
     async def backpack_trade(
-        self, ctx: Context, buyer: discord.Member, asking: Optional[int] = 1000, *, item: ItemConverter
+        self,
+        ctx: Context,
+        buyer: discord.Member,
+        asking: Optional[int] = 1000,
+        *,
+        item: ItemConverter,
     ):
         """Trade an item from your backpack to another user."""
         if self.in_adventure(ctx):
@@ -2810,6 +2835,14 @@ class Adventure(BaseCog):
         attack and 1 charisma to locastan. if a stat is not specified it will default to 0, order
         does not matter. available stats are attack(att), charisma(diplo) or charisma(cha),
         intelligence(int), dexterity(dex), and luck.
+
+        Item rarity is one of normal, rare, epic, legendary, set, forged, event.
+
+        Event items can have their level requirement and degrade number set via:
+        N degrade - (Set to -1 to never degrade on rebirths)
+        N level
+
+        `[p]give item @locastan "fine dagger" 1 att 1 charisma -1 degrade 100 level rare twohanded`
         """
         if item_name.isnumeric():
             return await smart_embed(ctx, _("Item names cannot be numbers."))
