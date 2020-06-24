@@ -219,7 +219,7 @@ class Adventure(BaseCog):
     __version__ = "3.2.12"
 
     intervals = [
-        (timedelta(seconds=5), 1),
+        (timedelta(seconds=10), 1),
     ]
 
     def __init__(self, bot: Red):
