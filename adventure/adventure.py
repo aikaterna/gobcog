@@ -117,6 +117,48 @@ def check_global_setting_admin():
     return commands.check(pred)
 
 
+def no_spammy_guild(intervals):
+    """
+    Command decorator. If the command isn't being spammed
+    """
+
+    async def pred(ctx: commands.Context):
+        guild = ctx.guild
+        cog = ctx.cog
+        command = ctx.command
+        if guild:
+            if command not in cog.antispam:
+                cog.antispam[command] = {}
+            if guild.id not in cog.antispam[command]:
+                cog.antispam[command][guild.id] = AntiSpam(intervals)
+            if cog.antispam[command][guild.id].spammy:
+                return False
+        return True
+
+    return commands.check(pred)
+
+
+def no_spammy_user(intervals):
+    """
+    Command decorator. If the command isn't being spammed
+    """
+
+    async def pred(ctx: commands.Context):
+        author = ctx.author
+        cog = ctx.cog
+        command = ctx.command
+        if author:
+            if command not in cog.antispam:
+                cog.antispam[command] = {}
+            if author.id not in cog.antispam[command]:
+                cog.antispam[command][author.id] = AntiSpam(intervals)
+            if cog.antispam[command][author.id].spammy:
+                return False
+        return True
+
+    return commands.check(pred)
+
+
 class AdventureResults:
     """Object to store recent adventure results."""
 
@@ -376,11 +418,13 @@ class Adventure(BaseCog):
 
     async def cog_before_invoke(self, ctx: Context):
         await self._ready_event.wait()
-        if ctx.guild and ctx.command == self._adventure:
-            if ctx.guild.id not in self.antispam:
-                self.antispam[ctx.guild.id] = AntiSpam(self.intervals)
-            if self.antispam[ctx.guild.id].spammy:
-                raise CheckFailure(f"User is Spamming adventure commands ({ctx.author.id})")
+        if ctx.guild:
+            if self.antispam[ctx.command][ctx.guild.id].spammy:
+                raise CheckFailure(f"Guild is Spamming adventure commands ({ctx.guild.id})")
+            self.antispam[ctx.command][ctx.guild.id].stamp()
+        if self.antispam[ctx.command][ctx.author.id].spammy:
+            raise CheckFailure(f"User is Spamming adventure commands ({ctx.author.id})")
+        self.antispam[ctx.command][ctx.author.id].stamp()
         if ctx.author.id in self.locks and self.locks[ctx.author.id].locked():
             raise CheckFailure(f"There's an active lock for this user ({ctx.author.id})")
         return True
@@ -3317,6 +3361,7 @@ class Adventure(BaseCog):
         if msgs:
             await menu(ctx, msgs, DEFAULT_CONTROLS)
 
+    @no_spammy_user([(timedelta(seconds=10), 1)])
     @commands.command(name="negaverse", aliases=["nv"], cooldown_after_parsing=True)
     @commands.cooldown(rate=1, per=3600, type=commands.BucketType.user)
     @commands.guild_only()
@@ -4370,7 +4415,10 @@ class Adventure(BaseCog):
         await self.config.guild(ctx.guild).cooldown.set(0)
         await ctx.tick()
 
-    @commands.cooldown(rate=1, per=5, type=commands.BucketType.guild)
+    @no_spammy_guild(
+        [(timedelta(seconds=10), 1),]
+    )
+    @no_spammy_user([(timedelta(seconds=10), 1)])
     @commands.command(name="adventure", aliases=["a"])
     @commands.bot_has_permissions(add_reactions=True)
     @commands.guild_only()
