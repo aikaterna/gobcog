@@ -380,7 +380,7 @@ class Adventure(BaseCog):
             if ctx.guild.id not in self.antispam:
                 self.antispam[ctx.guild.id] = AntiSpam(self.intervals)
             if self.antispam[ctx.guild.id].spammy:
-                raise CheckFailure(f"User if Spamming adventure commands ({ctx.author.id})")
+                raise CheckFailure(f"User is Spamming adventure commands ({ctx.author.id})")
         if ctx.author.id in self.locks and self.locks[ctx.author.id].locked():
             raise CheckFailure(f"There's an active lock for this user ({ctx.author.id})")
         return True
