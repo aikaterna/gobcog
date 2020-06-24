@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import logging
+import operator
 import re
 from copy import copy
 from datetime import date, timedelta
@@ -576,7 +577,7 @@ class Character(Item):
         else:
             class_desc = _("Hero.")
         legend = _(
-            "( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | DEGRADE | OWNED | SET (SET PIECES)"
+            "( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE] | OWNED | SET (SET PIECES)"
         )
         return _(
             "[{user}'s Character Sheet]\n\n"
@@ -679,7 +680,7 @@ class Character(Item):
 
             owned = ""
             if item.rarity in ["legendary", "event"] and item.degrade > 0:
-                owned += f" | `{item.degrade}`"
+                owned += f" | [{item.degrade}]"
             owned += f" | {item.owned}"
             if item.set:
                 settext += f" | Set `{item.set}` ({item.parts}pcs)"
@@ -690,7 +691,7 @@ class Character(Item):
                 f"{int_space}{inter} |"
                 f"{dex_space}{dex} |"
                 f"{luck_space}{luck} )"
-                f" | Lv {equip_level(self, item):<3}"
+                f" | Lv { equip_level(self, item):<3}"
                 f"{owned}{settext}"
             )
 
@@ -736,6 +737,10 @@ class Character(Item):
 
     async def get_sorted_backpack(self, backpack: dict):
         tmp = {}
+
+        def _sort(item):
+            return self.get_item_rarity(item), item[1].lvl, item[1].total_stats
+
         async for item in AsyncIter(backpack, steps=5):
             slots = backpack[item].slot
             slot_name = slots[0]
@@ -748,7 +753,7 @@ class Character(Item):
 
         final = []
         async for (idx, slot_name) in AsyncIter(tmp.keys()).enumerate():
-            final.append(sorted(tmp[slot_name], key=self.get_item_rarity))
+            final.append(sorted(tmp[slot_name], key=_sort))
 
         final.sort(
             key=lambda i: ORDER.index(i[0][1].slot[0])
@@ -762,7 +767,7 @@ class Character(Item):
             consumed = []
         bkpk = await self.get_sorted_backpack(self.backpack)
         form_string = _(
-            "Items in Backpack: \n( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | DEGRADE | OWNED | SET (SET PIECES)"
+            "Items in Backpack: \n( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE] | OWNED | SET (SET PIECES)"
         )
         consumed_list = [i for i in consumed]
         rjust = max([len(str(i[1])) + 3 for slot_group in bkpk for i in slot_group] or [1, 3])
@@ -786,10 +791,16 @@ class Character(Item):
                 luck_space = " " if len(str(item[1].luck)) == 1 else ""
                 owned = ""
                 if item[1].rarity in ["legendary", "event"] and item[1].degrade > 0:
-                    owned += f" | `{item[1].degrade}`"
+                    owned += f" | [{item[1].degrade}]"
                 owned += f" | {item[1].owned}"
                 if item[1].set:
                     settext += f" | Set `{item[1].set}` ({item[1].parts}pcs)"
+                e_level = equip_level(self, item[1])
+                if e_level > self.lvl:
+                    level = f"[{e_level}]"
+                else:
+                    level = f"#{e_level}"
+
                 form_string += (
                     f"\n{str(item[1]):<{rjust}} - "
                     f"({att_space}{item[1].att if len(slot_name_org)  < 2 else item[1].att * 2} |"
@@ -797,7 +808,7 @@ class Character(Item):
                     f"{int_space}{item[1].int if len(slot_name_org) < 2 else item[1].int * 2} |"
                     f"{dex_space}{item[1].dex if len(slot_name_org) < 2 else item[1].dex * 2} |"
                     f"{luck_space}{item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2} )"
-                    f" | Lv {equip_level(self, item[1]):<3}"
+                    f" | Lv {level:<5}"
                     f"{owned}{settext}"
                 )
 
