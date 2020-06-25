@@ -6643,7 +6643,7 @@ class Adventure(BaseCog):
             modif = 0.5
         weekend = datetime.today().weekday() in [5, 6]
         wedfriday = datetime.today().weekday() in [2, 4]
-        daymult = 3 if weekend else 2 if wedfriday else 1
+        daymult = 2 if weekend else 1.5 if wedfriday else 1
         xp = max(1, round(amount))
         cp = max(1, round(amount))
         newxp = 0
