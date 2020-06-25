@@ -591,6 +591,7 @@ class Character(Item):
             "Currency: {bal} \n- "
             "Experience: {xp}/{next_lvl} \n- "
             "Unspent skillpoints: {skill_points}\n\n"
+            "Total set bonus: {set_bonus}\n\n"
             "Items Equipped:\n{legend}{equip}"
         ).format(
             user=self.user.display_name,
@@ -619,6 +620,16 @@ class Character(Item):
             skill_points=0 if self.skill["pool"] < 0 else self.skill["pool"],
             legend=legend,
             equip=self.get_equipment(),
+            set_bonus=(
+                f"( {self.gear_set_bonus.get('att')} | "
+                f"{self.gear_set_bonus.get('cha')} | "
+                f"{self.gear_set_bonus.get('int')} | "
+                f"{self.gear_set_bonus.get('dex')} | "
+                f"{self.gear_set_bonus.get('luck')} ) "
+                f"Stats: {round(self.gear_set_bonus.get('statmult') * 100)}% | "
+                f"XP: {round(self.gear_set_bonus.get('xpmult') * 100)}% | "
+                f"Creds: {round(self.gear_set_bonus.get('cpmult') * 100)}%"
+            ),
         )
 
     def get_equipment(self):
