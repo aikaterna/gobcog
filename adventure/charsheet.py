@@ -629,7 +629,7 @@ class Character(Item):
                 f"{self.gear_set_bonus.get('int')} | "
                 f"{self.gear_set_bonus.get('dex')} | "
                 f"{self.gear_set_bonus.get('luck')} ) "
-                f"Stats: {round((self.gear_set_bonus.get('statmult') + daymult) * 100)}% | "
+                f"Stats: {round(self.gear_set_bonus.get('statmult') * 100)}% | "
                 f"XP: {round((self.gear_set_bonus.get('xpmult') + daymult) * 100)}% | "
                 f"Creds: {round((self.gear_set_bonus.get('cpmult') + daymult) * 100)}%"
             ),
