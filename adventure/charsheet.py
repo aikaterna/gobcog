@@ -558,6 +558,9 @@ class Character(Item):
                         elif value >= 0:
                             base[key] -= 1 - value
         self.gear_set_bonus = base
+        self.gear_set_bonus["cpmult"] = max(0, self.gear_set_bonus["cpmult"])
+        self.gear_set_bonus["xpmult"] = max(0, self.gear_set_bonus["xpmult"])
+        self.gear_set_bonus["statmult"] = max(-0.25, self.gear_set_bonus["statmult"])
 
     def __str__(self):
         """Define str to be our default look for the character sheet :thinkies:"""
