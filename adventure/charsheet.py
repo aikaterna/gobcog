@@ -4,7 +4,7 @@ import logging
 import operator
 import re
 from copy import copy
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from typing import Dict, List, Mapping, Optional, Set, MutableMapping
 
 import discord
@@ -578,6 +578,9 @@ class Character(Item):
         legend = _(
             "( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE#] | OWNED | SET (SET PIECES)"
         )
+        weekend = datetime.today().weekday() in [5, 6]
+        wedfriday = datetime.today().weekday() in [2, 4]
+        daymult = 1 if weekend else 0.5 if wedfriday else 0
         return _(
             "[{user}'s Character Sheet]\n\n"
             "{{Rebirths: {rebirths}, \n Max Level: {maxlevel}}}\n"
@@ -591,7 +594,7 @@ class Character(Item):
             "Currency: {bal} \n- "
             "Experience: {xp}/{next_lvl} \n- "
             "Unspent skillpoints: {skill_points}\n\n"
-            "Total set bonus: {set_bonus}\n\n"
+            "Total bonus: {set_bonus}\n\n"
             "Items Equipped:\n{legend}{equip}"
         ).format(
             user=self.user.display_name,
@@ -626,9 +629,9 @@ class Character(Item):
                 f"{self.gear_set_bonus.get('int')} | "
                 f"{self.gear_set_bonus.get('dex')} | "
                 f"{self.gear_set_bonus.get('luck')} ) "
-                f"Stats: {round(self.gear_set_bonus.get('statmult') * 100)}% | "
-                f"XP: {round(self.gear_set_bonus.get('xpmult') * 100)}% | "
-                f"Creds: {round(self.gear_set_bonus.get('cpmult') * 100)}%"
+                f"Stats: {round((self.gear_set_bonus.get('statmult') + daymult) * 100)}% | "
+                f"XP: {round((self.gear_set_bonus.get('xpmult') + daymult) * 100)}% | "
+                f"Creds: {round((self.gear_set_bonus.get('cpmult') + daymult) * 100)}%"
             ),
         )
 
