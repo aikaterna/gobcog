@@ -4180,26 +4180,18 @@ class Adventure(BaseCog):
             dexterity = bonus.get("dex", 0)
             luck = bonus.get("luck", 0)
 
-            attack = f"+{attack}" if attack >= 0 else f"{attack}"
-            charisma = f"+{charisma}" if charisma >= 0 else f"{charisma}"
-            intelligence = f"+{intelligence}" if intelligence >= 0 else f"{intelligence}"
-            dexterity = f"+{dexterity}" if dexterity >= 0 else f"{dexterity}"
-            luck = f"+{luck}" if luck >= 0 else f"{luck}"
+            attack = f"+{attack}" if attack > 0 else f"{attack}"
+            charisma = f"+{charisma}" if charisma > 0 else f"{charisma}"
+            intelligence = f"+{intelligence}" if intelligence > 0 else f"{intelligence}"
+            dexterity = f"+{dexterity}" if dexterity > 0 else f"{dexterity}"
+            luck = f"+{luck}" if luck > 0 else f"{luck}"
             statmult = bonus.get("statmult", 0)
             xpmult = bonus.get("xpmult", 0)
             cpmult = bonus.get("cpmult", 0)
-            if statmult >= 0:
-                statmult = f"{round(statmult*100)}%"
-            else:
-                statmult = f"{round(statmult*100)}%"
-            if xpmult >= 0:
-                xpmult = f"{round(xpmult*100)}%"
-            else:
-                xpmult = f"{round(xpmult*100)}%"
-            if cpmult >= 0:
-                cpmult = f"{round(cpmult*100)}%"
-            else:
-                cpmult = f"{round(cpmult*100)}%"
+
+            statmult = f"{round(statmult*100)}%"
+            xpmult = f"{round(xpmult*100)}%"
+            cpmult = f"{round(cpmult*100)}%"
 
             breakdown = _(
                 "Attack:                [{attack}]\n"
