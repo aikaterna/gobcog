@@ -4221,9 +4221,6 @@ class Adventure(BaseCog):
                 colour=await ctx.embed_colour(),
             )
             footer_text = (
-                # "Multiplier percentage is based on 100% being the full normal value.\n"
-                # "0% would be nothing, 50% would be half the value.\n"
-                # "A number like 150% means that it is 1.5x the value.\n"
                 "Multiple complete set bonuses stack.\n"
                 "\n"
                 "Use the information button below to display set piece details."
