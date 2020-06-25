@@ -636,8 +636,8 @@ class Character(Item):
                 f"{self.gear_set_bonus.get('dex')} | "
                 f"{self.gear_set_bonus.get('luck')} ) "
                 f"Stats: {round(statmult * 100)}% | "
-                f"XP: {round(xpmult * 100)}% | "
-                f"Creds: {round(cpmult * 100)}%"
+                f"EXP: {round(xpmult * 100)}% | "
+                f"Credits: {round(cpmult * 100)}%"
             ),
         )
 
