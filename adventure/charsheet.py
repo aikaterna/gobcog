@@ -581,6 +581,9 @@ class Character(Item):
         weekend = datetime.today().weekday() in [5, 6]
         wedfriday = datetime.today().weekday() in [2, 4]
         daymult = 1 if weekend else 0.5 if wedfriday else 0
+        statmult = self.gear_set_bonus.get("statmult") - 1
+        xpmult = (self.gear_set_bonus.get("xpmult") + daymult) - 1
+        cpmult = (self.gear_set_bonus.get("cpmult") + daymult) - 1
         return _(
             "[{user}'s Character Sheet]\n\n"
             "{{Rebirths: {rebirths}, \n Max Level: {maxlevel}}}\n"
@@ -594,7 +597,7 @@ class Character(Item):
             "Currency: {bal} \n- "
             "Experience: {xp}/{next_lvl} \n- "
             "Unspent skillpoints: {skill_points}\n\n"
-            "Total bonus: {set_bonus}\n\n"
+            "Active bonus: {set_bonus}\n\n"
             "Items Equipped:\n{legend}{equip}"
         ).format(
             user=self.user.display_name,
@@ -629,9 +632,9 @@ class Character(Item):
                 f"{self.gear_set_bonus.get('int')} | "
                 f"{self.gear_set_bonus.get('dex')} | "
                 f"{self.gear_set_bonus.get('luck')} ) "
-                f"Stats: {round(self.gear_set_bonus.get('statmult') * 100)}% | "
-                f"XP: {round((self.gear_set_bonus.get('xpmult') + daymult) * 100)}% | "
-                f"Creds: {round((self.gear_set_bonus.get('cpmult') + daymult) * 100)}%"
+                f"Stats: {round(statmult * 100)}% | "
+                f"XP: {round(xpmult * 100)}% | "
+                f"Creds: {round(cpmult * 100)}%"
             ),
         )
 

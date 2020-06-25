@@ -4185,13 +4185,14 @@ class Adventure(BaseCog):
             intelligence = f"+{intelligence}" if intelligence > 0 else f"{intelligence}"
             dexterity = f"+{dexterity}" if dexterity > 0 else f"{dexterity}"
             luck = f"+{luck}" if luck > 0 else f"{luck}"
-            statmult = bonus.get("statmult", 0)
-            xpmult = bonus.get("xpmult", 0)
-            cpmult = bonus.get("cpmult", 0)
 
-            statmult = f"{round(statmult*100)}%"
-            xpmult = f"{round(xpmult*100)}%"
-            cpmult = f"{round(cpmult*100)}%"
+            statmult = round((bonus.get("statmult", 1) - 1) * 100)
+            xpmult = round((bonus.get("xpmult", 1) - 1) * 100)
+            cpmult = round((bonus.get("cpmult", 1) - 1) * 100)
+
+            statmult = f"+{statmult}%" if statmult > 0 else f"{statmult}%"
+            xpmult = f"+{xpmult}%" if xpmult > 0 else f"{xpmult}%"
+            cpmult = f"+{cpmult}%" if cpmult > 0 else f"{cpmult}%"
 
             breakdown = _(
                 "Attack:                [{attack}]\n"
@@ -4220,9 +4221,9 @@ class Adventure(BaseCog):
                 colour=await ctx.embed_colour(),
             )
             footer_text = (
-                "Multiplier percentage is based on 100% being the full normal value.\n"
-                "0% would be nothing, 50% would be half the value.\n"
-                "A number like 150% means that it is 1.5x the value.\n"
+                # "Multiplier percentage is based on 100% being the full normal value.\n"
+                # "0% would be nothing, 50% would be half the value.\n"
+                # "A number like 150% means that it is 1.5x the value.\n"
                 "Multiple complete set bonuses stack.\n"
                 "\n"
                 "Use the information button below to display set piece details."
