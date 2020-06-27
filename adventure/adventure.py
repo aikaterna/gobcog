@@ -164,43 +164,42 @@ class AdventureResults:
         num_talk = 0
         talk_amount = 0
         num_wins = 0
-        raids = self._last_raids.get(ctx.guild.id, [])
-        raid_count = len(raids)
-        for raid in raids:
-            if raid["main_action"] == "attack":
-                num_attack += 1
-                dmg_amount += raid["amount"]
-                if raid["num_ppl"] == 1:
-                    dmg_amount += raid["amount"] * SOLO_RAID_SCALE
-            else:
-                num_talk += 1
-                talk_amount += raid["amount"]
-                if raid["num_ppl"] == 1:
-                    talk_amount += raid["amount"] * SOLO_RAID_SCALE
-            log.debug(f"raid dmg: {raid['amount']}")
-            if raid["success"]:
-                num_wins += 1
-
-        # calculate relevant stats
-        if num_wins == 0:
-            num_wins = self._num_raids // 2
-        win_percent = num_wins / raid_count if raid_count else self._num_raids
         stat_type = "hp"
         avg_amount = 0
-        if num_attack > 0:
-            avg_amount = dmg_amount / num_attack
-        if dmg_amount < talk_amount:
-            stat_type = "dipl"
-            avg_amount = talk_amount / num_talk
-
-        # return main stat and range
-        min_stat = avg_amount * 0.75
-        max_stat = avg_amount * 2
-        # want win % to be at least 50%, even when solo
-        # if win % is below 50%, scale back min/max for easier mons
-        if win_percent < 0.5:
-            min_stat = avg_amount * win_percent
-            max_stat = avg_amount * 1.5
+        raids = self._last_raids.get(ctx.guild.id, [])
+        raid_count = len(raids)
+        if raid_count == 0:
+            num_wins = self._num_raids // 2
+            raid_count = self._num_raids
+            win_percent = 0.5
+        else:
+            for raid in raids:
+                if raid["main_action"] == "attack":
+                    num_attack += 1
+                    dmg_amount += raid["amount"]
+                    if raid["num_ppl"] == 1:
+                        dmg_amount += raid["amount"] * SOLO_RAID_SCALE
+                else:
+                    num_talk += 1
+                    talk_amount += raid["amount"]
+                    if raid["num_ppl"] == 1:
+                        talk_amount += raid["amount"] * SOLO_RAID_SCALE
+                log.debug(f"raid dmg: {raid['amount']}")
+                if raid["success"]:
+                    num_wins += 1
+            if num_attack > 0:
+                avg_amount = dmg_amount / num_attack
+            if dmg_amount < talk_amount:
+                stat_type = "dipl"
+                avg_amount = talk_amount / num_talk
+            win_percent = num_wins / raid_count
+            min_stat = avg_amount * 0.75
+            max_stat = avg_amount * 2
+            # want win % to be at least 50%, even when solo
+            # if win % is below 50%, scale back min/max for easier mons
+            if win_percent < 0.5:
+                min_stat = avg_amount * win_percent
+                max_stat = avg_amount * 1.5
 
         stats_dict = {}
         for var in ("stat_type", "min_stat", "max_stat", "win_percent"):
