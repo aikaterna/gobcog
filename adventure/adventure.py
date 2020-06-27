@@ -8,7 +8,7 @@ import random
 import re
 import time
 from collections import namedtuple
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from operator import itemgetter
 from types import SimpleNamespace
 from typing import List, Optional, Union, MutableMapping
@@ -215,7 +215,7 @@ class AdventureResults:
 class Adventure(BaseCog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
-    __version__ = "3.2.21"
+    __version__ = "3.2.22"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -292,6 +292,7 @@ class Adventure(BaseCog):
         self._react_messaged = []
         self.tasks = {}
         self.locks: MutableMapping[int, asyncio.Lock] = {}
+        self.gb_task = None
 
         self.config = Config.get_conf(self, 2_710_801_001, force_registration=True)
 
@@ -479,6 +480,7 @@ class Adventure(BaseCog):
             log.exception("There was an error starting up the cog", exc_info=err)
         else:
             self._ready_event.set()
+            self.gb_task = self.bot.loop.create_task(self._garbage_collection)
 
     async def cleanup_tasks(self):
         await self._ready_event.wait()
@@ -1807,6 +1809,17 @@ class Adventure(BaseCog):
         while ctx.guild.id in self._sessions:
             del self._sessions[ctx.guild.id]
         await ctx.tick()
+
+    async def _garbage_collection(self):
+        await self.bot.wait_until_red_ready()
+        delta = timedelta(minutes=6)
+        with contextlib.suppress(asyncio.CancelledError):
+            while True:
+                async for guild_id, session in AsyncIter(self._sessions.copy(), steps=5):
+                    if session.start_time + delta > datetime.now():
+                        if guild_id in self._sessions:
+                            del self._sessions[guild_id]
+                await asyncio.sleep(5)
 
     @adventureset.command()
     @checks.is_owner()
@@ -6977,6 +6990,8 @@ class Adventure(BaseCog):
             self.cleanup_loop.cancel()
         if self._init_task:
             self._init_task.cancel()
+        if self.gb_task:
+            self.gb_task.cancel()
 
         for (msg_id, task) in self.tasks.items():
             task.cancel()

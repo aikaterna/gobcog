@@ -368,6 +368,7 @@ class GameSession:
     message: discord.Message = None
     transcended: bool = False
     insight = (0, None)
+    start_time: datetime = datetime.now()
 
     def __init__(self, **kwargs):
         self.challenge: str = kwargs.pop("challenge")
@@ -390,6 +391,7 @@ class GameSession:
         self.pray: List[discord.Member] = []
         self.run: List[discord.Member] = []
         self.transcended: bool = kwargs.pop("transcended", False)
+        self.start_time = datetime.now()
 
 
 class Character(Item):
