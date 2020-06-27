@@ -214,7 +214,7 @@ class AdventureResults:
 class Adventure(BaseCog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
-    __version__ = "3.2.22"
+    __version__ = "3.2.23"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -479,7 +479,7 @@ class Adventure(BaseCog):
             log.exception("There was an error starting up the cog", exc_info=err)
         else:
             self._ready_event.set()
-            self.gb_task = self.bot.loop.create_task(self._garbage_collection)
+            self.gb_task = self.bot.loop.create_task(self._garbage_collection())
 
     async def cleanup_tasks(self):
         await self._ready_event.wait()
