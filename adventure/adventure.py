@@ -3591,7 +3591,9 @@ class Adventure(BaseCog):
                 )
                 with contextlib.suppress(Exception):
                     lock.release()
-                await self._add_rewards(ctx, ctx.message.author, xp_won, offering, False)
+                msg = await self._add_rewards(ctx, ctx.message.author, xp_won, offering, False)
+                if msg:
+                    await smart_embed(ctx, msg, success=True)
             elif roll > versus:
                 await nega_msg.edit(
                     content=_(
@@ -3610,7 +3612,9 @@ class Adventure(BaseCog):
                 )
                 with contextlib.suppress(Exception):
                     lock.release()
-                await self._add_rewards(ctx, ctx.message.author, xp_won, 0, False)
+                msg = await self._add_rewards(ctx, ctx.message.author, xp_won, 0, False)
+                if msg:
+                    await smart_embed(ctx, msg, success=True)
             elif roll == versus:
                 ctx.command.reset_cooldown(ctx)
                 await nega_msg.edit(
@@ -4599,16 +4603,22 @@ class Adventure(BaseCog):
                 del self._sessions[ctx.guild.id]
             return
         reward_copy = reward.copy()
+        send_message = ""
         for (userid, rewards) in reward_copy.items():
             if rewards:
                 user = ctx.guild.get_member(userid)  # bot.get_user breaks sometimes :ablobsweats:
                 if user is None:
                     # sorry no rewards if you leave the server
                     continue
-                await self._add_rewards(
+                msg = await self._add_rewards(
                     ctx, user, rewards["xp"], rewards["cp"], rewards["special"]
                 )
+                if msg:
+                    send_message += f"{msg}\n"
                 self._rewards[userid] = {}
+        if send_message:
+            for page in pagify(send_message):
+                await smart_embed(ctx, page, success=True)
         if participants:
             for user in participants:  # reset activated abilities
                 async with self.get_lock(user):
@@ -6252,6 +6262,7 @@ class Adventure(BaseCog):
             lock.release()
             return
         else:
+            rebirth_text = ""
             c.exp += exp
             member = ctx.guild.get_member(user.id)
             cp = max(cp, 0)
@@ -6281,12 +6292,9 @@ class Adventure(BaseCog):
                 c.skill["pool"] += ending_points - starting_points
                 if c.skill["pool"] > 0:
                     extra = _(" You have **{}** skill points available.").format(c.skill["pool"])
-                await smart_embed(
-                    ctx,
-                    _("{} {} is now level **{}**!{}\n{}").format(
+                rebirth_text = _("{} {} is now level **{}**!{}\n{}").format(
                         levelup_emoji, user.mention, lvl_end, extra, rebirthextra
                     ),
-                )
             if c.rebirths > 1:
                 roll = random.randint(1, 100)
                 if lvl_end == c.maxlevel:
@@ -6317,6 +6325,7 @@ class Adventure(BaseCog):
             if special is not False:
                 c.treasure = [sum(x) for x in zip(c.treasure, special)]
             await self.config.user(user).set(await c.to_json(self.config))
+            return rebirth_text
         finally:
             lock = self.get_lock(user)
             with contextlib.suppress(Exception):
