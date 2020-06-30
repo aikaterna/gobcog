@@ -66,7 +66,7 @@ log = logging.getLogger("red.cogs.adventure")
 
 REBIRTH_LVL = 20
 REBIRTH_STEP = 10
-_SCHEMA_VERSION = 2
+_SCHEMA_VERSION = 3
 _config: Config = None
 
 
@@ -214,7 +214,7 @@ class AdventureResults:
 class Adventure(BaseCog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
-    __version__ = "3.2.24"
+    __version__ = "3.2.25"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -540,7 +540,38 @@ class Adventure(BaseCog):
                         adventurers_data[user]["loadouts"] = new_loadout
                     except Exception:
                         adventurers_data[user]["loadouts"] = {}
-        await self.config.schema_version.set(to_version)
+            await self.config.schema_version.set(2)
+            from_version = 2
+        if from_version < 3 <= to_version:
+            group = self.config._get_base_group(self.config.USER)
+            accounts = await group.all()
+            tmp = accounts.copy()
+            async with group.all() as adventurers_data:
+                for user in tmp:
+                    new_loadout = {}
+                    if "loadouts" not in adventurers_data[user]:
+                        adventurers_data[user]["loadouts"] = {}
+                    try:
+                        for (loadout_name, loadout) in adventurers_data[user]["loadouts"].items():
+                            if loadout_name in {
+                                "head",
+                                "neck",
+                                "chest",
+                                "gloves",
+                                "belt",
+                                "legs",
+                                "boots",
+                                "left",
+                                "right",
+                                "ring",
+                                "charm",
+                            }:
+                                continue
+                            new_loadout[loadout_name] = loadout
+                        adventurers_data[user]["loadouts"] = new_loadout
+                    except Exception:
+                        adventurers_data[user]["loadouts"] = {}
+            await self.config.schema_version.set(3)
 
     def _convert_item_migration(self, item_name, item_dict):
         new_name = item_name
@@ -6295,10 +6326,8 @@ class Adventure(BaseCog):
                 c.skill["pool"] += ending_points - starting_points
                 if c.skill["pool"] > 0:
                     extra = _(" You have **{}** skill points available.").format(c.skill["pool"])
-                rebirth_text = (
-                    _("{} {} is now level **{}**!{}\n{}").format(
-                        levelup_emoji, user.mention, lvl_end, extra, rebirthextra
-                    ),
+                rebirth_text = _("{} {} is now level **{}**!{}\n{}").format(
+                    levelup_emoji, user.mention, lvl_end, extra, rebirthextra
                 )
             if c.rebirths > 1:
                 roll = random.randint(1, 100)
