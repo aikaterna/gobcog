@@ -1258,7 +1258,7 @@ class Adventure(BaseCog):
                     author=self.escape(ctx.author.display_name)
                 ),
             )
-        lookup = list(x for n, x in c.backpack.items() if item.name.lower() == x.name.lower())
+        lookup = list(x for n, x in c.backpack.items() if str(item) == str(x))
         if len(lookup) > 1:
             await smart_embed(
                 ctx,
