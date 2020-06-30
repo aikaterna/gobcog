@@ -4817,7 +4817,6 @@ class Adventure(BaseCog):
         else:
             timer = 60 * 2
 
-
         self._sessions[ctx.guild.id] = GameSession(
             challenge=new_challenge,
             attribute=attribute,
@@ -6290,9 +6289,11 @@ class Adventure(BaseCog):
                 c.skill["pool"] += ending_points - starting_points
                 if c.skill["pool"] > 0:
                     extra = _(" You have **{}** skill points available.").format(c.skill["pool"])
-                rebirth_text = _("{} {} is now level **{}**!{}\n{}").format(
+                rebirth_text = (
+                    _("{} {} is now level **{}**!{}\n{}").format(
                         levelup_emoji, user.mention, lvl_end, extra, rebirthextra
                     ),
+                )
             if c.rebirths > 1:
                 roll = random.randint(1, 100)
                 if lvl_end == c.maxlevel:
