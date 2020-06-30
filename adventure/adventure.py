@@ -1351,26 +1351,21 @@ class Adventure(BaseCog):
                                 await bank.withdraw_credits(buyer, asking)
                                 await bank.set_balance(ctx.author, e.max_balance)
                             c.backpack[item.name].owned -= 1
+                            newly_owned = c.backpack[item.name].owned
                             if c.backpack[item.name].owned <= 0:
                                 del c.backpack[item.name]
                             async with self.get_lock(buyer):
-                                try:
-                                    buy_user = await Character.from_json(self.config, buyer)
-                                except Exception as exc:
-                                    log.exception(
-                                        "Error with the new character sheet", exc_info=exc
-                                    )
-                                    return
                                 if item.name in buy_user.backpack:
                                     buy_user.backpack[item.name].owned += 1
                                 else:
                                     item.owned = 1
                                     buy_user.backpack[item.name] = item
-                                await self.config.user(ctx.author).set(
-                                    await c.to_json(self.config)
-                                )
                                 await self.config.user(buyer).set(
                                     await buy_user.to_json(self.config)
+                                )
+                                item.owned = newly_owned
+                                await self.config.user(ctx.author).set(
+                                    await c.to_json(self.config)
                                 )
 
                             await trade_msg.edit(
