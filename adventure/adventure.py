@@ -1251,14 +1251,14 @@ class Adventure(BaseCog):
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             return
-        if not any([x for x in c.backpack if item.name.lower() in x.lower()]):
+        if not any([x for x in c.backpack if item.name.lower() == x.lower()]):
             return await smart_embed(
                 ctx,
                 _("**{author}**, you have to specify an item from your backpack to trade.").format(
                     author=self.escape(ctx.author.display_name)
                 ),
             )
-        lookup = list(x for n, x in c.backpack.items() if item.name.lower() in x.name.lower())
+        lookup = list(x for n, x in c.backpack.items() if item.name.lower() == x.name.lower())
         if len(lookup) > 1:
             await smart_embed(
                 ctx,
