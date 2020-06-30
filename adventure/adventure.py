@@ -5288,12 +5288,18 @@ class Adventure(BaseCog):
             roll = random.randint(1, 10)
             monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
             if session.transcended:
-                avaliable_loot = [
-                    [0, 0, 1, 5, 1],
-                    [0, 0, 1, 3, 1],
-                    [0, 0, 1, 1, 1],
-                    [0, 0, 0, 0, 1],
-                ]
+                if session.boss and "Trancended" in session.challenge:
+                    avaliable_loot = [
+                        [0, 0, 1, 5, 1],
+                        [0, 0, 0, 0, 2],
+                    ]
+                else:
+                    avaliable_loot = [
+                        [0, 0, 1, 5, 1],
+                        [0, 0, 1, 3, 1],
+                        [0, 0, 1, 1, 1],
+                        [0, 0, 0, 0, 1],
+                    ]
                 treasure = random.choice(avaliable_loot)
             elif session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
                 avaliable_loot = [[0, 0, 3, 1, 0], [0, 0, 1, 2, 0], [0, 0, 0, 3, 0]]
