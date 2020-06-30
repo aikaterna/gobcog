@@ -4798,7 +4798,15 @@ class Adventure(BaseCog):
             attribute = attribute.lower()
         else:
             attribute = random.choice(list(self.ATTRIBS.keys()))
-        if "Ascended" in challenge:
+
+        if transcended:
+            new_challenge = challenge.replace("Ascended", "Transcended")
+            if "Transcended" in new_challenge:
+                self.bot.dispatch("adventure_transcended", ctx)
+        else:
+            new_challenge = challenge
+
+        if "Ascended" in new_challenge:
             self.bot.dispatch("adventure_ascended", ctx)
         if attribute == "n immortal":
             self.bot.dispatch("adventure_immortal", ctx)
@@ -4806,19 +4814,14 @@ class Adventure(BaseCog):
             self.bot.dispatch("adventure_possessed", ctx)
         if monster_roster[challenge]["boss"]:
             timer = 60 * 5
-            text = box(_("\n [{} Alarm!]").format(challenge), lang="css")
+            text = box(_("\n [{} Alarm!]").format(new_challenge), lang="css")
             self.bot.dispatch("adventure_boss", ctx)  # dispatches an event on bosses
         elif monster_roster[challenge]["miniboss"]:
             timer = 60 * 3
             self.bot.dispatch("adventure_miniboss", ctx)
         else:
             timer = 60 * 2
-        if transcended:
-            new_challenge = challenge.replace("Ascended", "Transcended")
-            if "Transcended" in new_challenge:
-                self.bot.dispatch("adventure_transcended", ctx)
-        else:
-            new_challenge = challenge
+
 
         self._sessions[ctx.guild.id] = GameSession(
             challenge=new_challenge,
