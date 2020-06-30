@@ -836,10 +836,14 @@ class Character(Item):
         equiplevel = equip_level(self, item)
         if equiplevel > self.lvl:
             if not dev:
-                await self.add_to_backpack(item)
+                if not from_backpack:
+                    await self.add_to_backpack(item)
                 return self
         if from_backpack and item.name in self.backpack:
-            del self.backpack[item.name]
+            if self.backpack[item.name].owned > 1:
+                self.backpack[item.name].owned -= 1
+            else:
+                del self.backpack[item.name]
         for slot in item.slot:
             current = getattr(self, slot)
             if current:
