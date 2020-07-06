@@ -424,7 +424,6 @@ class Character(Item):
         self.get_set_bonus()
         self.maxlevel = self.get_max_level()
         self.lvl = self.lvl if self.lvl < self.maxlevel else self.maxlevel
-        self.get_equipment()
         self.set_items = self.get_set_item_count()
         self.att, self._att = self.get_stat_value("att")
         self.cha, self._cha = self.get_stat_value("cha")
@@ -698,7 +697,6 @@ class Character(Item):
             owned = ""
             if item.rarity in ["legendary", "event"] and item.degrade > 0:
                 owned += f" | [{item.degrade}#]"
-            owned += f" | {item.owned}"
             if item.set:
                 settext += f" | Set `{item.set}` ({item.parts}pcs)"
             form_string += (
