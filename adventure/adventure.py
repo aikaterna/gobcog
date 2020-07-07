@@ -1834,7 +1834,7 @@ class Adventure(BaseCog):
             lock.release()
         await ctx.tick()
 
-    @adventureset_locks.command(name="dailybonus")
+    @adventureset.command(name="dailybonus")
     @checks.is_owner()
     async def adventureset_daily_bonus(
         self, ctx: Context, day: DayConverter, percentage: PercentageConverter
