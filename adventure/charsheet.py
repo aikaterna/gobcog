@@ -5,7 +5,7 @@ import operator
 import re
 from copy import copy
 from datetime import date, timedelta, datetime
-from typing import Dict, List, Mapping, Optional, Set, MutableMapping
+from typing import Dict, List, Mapping, Optional, Set, MutableMapping, Tuple
 
 import discord
 from discord.ext.commands import check
@@ -1401,15 +1401,15 @@ class RarityConverter(Converter):
 
 
 class DayConverter(Converter):
-    async def convert(self, ctx, argument) -> str:
+    async def convert(self, ctx, argument) -> Tuple[str, str]:
         matches = DAY_REGEX.match(argument)
         if not matches:
-            raise BadArgument(_("Day must be one of:\nMon,Tue,Wed,Thurs,Fri,Sat or Sun"))
-        for k, v in matches.groupdict():
+            raise BadArgument(_("Day must be one of:\nMon, Tue, Wed, Thurs, Fri, Sat or Sun"))
+        for k, v in matches.groupdict().items():
             if v is None:
                 continue
             if (val := _DAY_MAPPING.get(k)) is not None:
-                return val
+                return (val, k)
         raise BadArgument(_("Day must be one of:\nMon,Tue,Wed,Thurs,Fri,Sat or Sun"))
 
 
