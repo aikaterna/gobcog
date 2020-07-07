@@ -1848,7 +1848,10 @@ class Adventure(BaseCog):
             daily_bonus_data[day_val] = percentage
             self._daily_bonus = daily_bonus_data.copy()
         await smart_embed(
-            ctx, _("Daily bonus for `{0}` has been set to: {1:.0%}").format(day_text.title(), percentage)
+            ctx,
+            _("Daily bonus for `{0}` has been set to: {1:.0%}").format(
+                day_text.title(), percentage
+            ),
         )
 
     @commands.guild_only()
