@@ -12,7 +12,7 @@
     "Arcane-Touched Satyr": {"hp": 125, "pdef": 1, "mdef": 1.15, "dipl": 130, "image": "https://cdn.pixabay.com/photo/2016/05/22/21/44/mask-1409287_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Arcane-Touched Spriggan": {"hp": 155, "pdef": 1, "mdef": 1.25, "dipl": 180, "image": "https://cdn.pixabay.com/photo/2017/10/06/21/08/fantasy-2824654_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Assassin": {"hp": 45, "pdef": 1.4, "mdef": 1, "dipl": 42, "image": "https://cdn.pixabay.com/photo/2016/03/31/21/41/assassin-1296592_960_720.png", "boss": false, "miniboss": {}, "color":""},
-    "Balrog": {"hp": 80, "pdef": 1, "mdef": 0.8, "dipl": 100, "image": "https://en.wikipedia.org/wiki/Balrog#/media/File:Durin%27s_Bane.jpg", "boss": false, "miniboss": {}, "color":""},
+    "Balrog": {"hp": 80, "pdef": 1, "mdef": 0.8, "dipl": 100, "image": "https://upload.wikimedia.org/wikipedia/commons/1/14/Durin%27s_Bane.jpg", "boss": false, "miniboss": {}, "color":""},
     "Bandit": {"hp": 35, "pdef": 1.2, "mdef": 0.9, "dipl": 35, "image": "https://cdn.pixabay.com/photo/2013/07/13/10/24/burglar-157142_960_720.png", "boss": false, "miniboss": {}, "color":""},
     "Barred Owl": {"hp": 39, "pdef": 1, "mdef": 15, "dipl": 40, "image": "https://cdn.pixabay.com/photo/2014/11/05/09/03/owl-517497_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Basilisk": {"hp": 300, "pdef": 1.2, "mdef": 0.8, "dipl": 320, "image": "http://mythicalarchive.com/wp-content/uploads/2015/12/basilisk_by_wretchedspawn2012-d8sc6ps-1024x921.jpg", "boss": false, "miniboss": {"requirements": [".mirror_shield", "left"], "defeat": "The Basilisk's gaze turned everyone to stone.", "special": "gaze"}, "color":""},
