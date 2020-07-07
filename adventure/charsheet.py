@@ -1054,7 +1054,7 @@ class Character(Item):
         for (k, v) in self.backpack.items():
             for (n, i) in v.to_json().items():
                 if i.get("rarity", False) in ["set"]:
-                    count_set += 1
+                    count_set += v.owned
         return count_set
 
     async def to_json(self, config) -> dict:
