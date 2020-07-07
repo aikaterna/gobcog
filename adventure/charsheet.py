@@ -83,6 +83,27 @@ RARITY = re.compile(r"(normal|rare|epic|legend(?:ary)?|set|forged|event)")
 RARITIES = ("normal", "rare", "epic", "legendary", "set", "event")
 DEG = re.compile(r"(-?\d*) degrade")
 LEVEL = re.compile(r"(-?\d*) (level|lvl)")
+PERCENTAGE = re.compile(r"^(\d*\.?\d+)(%?)")
+DAY_REGEX = re.compile(
+    r"^(?P<monday>mon(?:day)?|1)$|"
+    r"^(?P<tuesday>tue(?:sday)?|2)$|"
+    r"^(?P<wednesday>wed(?:nesday)?|3)$|"
+    r"^(?P<thursday>th(?:u(?:rs(?:day)?)?)?|4)$|"
+    r"^(?P<friday>fri(?:day)?|5)$|"
+    r"^(?P<saturday>sat(?:urday)?|6)$|"
+    r"^(?P<sunday>sun(?:day)?|7)$",
+    re.IGNORECASE,
+)
+
+_DAY_MAPPING = {
+    "monday": "1",
+    "tuesday": "2",
+    "wednesday": "3",
+    "thursday": "4",
+    "friday": "5",
+    "saturday": "6",
+    "sunday": "7",
+}
 
 
 class Stats(Converter):
@@ -461,6 +482,9 @@ class Character(Item):
             "charm": {},
         }
         self.last_skill_reset: int = kwargs.pop("last_skill_reset", 0)
+        self.daily_bonus = kwargs.pop(
+            "daily_bonus_mapping", {"1": 0, "2": 0, "3": 0.5, "4": 0, "5": 0.5, "6": 1.0, "7": 1.0}
+        )
 
     def remove_restrictions(self):
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
@@ -579,9 +603,8 @@ class Character(Item):
                     )
         else:
             class_desc = _("Hero.")
-        weekend = datetime.today().weekday() in [5, 6]
-        wedfriday = datetime.today().weekday() in [2, 4]
-        daymult = 1 if weekend else 0.5 if wedfriday else 0
+
+        daymult = self.daily_bonus.get(str(datetime.today().weekday()), 0)
         statmult = self.gear_set_bonus.get("statmult") - 1
         xpmult = (self.gear_set_bonus.get("xpmult") + daymult) - 1
         cpmult = (self.gear_set_bonus.get("cpmult") + daymult) - 1
@@ -924,7 +947,9 @@ class Character(Item):
         return self
 
     @classmethod
-    async def from_json(cls, config: Config, user: discord.Member):
+    async def from_json(
+        cls, config: Config, user: discord.Member, daily_bonus_mapping: Dict[str, float]
+    ):
         """Return a Character object from config and user."""
         data = await config.user(user).all()
         balance = await bank.get_balance(user)
@@ -1010,7 +1035,7 @@ class Character(Item):
         for (k, v) in equipment.items():
             hero_data[k] = v
         hero_data["last_skill_reset"] = data.get("last_skill_reset", 0)
-        return cls(**hero_data)
+        return cls(**hero_data, daily_bonus_mapping=daily_bonus_mapping)
 
     def get_set_item_count(self):
         count_set = 0
@@ -1178,7 +1203,11 @@ class Character(Item):
 class ItemConverter(Converter):
     async def convert(self, ctx, argument) -> Item:
         try:
-            c = await Character.from_json(ctx.bot.get_cog("Adventure").config, ctx.author)
+            c = await Character.from_json(
+                ctx.bot.get_cog("Adventure").config,
+                ctx.author,
+                ctx.bot.get_cog("Adventure")._daily_bonus,
+            )
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
@@ -1233,7 +1262,11 @@ class ItemConverter(Converter):
 class EquipmentConverter(Converter):
     async def convert(self, ctx, argument) -> Item:
         try:
-            c = await Character.from_json(ctx.bot.get_cog("Adventure").config, ctx.author)
+            c = await Character.from_json(
+                ctx.bot.get_cog("Adventure").config,
+                ctx.author,
+                ctx.bot.get_cog("Adventure")._daily_bonus,
+            )
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
@@ -1365,6 +1398,37 @@ class RarityConverter(Converter):
             if rarity not in RARITIES:
                 raise BadArgument
         return argument
+
+
+class DayConverter(Converter):
+    async def convert(self, ctx, argument) -> str:
+        matches = DAY_REGEX.match(argument)
+        if not matches:
+            raise BadArgument(_("Day must be one of:\nMon,Tue,Wed,Thurs,Fri,Sat or Sun"))
+        for k, v in matches.groupdict():
+            if v is None:
+                continue
+            if (val := _DAY_MAPPING.get(k)) is not None:
+                return val
+        raise BadArgument(_("Day must be one of:\nMon,Tue,Wed,Thurs,Fri,Sat or Sun"))
+
+
+class PercentageConverter(Converter):
+    async def convert(self, ctx, argument) -> float:
+        arg = argument.lower()
+        if arg in {"nan", "inf", "-inf", "+inf", "infinity", "-infinity", "+infinity"}:
+            raise BadArgument(_("Percentage must be between 0% and 100%"))
+        match = PERCENTAGE.match(argument)
+        if not match:
+            raise BadArgument(_("Percentage must be between 0% and 100%"))
+        value = match.group(1)
+        pencentage = match.group(2)
+        arg = float(value)
+        if pencentage:
+            arg /= 100
+        if arg < 0 or arg > 1:
+            raise BadArgument(_("Percentage must be between 0% and 100%"))
+        return arg
 
 
 def equip_level(char, item):
