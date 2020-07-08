@@ -3813,6 +3813,7 @@ class Adventure(BaseCog):
                                 else _("1 second")
                             ),
                         )
+                    ainz = False
                     theme = await self.config.theme()
                     extra_pets = await self.config.themes.all()
                     extra_pets = extra_pets.get(theme, {}).get("pets", {})
@@ -3827,6 +3828,9 @@ class Adventure(BaseCog):
                     if pet_reqs.get("set", False):
                         if pet_reqs.get("set", None) in c.sets:
                             can_catch = True
+                            if pet_reqs.get("set", None) in ["Ainz Ooal Gown"]:
+                                ainz = True
+                                pet = random.choice(["Albedo", "Rubedo", "Guardians of Nazarick"])
                         else:
                             can_catch = False
                             pet_msg4 = _(
@@ -3859,8 +3863,13 @@ class Adventure(BaseCog):
                         bonus = _("But they stepped on a twig and scared it away.")
                     elif roll in [50, 25]:
                         bonus = _("They happen to have its favorite food.")
-                    if dipl_value > self.PETS[pet]["cha"] and roll > 1 and can_catch:
-                        roll = random.randint(0, 2 if roll in [50, 25] else 5)
+                    if ainz is True or (
+                        dipl_value > self.PETS[pet]["cha"] and roll > 1 and can_catch
+                    ):
+                        if ainz:
+                            roll = 0
+                        else:
+                            roll = random.randint(0, 2 if roll in [50, 25] else 5)
                         if roll == 0:
                             pet_msg3 = box(
                                 _("{bonus}\nThey successfully tamed the {pet}.").format(

@@ -487,14 +487,22 @@ class Character(Item):
 
     def remove_restrictions(self):
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
+            requirements = (
+                PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
+            )
+            if "Ainz Ooal Gown" in self.sets and self.heroclass["pet"]["name"] in [
+                "Albedo",
+                "Rubedo",
+                "Guardians of Nazarick",
+            ]:
+                return
+
             if self.heroclass["pet"]["cha"] > (
                 self.total_cha + (self.total_int // 3) + (self.luck // 2)
             ):
                 self.heroclass["pet"] = {}
                 return
-            requirements = (
-                PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
-            )
+
             if requirements:
                 if requirements.get("set") and requirements.get("set") not in self.sets:
                     self.heroclass["pet"] = {}
