@@ -907,7 +907,8 @@ class Adventure(BaseCog):
                         level=equiplevel
                     ),
                 )
-            equip = c.backpack[equip_item.name]
+
+            equip = c.backpack.get(equip_item.name)
             if equip:
                 slot = equip.slot[0]
                 if len(equip.slot) > 1:
