@@ -852,13 +852,15 @@ class Character(Item):
                     int = self.get_equipped_delta(current_equipped, item[1], "int")
                     dex = self.get_equipped_delta(current_equipped, item[1], "dex")
                     luck = self.get_equipped_delta(current_equipped, item[1], "luck")
+                    rjuststat = 5
                 else:
                     att = item[1].att if len(slot_name_org) < 2 else item[1].att * 2
                     cha = item[1].cha if len(slot_name_org) < 2 else item[1].cha * 2
                     int = item[1].int if len(slot_name_org) < 2 else item[1].int * 2
                     dex = item[1].dex if len(slot_name_org) < 2 else item[1].dex * 2
                     luck = item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2
-                rjuststat = 5
+                    rjuststat = 3
+
                 stats = (
                     f"({att_space}{att:<{rjuststat}} |"
                     f"{cha_space}{cha:<{rjuststat}} |"
