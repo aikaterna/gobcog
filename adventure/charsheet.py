@@ -572,7 +572,7 @@ class Character(Item):
                 parts, count, bonus = set_names[item.set]
                 set_names[item.set] = (parts, count + 1, bonus)
         valid_sets = [(s, v[1]) for s, v in set_names.items() if v[1] >= v[0]]
-        self.sets = [s for s, _ in set_names.items() if s]
+        self.sets = [s for s, _ in valid_sets if s]
         for (_set, parts) in valid_sets:
             set_bonuses = SET_BONUSES.get(_set, [])
             for bonus in set_bonuses:
