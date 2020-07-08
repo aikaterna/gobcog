@@ -605,9 +605,18 @@ class Character(Item):
                 if not self.heroclass["pet"]:
                     class_desc += _("\n\n- Current pet: [None]")
                 elif self.heroclass["pet"]:
-                    class_desc += _("\n\n- Current pet: [{}]").format(
-                        self.heroclass["pet"]["name"]
-                    )
+                    if "Ainz Ooal Gown" in self.sets and self.heroclass["pet"]["name"] in [
+                        "Albedo",
+                        "Rubedo",
+                        "Guardians of Nazarick",
+                    ]:
+                        class_desc += _("\n\n- Current servant: [{}]").format(
+                            self.heroclass["pet"]["name"]
+                        )
+                    else:
+                        class_desc += _("\n\n- Current pet: [{}]").format(
+                            self.heroclass["pet"]["name"]
+                        )
         else:
             class_desc = _("Hero.")
 
@@ -1264,10 +1273,28 @@ class ItemConverter(Converter):
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
+        equipped_items = set()
+        for slots in ORDER:
+            if slots == "two handed":
+                continue
+            item = getattr(c, slots, None)
+            if item:
+                equipped_items.add(str(item))
         no_markdown = Item.remove_markdowns(argument)
-        lookup = list(i for x, i in c.backpack.items() if no_markdown.lower() in x.lower())
-        lookup_m = list(i for x, i in c.backpack.items() if argument.lower() == str(i).lower())
-        lookup_e = list(i for x, i in c.backpack.items() if argument == str(i))
+        lookup = list(
+            i
+            for x, i in c.backpack.items()
+            if no_markdown.lower() in x.lower() and str(i) not in equipped_items
+        )
+        lookup_m = list(
+            i
+            for x, i in c.backpack.items()
+            if argument.lower() == str(i).lower() and str(i) not in equipped_items
+        )
+        lookup_e = list(
+            i for x, i in c.backpack.items() if argument == str(i) and str(i) not in equipped_items
+        )
+
         _temp_items = set()
         for i in lookup:
             _temp_items.add(str(i))

@@ -3813,7 +3813,6 @@ class Adventure(BaseCog):
                                 else _("1 second")
                             ),
                         )
-                    ainz = False
                     theme = await self.config.theme()
                     extra_pets = await self.config.themes.all()
                     extra_pets = extra_pets.get(theme, {}).get("pets", {})
@@ -3825,18 +3824,27 @@ class Adventure(BaseCog):
                     pet_reqs = pet_list[pet].get("bonuses", {}).get("req", {})
                     pet_msg4 = ""
                     can_catch = True
-                    if pet_reqs.get("set", False):
+                    force_catch = False
+                    if "Ainz Ooal Gown" in c.sets:
+                        can_catch = True
+                        pet = random.choice(
+                            [
+                                "Albedo",
+                                "Rubedo",
+                                "Guardians of Nazarick",
+                                *random.choices(pet_choices, k=10),
+                            ]
+                        )
+                        if pet in ["Albedo", "Rubedo", "Guardians of Nazarick"]:
+                            force_catch = True
+                    elif pet_reqs.get("bonuses", {}).get("req"):
                         if pet_reqs.get("set", None) in c.sets:
                             can_catch = True
-                            if pet_reqs.get("set", None) in ["Ainz Ooal Gown"]:
-                                ainz = True
-                                pet = random.choice(["Albedo", "Rubedo", "Guardians of Nazarick"])
                         else:
                             can_catch = False
                             pet_msg4 = _(
                                 "\nPerhaps you're missing some requirements to tame {pet}."
                             ).format(pet=pet)
-
                     pet_msg = box(
                         _("{c} is trying to tame a pet.").format(
                             c=self.escape(ctx.author.display_name)
@@ -3863,22 +3871,40 @@ class Adventure(BaseCog):
                         bonus = _("But they stepped on a twig and scared it away.")
                     elif roll in [50, 25]:
                         bonus = _("They happen to have its favorite food.")
-                    if ainz is True or (
-                        dipl_value > self.PETS[pet]["cha"] and roll > 1 and can_catch
+                    if force_catch is True or (
+                        dipl_value > pet_list[pet]["cha"] and roll > 1 and can_catch
                     ):
-                        if ainz:
+                        if force_catch:
                             roll = 0
                         else:
                             roll = random.randint(0, 2 if roll in [50, 25] else 5)
                         if roll == 0:
-                            pet_msg3 = box(
-                                _("{bonus}\nThey successfully tamed the {pet}.").format(
-                                    bonus=bonus, pet=pet
-                                ),
-                                lang="css",
-                            )
+                            if force_catch and "Ainz Ooal Gown" in c.sets:
+                                msg = random.choice(
+                                    [
+                                        _("{author} commands {pet} into submission.").format(
+                                            pet=pet, author=self.escape(ctx.author.display_name)
+                                        ),
+                                        _("{pet} swears allegiance to the Supreme One.").format(
+                                            pet=pet, author=self.escape(ctx.author.display_name)
+                                        ),
+                                        _(
+                                            "{pet} takes an Oath of Allegiance to the Supreme One."
+                                        ).format(
+                                            pet=pet, author=self.escape(ctx.author.display_name)
+                                        ),
+                                    ]
+                                )
+                                pet_msg3 = box(msg, lang="css",)
+                            else:
+                                pet_msg3 = box(
+                                    _("{bonus}\nThey successfully tamed the {pet}.").format(
+                                        bonus=bonus, pet=pet
+                                    ),
+                                    lang="css",
+                                )
                             await user_msg.edit(content=f"{pet_msg}\n{pet_msg2}\n{pet_msg3}")
-                            c.heroclass["pet"] = self.PETS[pet]
+                            c.heroclass["pet"] = pet_list[pet]
                             c.heroclass["catch_cooldown"] = time.time()
                             await self.config.user(ctx.author).set(await c.to_json(self.config))
                         elif roll == 1:
