@@ -770,6 +770,7 @@ class Adventure(BaseCog):
     async def _backpack(
         self,
         ctx: Context,
+        show_diff: Optional[bool] = False,
         rarity: Optional[RarityConverter] = None,
         *,
         slot: Optional[SlotConverter] = None,
@@ -817,7 +818,7 @@ class Adventure(BaseCog):
 
             backpack_contents = _("[{author}'s backpack] \n\n{backpack}\n").format(
                 author=self.escape(ctx.author.display_name),
-                backpack=await c.get_backpack(rarity=rarity, slot=slot),
+                backpack=await c.get_backpack(rarity=rarity, slot=slot, show_delta=show_diff),
             )
             msgs = []
             async for page in AsyncIter(

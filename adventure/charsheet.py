@@ -800,7 +800,9 @@ class Character(Item):
         )
         return final
 
-    async def get_backpack(self, forging: bool = False, consumed=None, rarity=None, slot=None, show_delta=False):
+    async def get_backpack(
+        self, forging: bool = False, consumed=None, rarity=None, slot=None, show_delta=False
+    ):
         if consumed is None:
             consumed = []
         bkpk = await self.get_sorted_backpack(self.backpack)
@@ -813,6 +815,7 @@ class Character(Item):
             slot_name_org = slot_group[0][1].slot
             slot_name = slot_name_org[0] if len(slot_name_org) < 2 else "two handed"
             form_string += f"\n\n {slot_name.title()} slot\n"
+            current_equipped = getattr(self, slot_name if slot != "two handed" else "left", None)
             async for item in AsyncIter(slot_group):
                 if forging and (item[1].rarity in ["forged", "set"] or item[1] in consumed_list):
                     continue
@@ -840,13 +843,22 @@ class Character(Item):
                     level = f"{e_level}"
 
                 if show_delta:
-                    pass
+
+                    stats = (
+                        f"({att_space}{self.get_equipped_delta(current_equipped, item[1], 'att')} |"
+                        f"{cha_space}{self.get_equipped_delta(current_equipped, item[1], 'cha')} |"
+                        f"{int_space}{self.get_equipped_delta(current_equipped, item[1], 'int')} |"
+                        f"{dex_space}{self.get_equipped_delta(current_equipped, item[1], 'dex')} |"
+                        f"{luck_space}{self.get_equipped_delta(current_equipped, item[1], 'luck')} )"
+                    )
                 else:
-                    stats = (f"({att_space}{item[1].att if len(slot_name_org)  < 2 else item[1].att * 2} |"
-                    f"{cha_space}{item[1].cha if len(slot_name_org)  < 2 else item[1].cha * 2} |"
-                    f"{int_space}{item[1].int if len(slot_name_org) < 2 else item[1].int * 2} |"
-                    f"{dex_space}{item[1].dex if len(slot_name_org) < 2 else item[1].dex * 2} |"
-                    f"{luck_space}{item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2} )")
+                    stats = (
+                        f"({att_space}{item[1].att if len(slot_name_org)  < 2 else item[1].att * 2} |"
+                        f"{cha_space}{item[1].cha if len(slot_name_org)  < 2 else item[1].cha * 2} |"
+                        f"{int_space}{item[1].int if len(slot_name_org) < 2 else item[1].int * 2} |"
+                        f"{dex_space}{item[1].dex if len(slot_name_org) < 2 else item[1].dex * 2} |"
+                        f"{luck_space}{item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2} )"
+                    )
 
                 form_string += (
                     f"\n{str(item[1]):<{rjust}} - "
@@ -856,6 +868,25 @@ class Character(Item):
                 )
 
         return form_string + "\n"
+
+    def get_equipped_delta(self, equiped: Item, to_compare: Item, stat_name: str) -> str:
+        if len(to_compare.slot) == 2 and len(equiped.slot) != 2:
+            equipped_left_stat = getattr(self.left, stat_name, 0)
+            equipped_right_stat = getattr(self.right, stat_name, 0)
+            equipped_stat = equipped_left_stat + equipped_right_stat
+            comparing_to_stat = getattr(to_compare, stat_name, 0) * 2
+        elif len(equiped.slot) == 2 and len(to_compare.slot) != 2:
+            equipped_stat = getattr(equiped, stat_name, 0) * 2
+            comparing_to_stat = getattr(to_compare, stat_name, 0)
+        elif len(equiped.slot) == 2 and len(to_compare.slot) == 2:
+            equipped_stat = getattr(equiped, stat_name, 0) * 2
+            comparing_to_stat = getattr(to_compare, stat_name, 0) * 2
+        else:
+            equipped_stat = getattr(equiped, stat_name, 0)
+            comparing_to_stat = getattr(to_compare, stat_name, 0)
+
+        diff = int(comparing_to_stat - equipped_stat)
+        return f"[{diff}]" if diff < 0 else f"{diff}"
 
     async def equip_item(self, item: Item, from_backpack: bool = True, dev=False):
         """This handles moving an item from backpack to equipment."""
