@@ -68,7 +68,7 @@ log = logging.getLogger("red.cogs.adventure")
 
 REBIRTH_LVL = 20
 REBIRTH_STEP = 10
-_SCHEMA_VERSION = 3
+_SCHEMA_VERSION = 4
 _config: Config = None
 
 
@@ -577,6 +577,40 @@ class Adventure(BaseCog):
                     except Exception:
                         adventurers_data[user]["loadouts"] = {}
             await self.config.schema_version.set(3)
+
+        if from_version < 4 <= to_version:
+            group = self.config._get_base_group(self.config.USER)
+            accounts = await group.all()
+            tmp = accounts.copy()
+            async with group.all() as adventurers_data:
+                async for user in AsyncIter(tmp, steps=10):
+                    equipped = tmp[user]["items"]
+                    for slot, item in equipped.items():
+                        for item_name, item_data in item.items():
+                            if "King Solomos" in item_name:
+                                del adventurers_data[user]["items"][slot][item_name]
+                                item_name = item_name.replace("Solomos", "Solomons")
+                                adventurers_data[user]["items"][slot][item_name] = item_data
+                    loadout = tmp[user]["loadouts"]
+                    for loadout_name, loadout_data in loadout.items():
+                        for slot, item in equipped.items():
+                            for item_name, item_data in item.items():
+                                if "King Solomos" in item_name:
+                                    del adventurers_data[user]["loadouts"][loadout_name][slot][
+                                        item_name
+                                    ]
+                                    item_name = item_name.replace("Solomos", "Solomons")
+                                    adventurers_data[user]["loadouts"][loadout_name][slot][
+                                        item_name
+                                    ] = item_data
+
+                    backpack = tmp[user]["backpack"]
+                    async for item_name, item_data in AsyncIter(backpack.items(), steps=25):
+                        if "King Solomos" in item_name:
+                            del adventurers_data[user]["backpack"][item_name]
+                            item_name = item_name.replace("Solomos", "Solomons")
+                            adventurers_data[user]["backpack"][item_name] = item_data
+            await self.config.schema_version.set(4)
 
     def _convert_item_migration(self, item_name, item_dict):
         new_name = item_name
