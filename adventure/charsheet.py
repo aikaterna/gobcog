@@ -772,7 +772,7 @@ class Character(Item):
         else:
             return 6  # common / normal
 
-    async def get_sorted_backpack(self, backpack: dict):
+    async def get_sorted_backpack(self, backpack: dict, slot=None, rarity=None):
         tmp = {}
 
         def _sort(item):
@@ -783,6 +783,10 @@ class Character(Item):
             slot_name = slots[0]
             if len(slots) > 1:
                 slot_name = "two handed"
+            if slot is not None and slot_name != slot:
+                continue
+            if rarity is not None and rarity != backpack[item].rarity:
+                continue
 
             if slot_name not in tmp:
                 tmp[slot_name] = []
@@ -790,7 +794,8 @@ class Character(Item):
 
         final = []
         async for (idx, slot_name) in AsyncIter(tmp.keys()).enumerate():
-            final.append(sorted(tmp[slot_name], key=_sort))
+            if tmp[slot_name]:
+                final.append(sorted(tmp[slot_name], key=_sort))
 
         final.sort(
             key=lambda i: ORDER.index(i[0][1].slot[0])
@@ -804,7 +809,7 @@ class Character(Item):
     ):
         if consumed is None:
             consumed = []
-        bkpk = await self.get_sorted_backpack(self.backpack)
+        bkpk = await self.get_sorted_backpack(self.backpack, slot=slot, rarity=rarity)
         form_string = _(
             "Items in Backpack: \n( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE#] | OWNED | SET (SET PIECES)"
         )
@@ -847,23 +852,12 @@ class Character(Item):
                     int = self.get_equipped_delta(current_equipped, item[1], "int")
                     dex = self.get_equipped_delta(current_equipped, item[1], "dex")
                     luck = self.get_equipped_delta(current_equipped, item[1], "luck")
-                    rjuststat = max([len(att), len(cha), len(int), len(dex), len(luck)])
-
                 else:
                     att = item[1].att if len(slot_name_org) < 2 else item[1].att * 2
                     cha = item[1].cha if len(slot_name_org) < 2 else item[1].cha * 2
                     int = item[1].int if len(slot_name_org) < 2 else item[1].int * 2
                     dex = item[1].dex if len(slot_name_org) < 2 else item[1].dex * 2
                     luck = item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2
-                    rjuststat = max(
-                        [
-                            len(str(att)),
-                            len(str(cha)),
-                            len(str(int)),
-                            len(str(dex)),
-                            len(str(luck)),
-                        ]
-                    )
                 rjuststat = 5
                 stats = (
                     f"({att_space}{att:<{rjuststat}} |"
