@@ -3455,11 +3455,11 @@ class Adventure(BaseCog):
                     rjust = max([len(str(i)) for i in items.values()])
                     async for item in AsyncIter(items.values()):
                         settext = ""
-                        att_space = " " if len(str(item.att)) == 1 else ""
-                        cha_space = " " if len(str(item.cha)) == 1 else ""
-                        int_space = " " if len(str(item.int)) == 1 else ""
-                        dex_space = " " if len(str(item.dex)) == 1 else ""
-                        luck_space = " " if len(str(item.luck)) == 1 else ""
+                        att_space = " " if len(str(item.att)) >= 1 else ""
+                        cha_space = " " if len(str(item.cha)) >= 1 else ""
+                        int_space = " " if len(str(item.int)) >= 1 else ""
+                        dex_space = " " if len(str(item.dex)) >= 1 else ""
+                        luck_space = " " if len(str(item.luck)) >= 1 else ""
                         owned = f" | {item.owned}"
                         if item.set:
                             settext += f" | Set `{item.set}` ({item.parts}pcs)"

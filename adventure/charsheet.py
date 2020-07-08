@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import logging
-import operator
 import re
 from copy import copy
 from datetime import date, timedelta, datetime
@@ -649,11 +648,11 @@ class Character(Item):
             else humanize_number(max_level_xp),
             skill_points=0 if self.skill["pool"] < 0 else self.skill["pool"],
             set_bonus=(
-                f"( {self.gear_set_bonus.get('att')} | "
-                f"{self.gear_set_bonus.get('cha')} | "
-                f"{self.gear_set_bonus.get('int')} | "
-                f"{self.gear_set_bonus.get('dex')} | "
-                f"{self.gear_set_bonus.get('luck')} ) "
+                f"( {self.gear_set_bonus.get('att'):<2} | "
+                f"{self.gear_set_bonus.get('cha'):<2} | "
+                f"{self.gear_set_bonus.get('int'):<2} | "
+                f"{self.gear_set_bonus.get('dex'):<2} | "
+                f"{self.gear_set_bonus.get('luck'):<2} ) "
                 f"Stats: {round(statmult * 100)}% | "
                 f"EXP: {round(xpmult * 100)}% | "
                 f"Credits: {round(cpmult * 100)}%"
@@ -711,11 +710,11 @@ class Character(Item):
                     * self.gear_set_bonus.get("statmult", 1)
                 )
             )
-            att_space = " " if len(str(att)) == 1 else ""
-            cha_space = " " if len(str(cha)) == 1 else ""
-            int_space = " " if len(str(inter)) == 1 else ""
-            dex_space = " " if len(str(dex)) == 1 else ""
-            luck_space = " " if len(str(luck)) == 1 else ""
+            att_space = " " if len(str(att)) >= 1 else ""
+            cha_space = " " if len(str(cha)) >= 1 else ""
+            int_space = " " if len(str(inter)) >= 1 else ""
+            dex_space = " " if len(str(dex)) >= 1 else ""
+            luck_space = " " if len(str(luck)) >= 1 else ""
 
             owned = ""
             if item.rarity in ["legendary", "event"] and item.degrade >= 0:
@@ -724,11 +723,11 @@ class Character(Item):
                 settext += f" | Set `{item.set}` ({item.parts}pcs)"
             form_string += (
                 f"\n{str(item):<{rjust}} - "
-                f"({att_space}{att} |"
-                f"{cha_space}{cha} |"
-                f"{int_space}{inter} |"
-                f"{dex_space}{dex} |"
-                f"{luck_space}{luck} )"
+                f"({att_space}{att:<3} |"
+                f"{cha_space}{cha:<3} |"
+                f"{int_space}{inter:<3} |"
+                f"{dex_space}{dex:<3} |"
+                f"{luck_space}{luck:<3} )"
                 f" | Lvl { equip_level(self, item):<5}"
                 f"{owned}{settext}"
             )
@@ -825,11 +824,11 @@ class Character(Item):
                     continue
 
                 settext = ""
-                att_space = " " if len(str(item[1].att)) == 1 else ""
-                cha_space = " " if len(str(item[1].cha)) == 1 else ""
-                int_space = " " if len(str(item[1].int)) == 1 else ""
-                dex_space = " " if len(str(item[1].dex)) == 1 else ""
-                luck_space = " " if len(str(item[1].luck)) == 1 else ""
+                att_space = " " if len(str(item[1].att)) >= 1 else ""
+                cha_space = " " if len(str(item[1].cha)) >= 1 else ""
+                int_space = " " if len(str(item[1].int)) >= 1 else ""
+                dex_space = " " if len(str(item[1].dex)) >= 1 else ""
+                luck_space = " " if len(str(item[1].luck)) >= 1 else ""
                 owned = ""
                 if item[1].rarity in ["legendary", "event"] and item[1].degrade >= 0:
                     owned += f" | [{item[1].degrade}#]"
@@ -843,22 +842,36 @@ class Character(Item):
                     level = f"{e_level}"
 
                 if show_delta:
+                    att = self.get_equipped_delta(current_equipped, item[1], "att")
+                    cha = self.get_equipped_delta(current_equipped, item[1], "cha")
+                    int = self.get_equipped_delta(current_equipped, item[1], "int")
+                    dex = self.get_equipped_delta(current_equipped, item[1], "dex")
+                    luck = self.get_equipped_delta(current_equipped, item[1], "luck")
+                    rjuststat = max([len(att), len(cha), len(int), len(dex), len(luck)])
 
-                    stats = (
-                        f"({att_space}{self.get_equipped_delta(current_equipped, item[1], 'att')} |"
-                        f"{cha_space}{self.get_equipped_delta(current_equipped, item[1], 'cha')} |"
-                        f"{int_space}{self.get_equipped_delta(current_equipped, item[1], 'int')} |"
-                        f"{dex_space}{self.get_equipped_delta(current_equipped, item[1], 'dex')} |"
-                        f"{luck_space}{self.get_equipped_delta(current_equipped, item[1], 'luck')} )"
-                    )
                 else:
-                    stats = (
-                        f"({att_space}{item[1].att if len(slot_name_org)  < 2 else item[1].att * 2} |"
-                        f"{cha_space}{item[1].cha if len(slot_name_org)  < 2 else item[1].cha * 2} |"
-                        f"{int_space}{item[1].int if len(slot_name_org) < 2 else item[1].int * 2} |"
-                        f"{dex_space}{item[1].dex if len(slot_name_org) < 2 else item[1].dex * 2} |"
-                        f"{luck_space}{item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2} )"
+                    att = item[1].att if len(slot_name_org) < 2 else item[1].att * 2
+                    cha = item[1].cha if len(slot_name_org) < 2 else item[1].cha * 2
+                    int = item[1].int if len(slot_name_org) < 2 else item[1].int * 2
+                    dex = item[1].dex if len(slot_name_org) < 2 else item[1].dex * 2
+                    luck = item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2
+                    rjuststat = max(
+                        [
+                            len(str(att)),
+                            len(str(cha)),
+                            len(str(int)),
+                            len(str(dex)),
+                            len(str(luck)),
+                        ]
                     )
+                rjuststat = 5
+                stats = (
+                    f"({att_space}{att:<{rjuststat}} |"
+                    f"{cha_space}{cha:<{rjuststat}} |"
+                    f"{int_space}{int:<{rjuststat}} |"
+                    f"{dex_space}{dex:<{rjuststat}} |"
+                    f"{luck_space}{luck:<{rjuststat}} )"
+                )
 
                 form_string += (
                     f"\n{str(item[1]):<{rjust}} - "
@@ -870,15 +883,15 @@ class Character(Item):
         return form_string + "\n"
 
     def get_equipped_delta(self, equiped: Item, to_compare: Item, stat_name: str) -> str:
-        if len(to_compare.slot) == 2 and len(equiped.slot) != 2:
+        if (equiped and len(equiped.slot) != 2) and (to_compare and len(to_compare.slot) == 2):
             equipped_left_stat = getattr(self.left, stat_name, 0)
             equipped_right_stat = getattr(self.right, stat_name, 0)
             equipped_stat = equipped_left_stat + equipped_right_stat
             comparing_to_stat = getattr(to_compare, stat_name, 0) * 2
-        elif len(equiped.slot) == 2 and len(to_compare.slot) != 2:
+        elif (equiped and len(equiped.slot) == 2) and (to_compare and len(to_compare.slot) != 2):
             equipped_stat = getattr(equiped, stat_name, 0) * 2
             comparing_to_stat = getattr(to_compare, stat_name, 0)
-        elif len(equiped.slot) == 2 and len(to_compare.slot) == 2:
+        elif (equiped and len(equiped.slot) == 2) and (to_compare and len(to_compare.slot) == 2):
             equipped_stat = getattr(equiped, stat_name, 0) * 2
             comparing_to_stat = getattr(to_compare, stat_name, 0) * 2
         else:
@@ -886,7 +899,7 @@ class Character(Item):
             comparing_to_stat = getattr(to_compare, stat_name, 0)
 
         diff = int(comparing_to_stat - equipped_stat)
-        return f"[{diff}]" if diff < 0 else f"{diff}"
+        return f"[{diff}]" if diff < 0 else f"+{diff}" if diff > 0 else "0"
 
     async def equip_item(self, item: Item, from_backpack: bool = True, dev=False):
         """This handles moving an item from backpack to equipment."""
