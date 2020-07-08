@@ -718,7 +718,7 @@ class Character(Item):
             luck_space = " " if len(str(luck)) == 1 else ""
 
             owned = ""
-            if item.rarity in ["legendary", "event"] and item.degrade > 0:
+            if item.rarity in ["legendary", "event"] and item.degrade >= 0:
                 owned += f" | [{item.degrade}#]"
             if item.set:
                 settext += f" | Set `{item.set}` ({item.parts}pcs)"
@@ -800,7 +800,7 @@ class Character(Item):
         )
         return final
 
-    async def get_backpack(self, forging: bool = False, consumed=None, rarity=None, slot=None):
+    async def get_backpack(self, forging: bool = False, consumed=None, rarity=None, slot=None, show_delta=False):
         if consumed is None:
             consumed = []
         bkpk = await self.get_sorted_backpack(self.backpack)
@@ -828,7 +828,7 @@ class Character(Item):
                 dex_space = " " if len(str(item[1].dex)) == 1 else ""
                 luck_space = " " if len(str(item[1].luck)) == 1 else ""
                 owned = ""
-                if item[1].rarity in ["legendary", "event"] and item[1].degrade > 0:
+                if item[1].rarity in ["legendary", "event"] and item[1].degrade >= 0:
                     owned += f" | [{item[1].degrade}#]"
                 owned += f" | {item[1].owned}"
                 if item[1].set:
@@ -839,13 +839,18 @@ class Character(Item):
                 else:
                     level = f"{e_level}"
 
-                form_string += (
-                    f"\n{str(item[1]):<{rjust}} - "
-                    f"({att_space}{item[1].att if len(slot_name_org)  < 2 else item[1].att * 2} |"
+                if show_delta:
+                    pass
+                else:
+                    stats = (f"({att_space}{item[1].att if len(slot_name_org)  < 2 else item[1].att * 2} |"
                     f"{cha_space}{item[1].cha if len(slot_name_org)  < 2 else item[1].cha * 2} |"
                     f"{int_space}{item[1].int if len(slot_name_org) < 2 else item[1].int * 2} |"
                     f"{dex_space}{item[1].dex if len(slot_name_org) < 2 else item[1].dex * 2} |"
-                    f"{luck_space}{item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2} )"
+                    f"{luck_space}{item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2} )")
+
+                form_string += (
+                    f"\n{str(item[1]):<{rjust}} - "
+                    f"{stats}"
                     f" | Lvl {level:<5}"
                     f"{owned}{settext}"
                 )
@@ -1139,7 +1144,7 @@ class Character(Item):
                 elif self.rebirths < 50 and i.get("rarity", False) in ["legendary", "event"]:
                     if "degrade" in i:
                         i["degrade"] -= 1
-                        if i.get("degrade", 0) >= 1:
+                        if i.get("degrade", 0) >= 0:
                             backpack[n] = i
 
         tresure = [0, 0, 0, 0, 0]
