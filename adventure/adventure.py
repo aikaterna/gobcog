@@ -6397,14 +6397,19 @@ class Adventure(BaseCog):
             adv_end = await self._get_epoch(secondint)
             timer, done, sremain = await self._remaining(adv_end)
             message_adv = await ctx.send(f"⏳ [{title}] {timer}s")
+            deleted = False
             while not done:
                 timer, done, sremain = await self._remaining(adv_end)
                 self._adventure_countdown[ctx.guild.id] = (timer, done, sremain)
                 if done:
-                    await message_adv.delete()
+                    if not deleted:
+                        await message_adv.delete()
                     break
-                elif int(sremain) % 5 == 0:
-                    await message_adv.edit(content=f"⏳ [{title}] {timer}s")
+                elif not deleted and int(sremain) % 5 == 0:
+                    try:
+                        await message_adv.edit(content=f"⏳ [{title}] {timer}s")
+                    except discord.NotFound:
+                        deleted = True
                 await asyncio.sleep(1)
             log.debug("Timer countdown done.")
 
@@ -6419,14 +6424,19 @@ class Adventure(BaseCog):
             cart_end = await self._get_epoch(secondint)
             timer, done, sremain = await self._remaining(cart_end)
             message_cart = await room.send(f"⏳ [{title}] {timer}s")
+            deleted = False
             while not done:
                 timer, done, sremain = await self._remaining(cart_end)
                 self._trader_countdown[ctx.guild.id] = (timer, done, sremain)
                 if done:
-                    await message_cart.delete()
+                    if not deleted:
+                        await message_cart.delete()
                     break
-                if int(sremain) % 5 == 0:
-                    await message_cart.edit(content=f"⏳ [{title}] {timer}s")
+                if not deleted and int(sremain) % 5 == 0:
+                    try:
+                        await message_cart.edit(content=f"⏳ [{title}] {timer}s")
+                    except discord.NotFound:
+                        deleted = True
                 await asyncio.sleep(1)
 
         return ctx.bot.loop.create_task(cart_countdown())
