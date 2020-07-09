@@ -1273,6 +1273,68 @@ class ItemConverter(Converter):
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
+        no_markdown = Item.remove_markdowns(argument)
+        lookup = list(i for x, i in c.backpack.items() if no_markdown.lower() in x.lower())
+        lookup_m = list(
+            i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i)
+        )
+        lookup_e = list(i for x, i in c.backpack.items() if argument == str(i))
+
+        _temp_items = set()
+        for i in lookup:
+            _temp_items.add(str(i))
+        for i in lookup_m:
+            _temp_items.add(str(i))
+        for i in lookup_e:
+            _temp_items.add(str(i))
+
+        if len(lookup_e) == 1:
+            return lookup_e[0]
+        if len(lookup) == 1:
+            return lookup[0]
+        elif len(lookup_m) == 1:
+            return lookup_m[0]
+        elif len(lookup) == 0 and len(lookup_m) == 0:
+            raise BadArgument(_("`{}` doesn't seem to match any items you own.").format(argument))
+        else:
+            lookup = list(i for x, i in c.backpack.items() if str(i) in _temp_items)
+            if len(lookup) > 10:
+                raise BadArgument(
+                    _(
+                        "You have too many items matching the name `{}`,"
+                        " please be more specific."
+                    ).format(argument)
+                )
+            items = ""
+            for (number, item) in enumerate(lookup):
+                items += f"{number}. {str(item)} (owned {item.owned})\n"
+
+            msg = await ctx.send(
+                _("Multiple items share that name, which one would you like?\n{items}").format(
+                    items=box(items, lang="css")
+                )
+            )
+            emojis = ReactionPredicate.NUMBER_EMOJIS[: len(lookup)]
+            start_adding_reactions(msg, emojis)
+            pred = ReactionPredicate.with_emojis(emojis, msg, user=ctx.author)
+            try:
+                await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
+            except asyncio.TimeoutError:
+                raise BadArgument(_("Alright then."))
+            return lookup[pred.result]
+
+
+class EquipableItemConverter(Converter):
+    async def convert(self, ctx, argument) -> Item:
+        try:
+            c = await Character.from_json(
+                ctx.bot.get_cog("Adventure").config,
+                ctx.author,
+                ctx.bot.get_cog("Adventure")._daily_bonus,
+            )
+        except Exception as exc:
+            log.exception("Error with the new character sheet", exc_info=exc)
+            raise BadArgument
         equipped_items = set()
         for slots in ORDER:
             if slots == "two handed":

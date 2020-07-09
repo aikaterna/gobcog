@@ -41,8 +41,6 @@ from .charsheet import (
     Character,
     GameSession,
     Item,
-    ItemConverter,
-    EquipmentConverter,
     Stats,
     calculate_sp,
     can_equip,
@@ -52,12 +50,15 @@ from .charsheet import (
     DEV_LIST,
     RARITIES,
     ORDER,
+    ItemConverter,
+    EquipmentConverter,
     RarityConverter,
     SlotConverter,
     ThemeSetMonterConverter,
     ThemeSetPetConverter,
     PercentageConverter,
     DayConverter,
+    EquipableItemConverter,
 )
 
 BaseCog = getattr(commands, "Cog", object)
@@ -216,7 +217,7 @@ class AdventureResults:
 class Adventure(BaseCog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
-    __version__ = "3.2.29"
+    __version__ = "3.2.30"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -880,7 +881,7 @@ class Adventure(BaseCog):
             return await menu(ctx, msgs, controls)
 
     @_backpack.command(name="equip")
-    async def backpack_equip(self, ctx: Context, *, equip_item: ItemConverter):
+    async def backpack_equip(self, ctx: Context, *, equip_item: EquipableItemConverter):
         """Equip an item from your backpack."""
         assert isinstance(equip_item, Item)
         if self.in_adventure(ctx):
@@ -2593,7 +2594,7 @@ class Adventure(BaseCog):
                 )
 
     @commands.command()
-    async def equip(self, ctx: Context, *, item: ItemConverter):
+    async def equip(self, ctx: Context, *, item: EquipableItemConverter):
         """This equips an item from your backpack."""
         if self.in_adventure(ctx):
             return await smart_embed(
