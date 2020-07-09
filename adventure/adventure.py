@@ -1074,38 +1074,39 @@ class Adventure(BaseCog):
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
             total_price = 0
-            items = [i for n, i in c.backpack.items() if i.rarity not in ["forged", "set"]]
-            count = 0
-            async for item in AsyncIter(items):
-                if rarity and item.rarity != rarity:
-                    continue
-                if slot:
-                    if len(item.slot) == 1 and slot != item.slot[0]:
+            async with ctx.typing():
+                items = [i for n, i in c.backpack.items() if i.rarity not in ["forged", "set"]]
+                count = 0
+                async for item in AsyncIter(items):
+                    if rarity and item.rarity != rarity:
                         continue
-                    elif len(item.slot) == 2 and slot != "two handed":
-                        continue
-                item_price = 0
-                old_owned = item.owned
-                async for x in AsyncIter(range(0, item.owned)):
-                    item.owned -= 1
-                    item_price += self._sell(c, item)
-                    if item.owned <= 0:
-                        del c.backpack[item.name]
-                    if not count % 10:
-                        await asyncio.sleep(0.1)
-                    count += 1
-                msg += _("{old_item} sold for {price}.\n").format(
-                    old_item=str(old_owned) + " " + str(item), price=humanize_number(item_price)
-                )
-                total_price += item_price
-                await asyncio.sleep(0.1)
-                item_price = max(item_price, 0)
-                if item_price > 0:
-                    try:
-                        await bank.deposit_credits(ctx.author, item_price)
-                    except BalanceTooHigh as e:
-                        await bank.set_balance(ctx.author, e.max_balance)
-            await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    if slot:
+                        if len(item.slot) == 1 and slot != item.slot[0]:
+                            continue
+                        elif len(item.slot) == 2 and slot != "two handed":
+                            continue
+                    item_price = 0
+                    old_owned = item.owned
+                    async for x in AsyncIter(range(0, item.owned)):
+                        item.owned -= 1
+                        item_price += self._sell(c, item)
+                        if item.owned <= 0:
+                            del c.backpack[item.name]
+                        if not count % 10:
+                            await asyncio.sleep(0.1)
+                        count += 1
+                    msg += _("{old_item} sold for {price}.\n").format(
+                        old_item=str(old_owned) + " " + str(item), price=humanize_number(item_price)
+                    )
+                    total_price += item_price
+                    await asyncio.sleep(0.1)
+                    item_price = max(item_price, 0)
+                    if item_price > 0:
+                        try:
+                            await bank.deposit_credits(ctx.author, item_price)
+                        except BalanceTooHigh as e:
+                            await bank.set_balance(ctx.author, e.max_balance)
+                await self.config.user(ctx.author).set(await c.to_json(self.config))
         msg_list = []
         new_msg = _("{author} sold all their{rarity} items for {price}.\n\n{items}").format(
             author=self.escape(ctx.author.display_name),
@@ -3479,39 +3480,42 @@ class Adventure(BaseCog):
                 )
             else:
                 if number > 1:
-                    # atomically save reduced loot count then lock again when saving inside
-                    # open chests
-                    c.treasure[redux] -= number
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
-                    items = await self._open_chests(ctx, ctx.author, box_type, number, character=c)
-                    msg = _(
-                        "{}, you've opened the following items:\n"
-                        "( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | LOOTED | SET (SET PIECES)"
-                    ).format(self.escape(ctx.author.display_name))
-                    rjust = max([len(str(i)) for i in items.values()])
-                    async for item in AsyncIter(items.values()):
-                        settext = ""
-                        att_space = " " if len(str(item.att)) >= 1 else ""
-                        cha_space = " " if len(str(item.cha)) >= 1 else ""
-                        int_space = " " if len(str(item.int)) >= 1 else ""
-                        dex_space = " " if len(str(item.dex)) >= 1 else ""
-                        luck_space = " " if len(str(item.luck)) >= 1 else ""
-                        owned = f" | {item.owned}"
-                        if item.set:
-                            settext += f" | Set `{item.set}` ({item.parts}pcs)"
-                        msg += (
-                            f"\n{str(item):<{rjust}} - "
-                            f"({att_space}{item.att} |"
-                            f"{cha_space}{item.cha} |"
-                            f"{int_space}{item.int} |"
-                            f"{dex_space}{item.dex} |"
-                            f"{luck_space}{item.luck} )"
-                            f" | Lv {equip_level(c, item):<3}"
-                            f"{owned}{settext}"
+                    async with ctx.typing():
+                        # atomically save reduced loot count then lock again when saving inside
+                        # open chests
+                        c.treasure[redux] -= number
+                        await self.config.user(ctx.author).set(await c.to_json(self.config))
+                        items = await self._open_chests(
+                            ctx, ctx.author, box_type, number, character=c
                         )
-                    msgs = []
-                    async for page in AsyncIter(pagify(msg, page_length=1900)):
-                        msgs.append(box(page, lang="css"))
+                        msg = _(
+                            "{}, you've opened the following items:\n"
+                            "( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | LOOTED | SET (SET PIECES)"
+                        ).format(self.escape(ctx.author.display_name))
+                        rjust = max([len(str(i)) for i in items.values()])
+                        async for item in AsyncIter(items.values()):
+                            settext = ""
+                            att_space = " " if len(str(item.att)) >= 1 else ""
+                            cha_space = " " if len(str(item.cha)) >= 1 else ""
+                            int_space = " " if len(str(item.int)) >= 1 else ""
+                            dex_space = " " if len(str(item.dex)) >= 1 else ""
+                            luck_space = " " if len(str(item.luck)) >= 1 else ""
+                            owned = f" | {item.owned}"
+                            if item.set:
+                                settext += f" | Set `{item.set}` ({item.parts}pcs)"
+                            msg += (
+                                f"\n{str(item):<{rjust}} - "
+                                f"({att_space}{item.att} |"
+                                f"{cha_space}{item.cha} |"
+                                f"{int_space}{item.int} |"
+                                f"{dex_space}{item.dex} |"
+                                f"{luck_space}{item.luck} )"
+                                f" | Lv {equip_level(c, item):<3}"
+                                f"{owned}{settext}"
+                            )
+                        msgs = []
+                        async for page in AsyncIter(pagify(msg, page_length=1900)):
+                            msgs.append(box(page, lang="css"))
                 else:
                     msgs = []
                     # atomically save reduced loot count then lock again when saving inside
