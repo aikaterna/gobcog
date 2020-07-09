@@ -896,7 +896,10 @@ class Character(Item):
         return form_string + "\n"
 
     def get_equipped_delta(self, equiped: Item, to_compare: Item, stat_name: str) -> str:
-        if (equiped and len(equiped.slot) != 2) and (to_compare and len(to_compare.slot) == 2):
+        if (equiped and len(equiped.slot) == 2) and (to_compare and len(to_compare.slot) == 2):
+            equipped_stat = getattr(equiped, stat_name, 0) * 2
+            comparing_to_stat = getattr(to_compare, stat_name, 0) * 2
+        elif to_compare and len(to_compare.slot) == 2:
             equipped_left_stat = getattr(self.left, stat_name, 0)
             equipped_right_stat = getattr(self.right, stat_name, 0)
             equipped_stat = equipped_left_stat + equipped_right_stat
@@ -904,9 +907,6 @@ class Character(Item):
         elif (equiped and len(equiped.slot) == 2) and (to_compare and len(to_compare.slot) != 2):
             equipped_stat = getattr(equiped, stat_name, 0) * 2
             comparing_to_stat = getattr(to_compare, stat_name, 0)
-        elif (equiped and len(equiped.slot) == 2) and (to_compare and len(to_compare.slot) == 2):
-            equipped_stat = getattr(equiped, stat_name, 0) * 2
-            comparing_to_stat = getattr(to_compare, stat_name, 0) * 2
         else:
             equipped_stat = getattr(equiped, stat_name, 0)
             comparing_to_stat = getattr(to_compare, stat_name, 0)
