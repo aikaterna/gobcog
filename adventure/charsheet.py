@@ -987,7 +987,7 @@ class Character(Item):
             "charm": char.charm.to_json() if char.charm else {},
         }
 
-    def get_current_equipment(self):
+    def get_current_equipment(self) -> List[Item]:
         """returns a list of Items currently equipped."""
         equipped = []
         for slot in ORDER:
@@ -1412,14 +1412,29 @@ class EquipmentConverter(Converter):
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
-        lookup = list(i for i in c.get_current_equipment() if argument.lower() in str(i).lower())
-        lookup_m = list(i for i in c.get_current_equipment() if argument.lower() == str(i).lower())
+        matched = set()
+        lookup = list(
+            i
+            for i in c.get_current_equipment()
+            if argument.lower() in str(i).lower()
+            if len(i.slot) != 2 or (str(i) not in matched and not matched.add(str(i)))
+        )
+        matched = set()
+        lookup_m = list(
+            i
+            for i in c.get_current_equipment()
+            if argument.lower() == str(i).lower()
+            if len(i.slot) != 2 or (str(i) not in matched and not matched.add(str(i)))
+        )
+
         if len(lookup) == 1:
             return lookup[0]
         elif len(lookup_m) == 1:
             return lookup_m[0]
         elif len(lookup) == 0 and len(lookup_m) == 0:
-            raise BadArgument(_("`{}` doesn't seem to match any items you own.").format(argument))
+            raise BadArgument(
+                _("`{}` doesn't seem to match any items you have equipped.").format(argument)
+            )
         else:
             if len(lookup) > 10:
                 raise BadArgument(
