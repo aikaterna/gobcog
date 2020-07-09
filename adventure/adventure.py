@@ -1096,7 +1096,8 @@ class Adventure(BaseCog):
                             await asyncio.sleep(0.1)
                         count += 1
                     msg += _("{old_item} sold for {price}.\n").format(
-                        old_item=str(old_owned) + " " + str(item), price=humanize_number(item_price)
+                        old_item=str(old_owned) + " " + str(item),
+                        price=humanize_number(item_price),
                     )
                     total_price += item_price
                     await asyncio.sleep(0.1)
