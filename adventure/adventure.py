@@ -7521,7 +7521,7 @@ class Adventure(BaseCog):
                 
         final_str += "\nCompleted sets:\n"
         final_str += completed_sets
-        await smart_embed(final_str)
+        await smart_embed(ctx, final_str)
         
     @commands.command()
     async def unequip_all(self, ctx):
