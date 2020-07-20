@@ -2797,7 +2797,7 @@ class Adventure(BaseCog):
                     with contextlib.suppress(discord.HTTPException):
                         await forge_msg.delete()
                     if pred.result:  # user reacted with Yes.
-                        c.heroclass["cooldown"] = time.time() + cooldown_time
+                        c.heroclass["cooldown"] = time.time()
                         created_item = box(
                             _(
                                 "{author}, your new {newitem} consumed {lk} "
@@ -2815,7 +2815,7 @@ class Adventure(BaseCog):
                         c.backpack[newitem.name] = newitem
                         await self.config.user(ctx.author).set(await c.to_json(self.config))
                     else:
-                        c.heroclass["cooldown"] = time.time() + cooldown_time
+                        c.heroclass["cooldown"] = time.time()
                         await self.config.user(ctx.author).set(await c.to_json(self.config))
                         mad_forge = box(
                             _(
@@ -2825,7 +2825,7 @@ class Adventure(BaseCog):
                         )
                         return await ctx.send(mad_forge)
                 else:
-                    c.heroclass["cooldown"] = time.time() + cooldown_time
+                    c.heroclass["cooldown"] = time.time()
                     c.backpack[newitem.name] = newitem
                     await self.config.user(ctx.author).set(await c.to_json(self.config))
                     forged_item = box(
