@@ -7524,7 +7524,7 @@ class Adventure(BaseCog):
         await smart_embed(ctx, final_str)
         
     @commands.command()
-    async def unequip_all(self, ctx):
+    async def unequipall(self, ctx):
         if self.in_adventure(ctx):
             return await smart_embed(
                 ctx,
