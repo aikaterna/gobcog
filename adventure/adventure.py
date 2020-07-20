@@ -7501,3 +7501,63 @@ class Adventure(BaseCog):
             elif account_number == pos:
                 pages.append(box("\n".join(entries), lang="md"))
         return pages
+
+    @commands.command()
+    async def mysets(self, ctx):
+        all_sets = self.SET_BONUSES
+        c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+        backpack_data = await c.get_backpack()
+        sets = re.findall("Set `([A-Z a-z]*)`", backpack_data)
+        record = dict()
+        for item in sets:
+            record[item] = record.get(item, 0) + 1
+        final_str = ""
+        completed_sets = ""
+        for set_name, num_items in record.items():            
+            num_parts = all_sets.get(set_name)[0].get('parts')
+            final_str += f"{set_name}: {num_items}/{num_parts}.\n"
+            if num_items == all_sets.get(set_name)[0].get('parts'):
+                completed_sets += set_name + '\n'
+                
+        final_str += "\nCompleted sets:\n"
+        final_str += completed_sets
+        await smart_embed(final_str)
+        
+    @commands.command()
+    async def unequip_all(self, ctx):
+        if self.in_adventure(ctx):
+            return await smart_embed(
+                ctx,
+                _(
+                    "You tried to unequip your items, but the monster ahead of you looks mighty hungry..."
+                ),
+            )
+        if not await self.allow_in_dm(ctx):
+            return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
+        msg = ""
+        async with self.get_lock(ctx.author):
+            try:
+                c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+
+            for slots in ORDER:
+                if slots == "two handed":
+                    continue
+                item = getattr(c, slots)
+                if item is None:
+                    continue
+
+                await c.unequip_item(item)
+                msg += _(
+                    "{author} removed the {current_item} and put it into their backpack.\n"
+                ).format(
+                    author=self.escape(ctx.author.display_name), current_item=item
+                )
+            await self.config.user(ctx.author).set(await c.to_json(self.config))     
+                
+        if not msg:
+            msg = "You do not have any items equipped."
+        await ctx.send(box(msg, lang="css"))
+		
