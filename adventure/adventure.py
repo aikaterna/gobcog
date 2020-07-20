@@ -3988,7 +3988,7 @@ class Adventure(BaseCog):
                         lang="css",
                     )
                 )
-            cooldown_time = max(1800, (7200 - (c.luck * 2 + c.total_int * 2)))
+            cooldown_time = max(1800, (7200 - ((c.luck + c.total_int) * 2)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
             if c.heroclass["cooldown"] <= time.time():
