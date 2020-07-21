@@ -3219,7 +3219,7 @@ class Adventure(BaseCog):
                     currency_name = await bank.get_currency_name(ctx.guild)
                     if str(currency_name).startswith("<"):
                         currency_name = "credits"
-                    spend = round(bal * 0.2)
+                    spend = round(bal * 0.08)
                     try:
                         c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
                     except Exception as exc:
@@ -7524,7 +7524,7 @@ class Adventure(BaseCog):
         await smart_embed(ctx, final_str)
         
     @commands.command()
-    async def unequip_all(self, ctx):
+    async def unequipall(self, ctx):
         if self.in_adventure(ctx):
             return await smart_embed(
                 ctx,
