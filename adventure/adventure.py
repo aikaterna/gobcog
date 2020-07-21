@@ -3219,7 +3219,7 @@ class Adventure(BaseCog):
                     currency_name = await bank.get_currency_name(ctx.guild)
                     if str(currency_name).startswith("<"):
                         currency_name = "credits"
-                    spend = round(bal * 0.2)
+                    spend = round(bal * 0.08)
                     try:
                         c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
                     except Exception as exc:
@@ -7502,29 +7502,183 @@ class Adventure(BaseCog):
                 pages.append(box("\n".join(entries), lang="md"))
         return pages
 
+    @_backpack.command(name="sellunder")
+    async def backpack_sellunder(
+    self,
+    ctx: Context,
+    level:int,
+    rarity: Optional[RarityConverter] = None,
+    *,
+    slot: Optional[SlotConverter] = None,
+    ):
+        """Sell all items in your backpack under specific level. Optionally specify rarity or slot."""
+        assert isinstance(rarity, str) or rarity is None
+        assert isinstance(slot, str) or slot is None
+        if self.in_adventure(ctx):
+            return await smart_embed(
+                ctx,
+                _(
+                    "You tried to go sell your items but the monster ahead is not allowing you to leave."
+                ),
+            )
+        if rarity:
+            rarity = rarity.lower()
+            if rarity not in RARITIES:
+                return await smart_embed(
+                    ctx,
+                    _("{} is not a valid rarity, select one of {}").format(
+                        rarity, humanize_list(RARITIES)
+                    ),
+                )
+            if rarity.lower() in ["set", "forged"]:
+                return await smart_embed(
+                    ctx, _("You cannot sell `{rarity}` rarity items.").format(rarity=rarity)
+                )
+        if slot:
+            slot = slot.lower()
+            if slot not in ORDER:
+                return await smart_embed(
+                    ctx,
+                    _("{} is not a valid slot, select one of {}").format(
+                        slot, humanize_list(ORDER)
+                    ),
+                )
+        if level < 1:
+            return await smart_embed(
+                    ctx,
+                    _("{} must be greater than 0").format(
+                        level
+                    ),
+                )
+        async with self.get_lock(ctx.author):
+            if rarity and slot:
+                msg = await ctx.send(
+                    "Are you sure you want to sell all {rarity} {slot} items under level {lvl} in your inventory?".format(
+                        rarity=rarity, slot=slot, lvl=level
+                    )
+                )
+            elif rarity or slot:
+                msg = await ctx.send(
+                    "Are you sure you want to sell all{rarity}{slot} under level {lvl} items in your inventory?".format(
+                        rarity=f" {rarity}" if rarity else "", slot=f" {slot}" if slot else "", lvl=level
+                    )
+                )
+            else:
+                msg = await ctx.send("Are you sure you want to sell all items under level {lvl} in your inventory?".format(lvl=level))
+
+            start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
+            pred = ReactionPredicate.yes_or_no(msg, ctx.author)
+            try:
+                await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+            except asyncio.TimeoutError:
+                await self._clear_react(msg)
+                return
+
+            if not pred.result:
+                await ctx.send("Not selling those items.")
+                return
+
+            msg = ""
+            try:
+                c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+            total_price = 0
+            async with ctx.typing():
+                items = [i for n, i in c.backpack.items() if i.rarity not in ["forged", "set"]]
+                count = 0
+                async for item in AsyncIter(items):
+                    if rarity and item.rarity != rarity:
+                        continue
+                    if equip_level(c, item) > level:
+                        continue
+                    if slot:
+                        if len(item.slot) == 1 and slot != item.slot[0]:
+                            continue
+                        elif len(item.slot) == 2 and slot != "two handed":
+                            continue
+                    item_price = 0
+                    old_owned = item.owned
+                    async for x in AsyncIter(range(0, item.owned)):
+                        item.owned -= 1
+                        item_price += self._sell(c, item)
+                        if item.owned <= 0:
+                            del c.backpack[item.name]
+                        if not count % 10:
+                            await asyncio.sleep(0.1)
+                        count += 1
+                    msg += _("{old_item} sold for {price}.\n").format(
+                        old_item=str(old_owned) + " " + str(item),
+                        price=humanize_number(item_price),
+                    )
+                    total_price += item_price
+                    await asyncio.sleep(0.1)
+                    item_price = max(item_price, 0)
+                    if item_price > 0:
+                        try:
+                            await bank.deposit_credits(ctx.author, item_price)
+                        except BalanceTooHigh as e:
+                            await bank.set_balance(ctx.author, e.max_balance)
+                await self.config.user(ctx.author).set(await c.to_json(self.config))
+        msg_list = []
+        new_msg = _("{author} sold all their{rarity} items for {price}.\n\n{items}").format(
+            author=self.escape(ctx.author.display_name),
+            rarity=f" {rarity}" if rarity else "",
+            price=humanize_number(total_price),
+            items=msg,
+        )
+        for page in pagify(new_msg, shorten_by=10, page_length=1900):
+            msg_list.append(box(page, lang="css"))
+        await menu(ctx, msg_list, DEFAULT_CONTROLS)
+
     @commands.command()
-    async def mysets(self, ctx):
+    async def mysets(self, ctx, user:discord.Member = None):
+        if not user:
+            user = ctx.author
+        is_owner = await self.bot.is_owner(ctx.author)
+        if user is not None and not is_owner:
+            return await smart_embed(ctx, "You do not have permissions to see others backpack. <:pandacop:375143122474369046>", False)
         all_sets = self.SET_BONUSES
-        c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
-        backpack_data = await c.get_backpack()
-        sets = re.findall("Set `([A-Z a-z]*)`", backpack_data)
-        record = dict()
-        for item in sets:
-            record[item] = record.get(item, 0) + 1
+        record = dict() # Keep record of how many items of each set user has
         final_str = ""
         completed_sets = ""
-        for set_name, num_items in record.items():            
-            num_parts = all_sets.get(set_name)[0].get('parts')
-            final_str += f"{set_name}: {num_items}/{num_parts}.\n"
-            if num_items == all_sets.get(set_name)[0].get('parts'):
-                completed_sets += set_name + '\n'
-                
-        final_str += "\nCompleted sets:\n"
-        final_str += completed_sets
-        await smart_embed(ctx, final_str)
+        duplicate_items = ""
+        async with self.get_lock(user):
+            try:
+                c = await Character.from_json(self.config, user, self._daily_bonus)
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+          
+            async for name, item in AsyncIter(c.backpack.items()):
+                if item.rarity != "set":
+                    continue
+                else:
+                    # Use set name as key and number of items of each set as value
+                    record[str(item.set)] = record.get(str(item.set), 0) + 1
+                    if item.owned > 1:
+                        duplicate_items += f"{str(item.name)}\n"
+            # Create final string to display
+            for set_name, num_items in record.items():            
+                num_parts = all_sets.get(set_name)[0].get('parts')
+                final_str += f"{set_name}: {num_items}/{num_parts}.\n"
+                if num_items == all_sets.get(set_name)[0].get('parts'):
+                    completed_sets += set_name + '\n'
+        if not final_str:
+            final_str = "You do not have any set items in your backpack."
+        if not completed_sets:
+            completed_sets = "You do not have any completed any sets."
+        if not duplicate_items:
+            duplicate_items = "You do not have any duplicate items."
+        colour = discord.Colour.dark_green()
+        msg_list = [discord.Embed(description=final_str, color=colour, title="Items in backpack:"), discord.Embed(description=completed_sets, color=colour, title="Completed sets:")]
+        for page in pagify(duplicate_items, shorten_by=10, page_length=500):
+            msg_list.append(discord.Embed(description=page, color=colour, title="Duplicate items:"))
+        await menu(ctx, msg_list, DEFAULT_CONTROLS)
         
     @commands.command()
-    async def unequip_all(self, ctx):
+    async def unequipall(self, ctx):
         if self.in_adventure(ctx):
             return await smart_embed(
                 ctx,
