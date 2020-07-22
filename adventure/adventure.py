@@ -7637,7 +7637,7 @@ class Adventure(BaseCog):
         is_owner = await self.bot.is_owner(ctx.author)
         if user is not None and not is_owner:
             return await smart_embed(ctx, "You do not have permissions to see others backpack. <:pandacop:375143122474369046>", False)
-        else:
+        if user is None:
             user = ctx.author
         all_sets = self.SET_BONUSES
         record = dict() # Keep record of how many items of each set user has
