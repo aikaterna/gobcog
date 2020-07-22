@@ -7675,7 +7675,6 @@ class Adventure(BaseCog):
                     if num_item > 1:
                         duplicate_items += f"{num_item} of {str(item.name)}"
                         duplicate_items += " [Equipped]\n" if item.name in equipped_items else "\n"
-                    print(item.name, num_item)
                         
             # Create final string to display
             for set_name, num_items in record.items():            
