@@ -358,6 +358,7 @@ class Adventure(BaseCog):
             "rebirth_cost": 100.0,
             "themes": {},
             "daily_bonus": {"1": 0, "2": 0, "3": 0.5, "4": 0, "5": 0.5, "6": 1.0, "7": 1.0},
+            "record_keeper": None
         }
         self.RAISINS: list = None
         self.THREATEE: list = None
@@ -4784,13 +4785,19 @@ class Adventure(BaseCog):
             return
         possible_monsters = []
         stat_range = self._adv_results.get_stat_range(ctx)
+        await self.send_log("Stat range is: " + str(stat_range))
+        if stat_range["max_stat"] > 0:
+            await self.send_log(f"Appropriate range is: {str(stat_range['min_stat'] * 0.75)} and {str(stat_range['max_stat'] * 1.2)} for {stat_range['stat_type']}")
+        else:
+            await self.send_log(f"stat_range is 0 so Appropriate range is: less than {max(c.att, c.int, c.cha) * 5} for {stat_range['stat_type']}")
         async for (e, (m, stats)) in AsyncIter(monsters.items()).enumerate(start=1):
-            appropriate_range = max(stats["hp"], stats["dipl"]) <= (max(c.att, c.int, c.cha) * 5)
+            appropriate_range = max(stats["hp"], stats["dipl"]) <= (max(c.att, c.int, c.cha) * 5)            
             if stat_range["max_stat"] > 0:
                 main_stat = stats["hp"] if (stat_range["stat_type"] == "attack") else stats["dipl"]
                 appropriate_range = (
                     (stat_range["min_stat"] * 0.75) <= main_stat <= (stat_range["max_stat"] * 1.2)
                 )
+                
             if not appropriate_range:
                 continue
             if not stats["boss"] and not stats["miniboss"]:
@@ -4807,7 +4814,9 @@ class Adventure(BaseCog):
         if len(possible_monsters) == 0:
             choice = random.choice(list(monsters.keys()) * 3)
         else:
+            await self.send_log("No monsters found so selecting randomly")
             choice = random.choice(possible_monsters)
+        await self.send_log("Selected monster: " + choice)
         return choice
 
     def _dynamic_monster_stats(self, ctx: Context, choice: MutableMapping):
@@ -5345,6 +5354,8 @@ class Adventure(BaseCog):
             * self.ATTRIBS[challenge_attrib][1]
             * session.monster_stats
         )
+        await self.send_log(f"Monster hp is {session.monster_modified_stats['hp']} * {self.ATTRIBS[challenge_attrib][0]} * {session.monster_stats} = {hp} base_stat attrib stat")
+        await self.send_log(f"Monster dipl is {session.monster_modified_stats['dipl']}, {self.ATTRIBS[challenge_attrib][1]}, {session.monster_stats} = {hp}")
 
         dmg_dealt = int(attack + magic)
         diplomacy = int(diplomacy)
@@ -5570,6 +5581,7 @@ class Adventure(BaseCog):
         amount = 1 * session.monster_stats
         amount *= (hp + dipl) if slain and persuaded else hp if slain else dipl
         amount += int(amount * (0.25 * people))
+        await self.send_log(f"Base reward amount = {amount}")
         if people == 1:
             if slain:
                 group = fighters_final_string if len(fight_list) == 1 else wizards_final_string
@@ -6904,6 +6916,7 @@ class Adventure(BaseCog):
             usercp = int(cp + (cp * c.luck) // 2)
             userxp = int(userxp * (c.gear_set_bonus.get("xpmult", 1) + daymult))
             usercp = int(usercp * (c.gear_set_bonus.get("cpmult", 1) + daymult))
+            await self.send_log(f"User {user.nick} got {userxp} exp points and {usercp} currency with base amt{xp}.") 
             newxp += userxp
             newcp += usercp
             roll = random.randint(1, 5)
@@ -7845,7 +7858,7 @@ class Adventure(BaseCog):
         for arg in stats_args.keys():
             parser.add_argument(*stats_args[arg], nargs="+")
         
-        parser.add_argument("--rarity", "-r", choices=["normal", "rare", "epic", "legendary"], nargs="+", default=RARITIES)
+        parser.add_argument("--rarity", "-r", choices=RARITIES, nargs="+", default=RARITIES)
         parser.add_argument("--slot", "-s", choices=ORDER, nargs="+", default=ORDER)
         parser.add_argument("-diff", action="store_true", default=False)
         
@@ -7905,4 +7918,15 @@ class Adventure(BaseCog):
             value = arguments.get(name)
             required[name] = value
         return required
+        
+    @commands.command()
+    @commands.is_owner()
+    async def setadventurelog(self, ctx, channel:discord.TextChannel):
+        await self.config.record_keeper.set(channel.id)
+        await ctx.tick()
+        
+    async def send_log(self, message):
+        channel = await self.bot.fetch_channel( await self.config.record_keeper())
+        if channel and message:
+            await channel.send(message)
             
