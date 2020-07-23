@@ -4708,7 +4708,8 @@ class Adventure(BaseCog):
                     else _("1 second")
                 ),
             )
-
+        await self.send_log(f"Starting adventure on: {str(datetime.now())}\n")
+        
         if challenge and not (self.is_dev(ctx.author) or await ctx.bot.is_owner(ctx.author)):
             # Only let the bot owner specify a specific challenge
             challenge = None
@@ -4778,6 +4779,7 @@ class Adventure(BaseCog):
         await ctx.bot.on_command_error(ctx, error, unhandled_by_cog=True)
 
     async def get_challenge(self, ctx: Context, monsters):
+        log_msg = "Selecting a monster:\n"
         try:
             c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
         except Exception as exc:
@@ -4785,11 +4787,11 @@ class Adventure(BaseCog):
             return
         possible_monsters = []
         stat_range = self._adv_results.get_stat_range(ctx)
-        await self.send_log("Stat range is: " + str(stat_range))
+        log_msg += (f"Stat range is: {str(stat_range)}\n")
         if stat_range["max_stat"] > 0:
-            await self.send_log(f"Appropriate range is: {str(stat_range['min_stat'] * 0.75)} and {str(stat_range['max_stat'] * 1.2)} for {stat_range['stat_type']}")
+            log_msg += (f"Appropriate range is between {str(stat_range['min_stat'] * 0.75)} and {str(stat_range['max_stat'] * 1.2)} for {stat_range['stat_type']}\n")
         else:
-            await self.send_log(f"stat_range is 0 so Appropriate range is: less than {max(c.att, c.int, c.cha) * 5} for {stat_range['stat_type']}")
+            log_msg += (f"Stat_range is not defined. Appropriate range is: less than {max(c.att, c.int, c.cha) * 5} for {stat_range['stat_type']}\n")
         async for (e, (m, stats)) in AsyncIter(monsters.items()).enumerate(start=1):
             appropriate_range = max(stats["hp"], stats["dipl"]) <= (max(c.att, c.int, c.cha) * 5)            
             if stat_range["max_stat"] > 0:
@@ -4812,11 +4814,12 @@ class Adventure(BaseCog):
                 possible_monsters.append(m)
 
         if len(possible_monsters) == 0:
+            log_msg += ("No monsters found so selecting a monster randomly.\n")
             choice = random.choice(list(monsters.keys()) * 3)
         else:
-            await self.send_log("No monsters found so selecting randomly")
             choice = random.choice(possible_monsters)
-        await self.send_log("Selected monster: " + choice)
+        log_msg += (f"Selected monster: {choice} with base stats {monsters[choice]['hp'] if (stat_range['stat_type'] == 'attack') else monsters[choice]['dipl']} for {stat_range['stat_type']}\n")
+        await self.send_log(log_msg)
         return choice
 
     def _dynamic_monster_stats(self, ctx: Context, choice: MutableMapping):
@@ -5294,6 +5297,7 @@ class Adventure(BaseCog):
             self._current_traders[guild.id]["users"].remove(user)
 
     async def _result(self, ctx: Context, message: discord.Message):
+        log_msg = "Calculating result:\n"
         if ctx.guild.id not in self._sessions:
             return
         calc_msg = await ctx.send(_("Calculating..."))
@@ -5354,8 +5358,8 @@ class Adventure(BaseCog):
             * self.ATTRIBS[challenge_attrib][1]
             * session.monster_stats
         )
-        await self.send_log(f"Monster hp is {session.monster_modified_stats['hp']} * {self.ATTRIBS[challenge_attrib][0]} * {session.monster_stats} = {hp} base_stat attrib stat")
-        await self.send_log(f"Monster dipl is {session.monster_modified_stats['dipl']}, {self.ATTRIBS[challenge_attrib][1]}, {session.monster_stats} = {hp}")
+        log_msg += (f"Monster attack hp is {session.monster_modified_stats['hp']} * {self.ATTRIBS[challenge_attrib][0]} * {session.monster_stats} = {hp} using base_stat*attribute value*session stats.\n")
+        log_msg += (f"Monster talk hp is {session.monster_modified_stats['dipl']} * {self.ATTRIBS[challenge_attrib][1]} * {session.monster_stats} = {dipl}\n")
 
         dmg_dealt = int(attack + magic)
         diplomacy = int(diplomacy)
@@ -5581,7 +5585,7 @@ class Adventure(BaseCog):
         amount = 1 * session.monster_stats
         amount *= (hp + dipl) if slain and persuaded else hp if slain else dipl
         amount += int(amount * (0.25 * people))
-        await self.send_log(f"Base reward amount = {amount}")
+        log_msg += (f"Base reward amount is {amount}.\n")
         if people == 1:
             if slain:
                 group = fighters_final_string if len(fight_list) == 1 else wizards_final_string
@@ -5920,6 +5924,7 @@ class Adventure(BaseCog):
                     c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
                     parsed_users.append(user)
                 await self.config.user(user).set(await c.to_json(self.config))
+        await self.send_log(log_msg)
 
     async def handle_run(self, guild_id, attack, diplomacy, magic):
         runners = []
@@ -6893,6 +6898,7 @@ class Adventure(BaseCog):
         return (out, finish, remaining)
 
     async def _reward(self, ctx: Context, userlist, amount, modif, special):
+        log_msg = "Calculating rewards:\n"
         if modif == 0:
             modif = 0.5
         daymult = self._daily_bonus.get(str(datetime.today().weekday()), 0)
@@ -6916,7 +6922,7 @@ class Adventure(BaseCog):
             usercp = int(cp + (cp * c.luck) // 2)
             userxp = int(userxp * (c.gear_set_bonus.get("xpmult", 1) + daymult))
             usercp = int(usercp * (c.gear_set_bonus.get("cpmult", 1) + daymult))
-            await self.send_log(f"User {user.nick} got {userxp} exp points and {usercp} currency with base amt{xp}.") 
+            log_msg += (f"User {user.display_name} got {userxp} exp points and {usercp} currency with base amount of {xp}.\n") 
             newxp += userxp
             newcp += usercp
             roll = random.randint(1, 5)
@@ -6992,6 +6998,7 @@ class Adventure(BaseCog):
                 cp=humanize_number(int(newcp)),
                 currency_name=currency_name,
             )
+        await self.send_log(log_msg)
         return phrase
 
     @staticmethod
@@ -7928,5 +7935,5 @@ class Adventure(BaseCog):
     async def send_log(self, message):
         channel = await self.bot.fetch_channel( await self.config.record_keeper())
         if channel and message:
-            await channel.send(message)
+            await channel.send(box(message, lang="python"))
             
