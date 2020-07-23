@@ -894,6 +894,91 @@ class Character(Item):
                 )
 
         return form_string + "\n"
+        
+    async def get_custom_backpack(self, required):
+        bkpk = await self.get_sorted_backpack(self.backpack)
+        form_string = _(
+            "Items in Backpack: \n( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE#] | OWNED | SET (SET PIECES)"
+        )        
+        rjust = max([len(str(i[1])) + 4 for slot_group in bkpk for i in slot_group] or [1, 4])
+        async for slot_group in AsyncIter(bkpk):
+            slot_name_org = slot_group[0][1].slot
+            slot_name = slot_name_org[0] if len(slot_name_org) < 2 else "two handed"
+            form_string += f"\n\n {slot_name.title()} slot\n"
+            current_equipped = getattr(self, slot_name, None)
+            if slot_name not in required.get('slot', ORDER):
+                continue
+            async for item in AsyncIter(slot_group):
+                stats_args = {"attack": "att", "charisma": "cha", "intellgence": "int", "luck": "luck", "dexterity": "dex", "level": "lvl"}
+                item_is_valid = True
+                for name in stats_args.keys():
+                    if name == "level":
+                        item_stat = equip_level(self, item[1])
+                    else:
+                        item_stat = getattr(item[1], stats_args[name])
+                    # If requirement is not specified use items's stat so requirement for unspecified stats is always fulfilled
+                    if required.get(name, item_stat) != item_stat:
+                        item_is_valid = False                         
+                    if item_stat < required.get(name + '_min', item_stat):
+                        item_is_valid = False
+                    if item_stat > required.get(name + '_max', item_stat):
+                        item_is_valid = False
+                        
+                if item[1].rarity not in required.get('rarity', RARITIES):
+                    item_is_valid = False
+                if not item_is_valid:
+                    # print(f"Item {item} is invalid.")
+                    continue
+                show_delta = required["diff"]
+                settext = ""
+                att_space = " " if len(str(item[1].att)) >= 1 else ""
+                cha_space = " " if len(str(item[1].cha)) >= 1 else ""
+                int_space = " " if len(str(item[1].int)) >= 1 else ""
+                dex_space = " " if len(str(item[1].dex)) >= 1 else ""
+                luck_space = " " if len(str(item[1].luck)) >= 1 else ""
+                owned = ""
+                if item[1].rarity in ["legendary", "event"] and item[1].degrade >= 0:
+                    owned += f" | [{item[1].degrade}#]"
+                owned += f" | {item[1].owned}"
+                if item[1].set:
+                    settext += f" | Set `{item[1].set}` ({item[1].parts}pcs)"
+                e_level = equip_level(self, item[1])
+                if e_level > self.lvl:
+                    level = f"[{e_level}]"
+                else:
+                    level = f"{e_level}"
+
+                if show_delta:
+                    att = self.get_equipped_delta(current_equipped, item[1], "att")
+                    cha = self.get_equipped_delta(current_equipped, item[1], "cha")
+                    int = self.get_equipped_delta(current_equipped, item[1], "int")
+                    dex = self.get_equipped_delta(current_equipped, item[1], "dex")
+                    luck = self.get_equipped_delta(current_equipped, item[1], "luck")
+                    rjuststat = 5
+                else:
+                    att = item[1].att if len(slot_name_org) < 2 else item[1].att * 2
+                    cha = item[1].cha if len(slot_name_org) < 2 else item[1].cha * 2
+                    int = item[1].int if len(slot_name_org) < 2 else item[1].int * 2
+                    dex = item[1].dex if len(slot_name_org) < 2 else item[1].dex * 2
+                    luck = item[1].luck if len(slot_name_org) < 2 else item[1].luck * 2
+                    rjuststat = 3
+
+                stats = (
+                    f"({att_space}{att:<{rjuststat}} |"
+                    f"{cha_space}{cha:<{rjuststat}} |"
+                    f"{int_space}{int:<{rjuststat}} |"
+                    f"{dex_space}{dex:<{rjuststat}} |"
+                    f"{luck_space}{luck:<{rjuststat}} )"
+                )
+
+                form_string += (
+                    f"\n{str(item[1]):<{rjust}} - "
+                    f"{stats}"
+                    f" | Lvl {level:<5}"
+                    f"{owned}{settext}"
+                )
+
+        return form_string + "\n"
 
     def get_equipped_delta(self, equiped: Item, to_compare: Item, stat_name: str) -> str:
         if (equiped and len(equiped.slot) == 2) and (to_compare and len(to_compare.slot) == 2):

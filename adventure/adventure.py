@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import argparse
 import asyncio
 import contextlib
 import json
@@ -72,6 +73,9 @@ REBIRTH_STEP = 10
 _SCHEMA_VERSION = 4
 _config: Config = None
 
+class NoExitParser(argparse.ArgumentParser):
+    def error(self, message):        
+        raise BadArgument(message)
 
 async def smart_embed(ctx, message, success=None):
     if ctx.guild:
@@ -7735,3 +7739,170 @@ class Adventure(BaseCog):
             msg = "You do not have any items equipped."
         await ctx.send(box(msg, lang="css"))
 		
+        
+    @_backpack.command(
+        name="filter",
+        help= """
+            Allows filtering of backpack items based on its stats
+            
+        """)
+    async def _backpack_filter(self, ctx, diff:Optional[bool]=False, *query):
+        stats_args = {
+            "attack": ["--attack", "-a"],
+            "charisma": ["--charisma", "-c"],
+            "intelligence": ["--intelligence", "-i"],
+            "luck": ["--luck", "-lk"],
+            "dexterity": ["--dexterity", "-d"],
+            "level": ["--level", "-lvl"],
+        }        
+            
+        try:
+            required = await self.parse_requirements(ctx, query)
+        except BadArgument as e:
+            await ctx.send(str(e))
+            return
+        if diff:
+            required['diff'] = True
+        if not query:
+            await ctx.send_help()
+            return
+            
+        output = ""        
+        for name in stats_args.keys():            
+            if required.get(name):
+                output += f"{name} = {required.get(name)}\n"
+            elif required.get(name + '_min') and required.get(name + '_max'):
+                if required.get(name + '_min') > required.get(name + '_max'):
+                    await ctx.send(f"Requirement for {name}: greater than {required.get(name + '_min')} and less than {required.get(name + '_max')} makes no sense to me.")
+                    return
+                output += f"{name.capitalize()} between {required.get(name + '_min')} and {required.get(name + '_max')}\n"
+            elif required.get(name + '_min'):
+                output += f"{name.capitalize()} greater than {required.get(name + '_min')}\n"
+            elif required.get(name + '_max'):
+                output += f"{name.capitalize()} less than {required.get(name + '_max')}\n"
+        for name in ["rarity", "slot"]:
+            value = required.get(name)
+            if value:
+                output += f"{name.capitalize()} is one of [{humanize_list(list(value))}]\n"
+        if output:
+            await ctx.send(box("Using requirements:\n\n" + output, lang="css"))
+        else:
+            await ctx.send_help()
+            
+        if not await self.allow_in_dm(ctx):
+            return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
+		
+        try:
+            c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+        except Exception as exc:
+            log.exception("Error with the new character sheet", exc_info=exc)
+            return
+            
+        backpack_contents = _("[{author}'s backpack] \n\n{backpack}\n").format(
+            author=self.escape(ctx.author.display_name),
+            backpack=await c.get_custom_backpack(required),
+        )
+        msgs = []
+        async for page in AsyncIter(
+            pagify(backpack_contents, delims=["\n"], shorten_by=20, page_length=1900)
+        ):
+            msgs.append(box(page, lang="css"))
+        controls = DEFAULT_CONTROLS.copy()
+        async def _backpack_info(
+            ctx: commands.Context,
+            pages: list,
+            controls: MutableMapping,
+            message: discord.Message,
+            page: int,
+            timeout: float,
+            emoji: str,
+        ):
+            if message:
+                await ctx.send_help(self._backpack)
+                with contextlib.suppress(discord.HTTPException):
+                    await message.delete()
+                return None
+        controls["\N{INFORMATION SOURCE}\N{VARIATION SELECTOR-16}"] = _backpack_info
+        await ctx.tick()
+        return await menu(ctx, msgs, controls)
+        
+        
+    async def parse_requirements(self, ctx, args:list):
+        required = {}
+        arguments = {} 
+        parser = NoExitParser()
+        
+        # Add arguments to parser
+        stats_args = {
+            "attack": ["--attack", "-a"],
+            "charisma": ["--charisma", "-c"],
+            "intelligence": ["--intelligence", "-i"],
+            "luck": ["--luck", "-lk"],
+            "dexterity": ["--dexterity", "-d"],
+            "level": ["--level", "-lvl"],
+        }
+        
+        for arg in stats_args.keys():
+            parser.add_argument(*stats_args[arg], nargs="+")
+        
+        parser.add_argument("--rarity", "-r", choices=["normal", "rare", "epic", "legendary"], nargs="+", default=RARITIES)
+        parser.add_argument("--slot", "-s", choices=ORDER, nargs="+", default=ORDER)
+        parser.add_argument("-diff", action="store_true", default=False)
+        
+        sub_parser = NoExitParser(add_help=False)
+        sub_parser.add_argument("-gt", "--min", type=int)
+        sub_parser.add_argument("-lt", "--max", type=int)
+        sub_parser.add_argument("-eq", "--equal", type=int)
+        
+        
+        
+        args = parser.parse_args(args)            
+        arguments = dict(vars(args))
+        required["diff"] = args.diff
+        # Handle stats arguments with min and max
+        for name in stats_args.keys():
+            values = arguments.get(name)
+            if not values:
+                continue
+            
+            # Parse just numbers such as "-a 1 10"
+            vals = []
+            needs_advanced = False
+            for v in values:
+                try:
+                    vals.append(int(v))
+                except ValueError:
+                    needs_advanced = True
+                    break
+            if not needs_advanced:
+                if len(vals) == 1:
+                    if name == "level":
+                        required[name + '_max'] = vals[0]
+                    else:
+                        required[name + '_min'] = vals[0]
+                elif len(vals) == 2:
+                    required[name + '_min'] = min(vals)
+                    required[name + '_max'] = max(vals)
+                elif len(vals) > 2:
+                    raise BadArgument(f"You can only specify two values for {name}.")
+                    return
+            
+            else:
+                # Parse less than, greater than and equal arguments
+                value = ' '.join(values)
+                sub_args = sub_parser.parse_args(value.split())
+                try:
+                    if sub_args.min:
+                        required[name + '_min'] = int(sub_args.min)                
+                    if sub_args.max:
+                        required[name + '_max'] = int(sub_args.max)
+                    if sub_args.equal:
+                        required[name] = int(sub_args.equal)
+                except ValueError:
+                    raise BadArgument(f'Converting to "int" failed for parameter "{name}".')
+                    
+        for name in ["rarity", "slot"]:
+            value = arguments.get(name)
+            required[name] = value
+        return required
+            
