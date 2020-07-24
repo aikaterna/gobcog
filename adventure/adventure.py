@@ -1865,6 +1865,7 @@ class Adventure(BaseCog):
         await smart_embed(
             ctx, _("Done, carts will only appear in {room.mention}.").format(room=room)
         )
+    
     @adventureset.command()
     @checks.admin_or_permissions(administrator=True)
     async def adventureroom(self, ctx: Context, room: discord.TextChannel):
@@ -4063,7 +4064,11 @@ class Adventure(BaseCog):
                             self.escape(ctx.author.display_name)
                         ),
                     )
-                cooldown_time = max(300, (1200 - ((c.luck + c.total_int) * 2)))
+
+                # Base cooldown based on adventure_cooldown
+                base_cooldown_time = int((await self.config.guild(ctx.guild).cooldown_timer_manual()) * 5.5)
+                min_cooldown_time = ((await self.config.guild(ctx.guild).cooldown_timer_manual()) * 2)
+                cooldown_time = max(min_cooldown_time, (base_cooldown_time - ((c.luck + c.total_int) * 2)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] + cooldown_time <= time.time():
@@ -4119,7 +4124,11 @@ class Adventure(BaseCog):
                             self.escape(ctx.author.display_name)
                         ),
                     )
-                cooldown_time = max(300, (1200 - ((c.luck + c.total_att) * 2)))
+                    
+                # Base cooldown based on adventure_cooldown
+                base_cooldown_time = int((await self.config.guild(ctx.guild).cooldown_timer_manual()) * 5.5)
+                min_cooldown_time = ((await self.config.guild(ctx.guild).cooldown_timer_manual()) * 2)
+                cooldown_time = max(min_cooldown_time, (base_cooldown_time - ((c.luck + c.total_att) * 2)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] + cooldown_time <= time.time():
@@ -4175,7 +4184,11 @@ class Adventure(BaseCog):
                             self.escape(ctx.author.display_name)
                         ),
                     )
-                cooldown_time = max(300, (1200 - ((c.luck + c.total_int) * 2)))
+                    
+                # Base cooldown based on adventure_cooldown
+                base_cooldown_time = int((await self.config.guild(ctx.guild).cooldown_timer_manual()) * 5.5)
+                min_cooldown_time = ((await self.config.guild(ctx.guild).cooldown_timer_manual()) * 2)
+                cooldown_time = max(min_cooldown_time, (base_cooldown_time - ((c.luck + c.total_int) * 2)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] + cooldown_time <= time.time():
@@ -4232,7 +4245,10 @@ class Adventure(BaseCog):
                             self.escape(ctx.author.display_name)
                         ),
                     )
-                cooldown_time = max(300, (1200 - ((c.luck + c.total_cha) * 2)))
+                # Base cooldown based on adventure_cooldown
+                base_cooldown_time = int((await self.config.guild(ctx.guild).cooldown_timer_manual()) * 5.5)
+                min_cooldown_time = ((await self.config.guild(ctx.guild).cooldown_timer_manual()) * 2)
+                cooldown_time = max(min_cooldown_time, (base_cooldown_time - ((c.luck + c.total_cha) * 2)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] + cooldown_time <= time.time():
