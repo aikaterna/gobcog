@@ -338,6 +338,7 @@ class Adventure(BaseCog):
         default_guild = {
             "cart_channels": [],
             "adventure_channels": [735808553872392262],
+            "grindsquad": [],
             "god_name": "",
             "cart_name": "",
             "embed": True,
@@ -7555,6 +7556,48 @@ class Adventure(BaseCog):
                 pages.append(box("\n".join(entries), lang="md"))
         return pages
     
+    @commands.group(name="grindsquad", autohelp=False)
+    async def _grindsquad(self, ctx):
+        if ctx.invoked_subcommand is not None:
+            return
+        to_ping = await self.config.guild(ctx.guild).grindsquad()
+        msg = f"{ctx.author.mention} is a nab and is begging for the help of "
+        if len(to_ping) == 0:
+            msg += "adventure players "
+        elif len(to_ping) == 1:
+            user = self.bot.get_user(to_ping[0])
+            if user:
+                print(type(user))
+                msg += f"{user.mention} "
+            else:
+                msg += f"adventure players "
+        else:
+            for _id in to_ping[:-2]:
+                user = self.bot.get_user(_id)
+                if user:
+                    msg += f"{user.mention}, "
+            msg += f"{(self.bot.get_user(to_ping[-2])).mention} and {(self.bot.get_user(to_ping[-1])).mention} "
+        channel = self.bot.get_channel((await self.config.guild(ctx.guild).adventure_channels())[0])
+        msg += f"in {channel.mention}.\n\nPls do `!here` if you get this ping and reacted\n\n <:PandaKiller:703297599100420188> <:PandaKiller:703297599100420188> <:PandaKiller:703297599100420188>"
+        await ctx.send(msg)
+    
+    @_grindsquad.command(name="add")
+    async def _grindsquad_add(self, ctx, *users:discord.User):
+        async with self.config.guild(ctx.guild).grindsquad() as to_ping:
+            for user in users:
+                if user not in to_ping:
+                    to_ping.append(user.id)
+        await ctx.tick()
+        
+    @_grindsquad.command(name="remove")
+    async def _grindsquad_remove(self, ctx, *users:discord.User):
+        async with self.config.guild(ctx.guild).grindsquad() as to_ping:
+            for user in users:
+                if user.id in to_ping:
+                    to_ping.remove(user.id)
+        await ctx.tick()
+                
+        
     @_backpack.command(name="sellunder")
     async def backpack_sellunder(
     self,
