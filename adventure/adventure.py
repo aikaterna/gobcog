@@ -1427,8 +1427,9 @@ class Adventure(BaseCog):
                                 return await smart_embed(
                                     ctx,
                                     _(
-                                        "You can only trade with people the same "
-                                        "rebirth level or higher than yours."
+                                        "You can only trade with people that are the same "
+                                        "rebirth level, one rebirth level less than you, "
+                                        "or a higher rebirth level than yours."
                                     ),
                                 )
                             try:
