@@ -147,9 +147,7 @@ class Stats(Converter):
                 if (
                     (key not in ["degrade", "lvl"] and stat > 10) or (key == "lvl" and stat < 50)
                 ) and not await ctx.bot.is_owner(ctx.author):
-                    raise BadArgument(
-                        _("Don't you think that's a bit overpowered? Not creating item.")
-                    )
+                    raise BadArgument(_("Don't you think that's a bit overpowered? Not creating item."))
                 result[key] = stat
             except (AttributeError, ValueError):
                 pass
@@ -210,9 +208,7 @@ class Item:
         if self.rarity not in ["forged"]:
             # epic and legendary stats too similar so make level req's
             # the same
-            rarity_multiplier = min(
-                RARITIES.index(self.rarity) if self.rarity in RARITIES else 1, 5
-            )
+            rarity_multiplier = min(RARITIES.index(self.rarity) if self.rarity in RARITIES else 1, 5)
             lvl = self.max_main_stat * (rarity_multiplier + 3)
         return max(round(lvl), 1)
 
@@ -440,6 +436,8 @@ class Character(Item):
         self.user: discord.Member = kwargs.pop("user")
         self.sets = []
         self.rebirths = kwargs.pop("rebirths", 0)
+        self.last_known_currency = kwargs.get("last_known_currency")
+        self.last_currency_check = kwargs.get("last_currency_check")
         self.gear_set_bonus = {}
         self.get_set_bonus()
         self.maxlevel = self.get_max_level()
@@ -487,9 +485,7 @@ class Character(Item):
 
     def remove_restrictions(self):
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
-            requirements = (
-                PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
-            )
+            requirements = PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
             if "Ainz Ooal Gown" in self.sets and self.heroclass["pet"]["name"] in [
                 "Albedo",
                 "Rubedo",
@@ -497,9 +493,7 @@ class Character(Item):
             ]:
                 return
 
-            if self.heroclass["pet"]["cha"] > (
-                self.total_cha + (self.total_int // 3) + (self.luck // 2)
-            ):
+            if self.heroclass["pet"]["cha"] > (self.total_cha + (self.total_int // 3) + (self.luck // 2)):
                 self.heroclass["pet"] = {}
                 return
 
@@ -610,13 +604,9 @@ class Character(Item):
                         "Rubedo",
                         "Guardians of Nazarick",
                     ]:
-                        class_desc += _("\n\n- Current servant: [{}]").format(
-                            self.heroclass["pet"]["name"]
-                        )
+                        class_desc += _("\n\n- Current servant: [{}]").format(self.heroclass["pet"]["name"])
                     else:
-                        class_desc += _("\n\n- Current pet: [{}]").format(
-                            self.heroclass["pet"]["name"]
-                        )
+                        class_desc += _("\n\n- Current pet: [{}]").format(self.heroclass["pet"]["name"])
         else:
             class_desc = _("Hero.")
 
@@ -645,9 +635,7 @@ class Character(Item):
             lvl=self.lvl if self.lvl < self.maxlevel else self.maxlevel,
             rebirth_text="\n"
             if self.lvl < self.maxlevel
-            else _(
-                "You have reached max level. To continue gaining levels and xp, you will have to rebirth.\n\n"
-            ),
+            else _("You have reached max level. To continue gaining levels and xp, you will have to rebirth.\n\n"),
             maxlevel=self.maxlevel,
             class_desc=class_desc,
             att=humanize_number(self.att),
@@ -660,9 +648,7 @@ class Character(Item):
             luck=humanize_number(self.luck),
             bal=humanize_number(self.bal),
             xp=humanize_number(round(self.exp)),
-            next_lvl=humanize_number(next_lvl)
-            if self.lvl < self.maxlevel
-            else humanize_number(max_level_xp),
+            next_lvl=humanize_number(next_lvl) if self.lvl < self.maxlevel else humanize_number(max_level_xp),
             skill_points=0 if self.skill["pool"] < 0 else self.skill["pool"],
             set_bonus=(
                 f"( {self.gear_set_bonus.get('att'):<2} | "
@@ -698,34 +684,19 @@ class Character(Item):
             form_string += _("\n\n {} slot").format(slot_name.title())
             last_slot = slot_name
             att = int(
-                (
-                    (item.att * 2 if slot_name == "two handed" else item.att)
-                    * self.gear_set_bonus.get("statmult", 1)
-                )
+                ((item.att * 2 if slot_name == "two handed" else item.att) * self.gear_set_bonus.get("statmult", 1))
             )
             inter = int(
-                (
-                    (item.int * 2 if slot_name == "two handed" else item.int)
-                    * self.gear_set_bonus.get("statmult", 1)
-                )
+                ((item.int * 2 if slot_name == "two handed" else item.int) * self.gear_set_bonus.get("statmult", 1))
             )
             cha = int(
-                (
-                    (item.cha * 2 if slot_name == "two handed" else item.cha)
-                    * self.gear_set_bonus.get("statmult", 1)
-                )
+                ((item.cha * 2 if slot_name == "two handed" else item.cha) * self.gear_set_bonus.get("statmult", 1))
             )
             dex = int(
-                (
-                    (item.dex * 2 if slot_name == "two handed" else item.dex)
-                    * self.gear_set_bonus.get("statmult", 1)
-                )
+                ((item.dex * 2 if slot_name == "two handed" else item.dex) * self.gear_set_bonus.get("statmult", 1))
             )
             luck = int(
-                (
-                    (item.luck * 2 if slot_name == "two handed" else item.luck)
-                    * self.gear_set_bonus.get("statmult", 1)
-                )
+                ((item.luck * 2 if slot_name == "two handed" else item.luck) * self.gear_set_bonus.get("statmult", 1))
             )
             att_space = " " if len(str(att)) >= 1 else ""
             cha_space = " " if len(str(cha)) >= 1 else ""
@@ -814,16 +785,10 @@ class Character(Item):
             if tmp[slot_name]:
                 final.append(sorted(tmp[slot_name], key=_sort))
 
-        final.sort(
-            key=lambda i: ORDER.index(i[0][1].slot[0])
-            if len(i[0][1].slot) == 1
-            else ORDER.index("two handed")
-        )
+        final.sort(key=lambda i: ORDER.index(i[0][1].slot[0]) if len(i[0][1].slot) == 1 else ORDER.index("two handed"))
         return final
 
-    async def get_backpack(
-        self, forging: bool = False, consumed=None, rarity=None, slot=None, show_delta=False
-    ):
+    async def get_backpack(self, forging: bool = False, consumed=None, rarity=None, slot=None, show_delta=False):
         if consumed is None:
             consumed = []
         bkpk = await self.get_sorted_backpack(self.backpack, slot=slot, rarity=rarity)
@@ -886,12 +851,7 @@ class Character(Item):
                     f"{luck_space}{luck:<{rjuststat}} )"
                 )
 
-                form_string += (
-                    f"\n{str(item[1]):<{rjust}} - "
-                    f"{stats}"
-                    f" | Lvl {level:<5}"
-                    f"{owned}{settext}"
-                )
+                form_string += f"\n{str(item[1]):<{rjust}} - " f"{stats}" f" | Lvl {level:<5}" f"{owned}{settext}"
 
         return form_string + "\n"
 
@@ -956,13 +916,10 @@ class Character(Item):
             else:
                 if item.get("rarity", "common") == "event":
                     equiplevel = item.get(
-                        "lvl",
-                        max((item.get("lvl", 1) - min(max(self.rebirths // 2 - 1, 0), 50)), 1),
+                        "lvl", max((item.get("lvl", 1) - min(max(self.rebirths // 2 - 1, 0), 50)), 1),
                     )
                 else:
-                    equiplevel = max(
-                        (item.get("lvl", 1) - min(max(self.rebirths // 2 - 1, 0), 50)), 1
-                    )
+                    equiplevel = max((item.get("lvl", 1) - min(max(self.rebirths // 2 - 1, 0), 50)), 1)
                 if equiplevel > self.lvl:
                     continue
 
@@ -1009,17 +966,11 @@ class Character(Item):
         return self
 
     @classmethod
-    async def from_json(
-        cls, config: Config, user: discord.Member, daily_bonus_mapping: Dict[str, float]
-    ):
+    async def from_json(cls, config: Config, user: discord.Member, daily_bonus_mapping: Dict[str, float]):
         """Return a Character object from config and user."""
         data = await config.user(user).all()
         balance = await bank.get_balance(user)
-        equipment = {
-            k: Item.from_json(v) if v else None
-            for k, v in data["items"].items()
-            if k != "backpack"
-        }
+        equipment = {k: Item.from_json(v) if v else None for k, v in data["items"].items() if k != "backpack"}
         if "int" not in data["skill"]:
             data["skill"]["int"] = 0
             # auto update old users with new skill slot
@@ -1097,6 +1048,8 @@ class Character(Item):
         for (k, v) in equipment.items():
             hero_data[k] = v
         hero_data["last_skill_reset"] = data.get("last_skill_reset", 0)
+        hero_data["last_known_currency"] = data.get("last_known_currency", 0)
+        hero_data["last_currency_check"] = data.get("last_currency_check", 0)
         return cls(**hero_data, daily_bonus_mapping=daily_bonus_mapping)
 
     def get_set_item_count(self):
@@ -1130,9 +1083,7 @@ class Character(Item):
             extra_pets = await config.themes.all()
             extra_pets = extra_pets.get(theme, {}).get("pets", {})
             pet_list = {**PETS, **extra_pets}
-            self.heroclass["pet"] = pet_list.get(
-                self.heroclass["pet"]["name"], self.heroclass["pet"]
-            )
+            self.heroclass["pet"] = pet_list.get(self.heroclass["pet"]["name"], self.heroclass["pet"])
 
         return {
             "adventures": self.adventures,
@@ -1163,6 +1114,7 @@ class Character(Item):
             "rebirths": self.rebirths,
             "set_items": self.set_items,
             "last_skill_reset": self.last_skill_reset,
+            "last_known_currency": self.last_known_currency,
         }
 
     async def rebirth(self, dev_val: int = None) -> dict:
@@ -1244,6 +1196,8 @@ class Character(Item):
             "skill": {"pool": 0, "att": 0, "cha": 0, "int": 0},
             "rebirths": self.rebirths,
             "set_items": self.set_items,
+            "last_known_currency": 0,
+            "last_currency_check": 0,
         }
 
     def keep_equipped(self):
@@ -1256,9 +1210,7 @@ class Character(Item):
                 last_slot = slots
                 continue
             item = getattr(self, slots)
-            items_to_keep[slots] = (
-                item.to_json() if self.rebirths >= 30 and item and item.set else {}
-            )
+            items_to_keep[slots] = item.to_json() if self.rebirths >= 30 and item and item.set else {}
         self.pieces_to_keep = items_to_keep
 
 
@@ -1266,18 +1218,14 @@ class ItemConverter(Converter):
     async def convert(self, ctx, argument) -> Item:
         try:
             c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config,
-                ctx.author,
-                ctx.bot.get_cog("Adventure")._daily_bonus,
+                ctx.bot.get_cog("Adventure").config, ctx.author, ctx.bot.get_cog("Adventure")._daily_bonus,
             )
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
         no_markdown = Item.remove_markdowns(argument)
         lookup = list(i for x, i in c.backpack.items() if no_markdown.lower() in x.lower())
-        lookup_m = list(
-            i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i)
-        )
+        lookup_m = list(i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i))
         lookup_e = list(i for x, i in c.backpack.items() if argument == str(i))
 
         _temp_items = set()
@@ -1300,10 +1248,7 @@ class ItemConverter(Converter):
             lookup = list(i for x, i in c.backpack.items() if str(i) in _temp_items)
             if len(lookup) > 10:
                 raise BadArgument(
-                    _(
-                        "You have too many items matching the name `{}`,"
-                        " please be more specific."
-                    ).format(argument)
+                    _("You have too many items matching the name `{}`," " please be more specific.").format(argument)
                 )
             items = ""
             for (number, item) in enumerate(lookup):
@@ -1328,9 +1273,7 @@ class EquipableItemConverter(Converter):
     async def convert(self, ctx, argument) -> Item:
         try:
             c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config,
-                ctx.author,
-                ctx.bot.get_cog("Adventure")._daily_bonus,
+                ctx.bot.get_cog("Adventure").config, ctx.author, ctx.bot.get_cog("Adventure")._daily_bonus,
             )
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
@@ -1344,18 +1287,12 @@ class EquipableItemConverter(Converter):
                 equipped_items.add(str(item))
         no_markdown = Item.remove_markdowns(argument)
         lookup = list(
-            i
-            for x, i in c.backpack.items()
-            if no_markdown.lower() in x.lower() and str(i) not in equipped_items
+            i for x, i in c.backpack.items() if no_markdown.lower() in x.lower() and str(i) not in equipped_items
         )
         lookup_m = list(
-            i
-            for x, i in c.backpack.items()
-            if argument.lower() == str(i).lower() and str(i) not in equipped_items
+            i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i) not in equipped_items
         )
-        lookup_e = list(
-            i for x, i in c.backpack.items() if argument == str(i) and str(i) not in equipped_items
-        )
+        lookup_e = list(i for x, i in c.backpack.items() if argument == str(i) and str(i) not in equipped_items)
 
         _temp_items = set()
         for i in lookup:
@@ -1377,10 +1314,7 @@ class EquipableItemConverter(Converter):
             lookup = list(i for x, i in c.backpack.items() if str(i) in _temp_items)
             if len(lookup) > 10:
                 raise BadArgument(
-                    _(
-                        "You have too many items matching the name `{}`,"
-                        " please be more specific."
-                    ).format(argument)
+                    _("You have too many items matching the name `{}`," " please be more specific.").format(argument)
                 )
             items = ""
             for (number, item) in enumerate(lookup):
@@ -1405,9 +1339,7 @@ class EquipmentConverter(Converter):
     async def convert(self, ctx, argument) -> Item:
         try:
             c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config,
-                ctx.author,
-                ctx.bot.get_cog("Adventure")._daily_bonus,
+                ctx.bot.get_cog("Adventure").config, ctx.author, ctx.bot.get_cog("Adventure")._daily_bonus,
             )
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
@@ -1432,16 +1364,11 @@ class EquipmentConverter(Converter):
         elif len(lookup_m) == 1:
             return lookup_m[0]
         elif len(lookup) == 0 and len(lookup_m) == 0:
-            raise BadArgument(
-                _("`{}` doesn't seem to match any items you have equipped.").format(argument)
-            )
+            raise BadArgument(_("`{}` doesn't seem to match any items you have equipped.").format(argument))
         else:
             if len(lookup) > 10:
                 raise BadArgument(
-                    _(
-                        "You have too many items matching the name `{}`,"
-                        " please be more specific"
-                    ).format(argument)
+                    _("You have too many items matching the name `{}`," " please be more specific").format(argument)
                 )
             items = ""
             for (number, item) in enumerate(lookup):
@@ -1473,9 +1400,7 @@ class ThemeSetMonterConverter(Converter):
             pdef = float(arguments[4])
             mdef = float(arguments[5])
             if any([i < 0 for i in [hp, dipl, pdef, mdef]]):
-                raise BadArgument(
-                    "HP, Charisma, Magical defence and Physical defence cannot be negative."
-                )
+                raise BadArgument("HP, Charisma, Magical defence and Physical defence cannot be negative.")
 
             image = arguments[7]
             boss = True if arguments[6].lower() == "true" else False
@@ -1484,9 +1409,7 @@ class ThemeSetMonterConverter(Converter):
         except BadArgument:
             raise
         except Exception:
-            raise BadArgument(
-                "Invalid format, Excepted:\n`theme++name++hp++dipl++pdef++mdef++boss++image`"
-            )
+            raise BadArgument("Invalid format, Excepted:\n`theme++name++hp++dipl++pdef++mdef++boss++image`")
         if "transcended" in name.lower() or "ascended" in name.lower():
             raise BadArgument("You are not worthy.")
         return {
@@ -1520,8 +1443,7 @@ class ThemeSetPetConverter(Converter):
             raise
         except Exception:
             raise BadArgument(
-                "Invalid format, Excepted:\n`theme++name++bonus_multiplier"
-                "++required_cha++crit_chance++always_crit`"
+                "Invalid format, Excepted:\n`theme++name++bonus_multiplier" "++required_cha++crit_chance++always_crit`"
             )
         if not ctx.cog.is_dev(ctx.author):
             if bonus > 2:
@@ -1589,11 +1511,7 @@ class PercentageConverter(Converter):
 
 
 def equip_level(char, item):
-    return (
-        item.lvl
-        if item.rarity == "event"
-        else max((item.lvl - min(max(char.rebirths // 2 - 1, 0), 50)), 1)
-    )
+    return item.lvl if item.rarity == "event" else max((item.lvl - min(max(char.rebirths // 2 - 1, 0), 50)), 1)
 
 
 def can_equip(char: Character, item: Item):
@@ -1628,9 +1546,9 @@ def has_funds_check(cost):
         if not await bank.can_spend(ctx.author, cost):
             currency_name = await bank.get_currency_name(ctx.guild)
             raise commands.CheckFailure(
-                _(
-                    "You need {cost} {currency_name} to be able to take parts in an adventures"
-                ).format(cost=humanize_number(cost), currency_name=currency_name)
+                _("You need {cost} {currency_name} to be able to take parts in an adventures").format(
+                    cost=humanize_number(cost), currency_name=currency_name
+                )
             )
         return True
 
