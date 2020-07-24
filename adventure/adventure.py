@@ -853,7 +853,7 @@ class Adventure(BaseCog):
                         ),
                     )
 
-            backpack_contents = _("[{author}'s backpack] \n\n{backpack}\n").format(
+            backpack_contents = _("[{author}ʹs backpack] \n\n{backpack}\n").format(
                 author=self.escape(ctx.author.display_name),
                 backpack=await c.get_backpack(rarity=rarity, slot=slot, show_delta=show_diff),
             )
