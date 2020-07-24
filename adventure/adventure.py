@@ -7120,22 +7120,21 @@ class Adventure(BaseCog):
     async def _trader_get_items(self, howmany: int):
         items = {}
         output = {}
-
         while len(items) < howmany:
             rarity_roll = random.random()
             #  rarity_roll = .9
             # 1% legendary
-            if rarity_roll >= 0.99:
+            if rarity_roll >= 0.90:
                 item = await self._genitem("legendary")
                 # min. 10 stat for legendary, want to be about 50k
                 price = random.randint(2500, 5000)
             # 20% epic
-            elif rarity_roll >= 0.7:
+            elif rarity_roll >= 0.70:
                 item = await self._genitem("epic")
                 # min. 5 stat for epic, want to be about 25k
                 price = random.randint(1000, 2000)
             # 35% rare
-            elif rarity_roll >= 0.35:
+            elif rarity_roll >= 0.40:
                 item = await self._genitem("rare")
                 # around 3 stat for rare, want to be about 3k
                 price = random.randint(500, 1000)
