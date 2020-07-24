@@ -337,6 +337,7 @@ class Adventure(BaseCog):
 
         default_guild = {
             "cart_channels": [],
+            "adventure_channels": [735808553872392262],
             "god_name": "",
             "cart_name": "",
             "embed": True,
@@ -1863,6 +1864,15 @@ class Adventure(BaseCog):
         await self.config.guild(ctx.guild).cartroom.set(room.id)
         await smart_embed(
             ctx, _("Done, carts will only appear in {room.mention}.").format(room=room)
+        )
+    @adventureset.command()
+    @checks.admin_or_permissions(administrator=True)
+    async def adventureroom(self, ctx: Context, room: discord.TextChannel):
+        """[Admin] Lock adventures to a specific text channel."""
+        
+        await self.config.guild(ctx.guild).adventure_channels.set(list([room.id]))
+        await smart_embed(
+            ctx, _("Done, adventures will only occur in {room.mention}.").format(room=room)
         )
 
     @adventureset.group(name="locks")
@@ -4673,7 +4683,11 @@ class Adventure(BaseCog):
 
         You play by reacting with the offered emojis.
         """
-
+        adventure_channels = await self.config.guild(ctx.guild).adventure_channels()
+        if ctx.channel.id not in adventure_channels:
+            channel = self.bot.get_channel(adventure_channels[0])
+            if channel:
+                return await ctx.send(embed=discord.Embed(description=f"The dragons will burn down the street! Go to {channel.mention}. That street is fire-proof.", color=discord.Colour.dark_red()))
         if ctx.guild.id in self._sessions:
             adventure_obj = self._sessions[ctx.guild.id]
             link = adventure_obj.message.jump_url
