@@ -1399,7 +1399,12 @@ class Adventure(BaseCog):
             current_balance = c.bal
             last_known_currency = c.last_known_currency
             if current_balance / last_known_currency < 0.75:
-                has_fund = False
+                currency_name = await bank.get_currency_name(ctx.guild)
+                return await smart_embed(
+                    ctx, _("You tried to get rid of all your {currency_name} -- tsk tsk, "
+                           "once you get back up to {cur} {currency_name} try again.").format(
+                        currency_name=currency_name, cur=humanize_number(last_known_currency),)
+                )
             else:
                 has_fund = await has_funds(ctx.author, rebirthcost)
             if not has_fund:
