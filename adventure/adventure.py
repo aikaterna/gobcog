@@ -5672,7 +5672,7 @@ class Adventure(BaseCog):
                     fumblelist.append(user)
                     msg += _(
                         "**{user}'s** sermon offended the mighty {god}. {failed_emoji}"
-                        "(-{len_f_list}{attack}/-{len_t_list}{talk}/-{len_m_list}{magic}) {roll}{roll_emoji}\n"
+                        "(-{len_f_list}{attack}/-{len_t_list}{talk}/-{len_m_list}{magic}) {roll_emoji}({roll})\n"
                     ).format(
                         user=self.escape(user.display_name),
                         god=god,
@@ -5711,12 +5711,12 @@ class Adventure(BaseCog):
                     if roll == 50:
                         roll_msg = _(
                             "{user} turned into an avatar of mighty {god}. "
-                            "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll}{roll_emoji}\n"
+                            "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll_emoji}({roll})\n"
                         )
                     else:
                         roll_msg = _(
                             "**{user}** blessed you all in {god}'s name. "
-                            "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll}{roll_emoji}\n"
+                            "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll_emoji}({roll})\n"
                         )
                     msg += roll_msg.format(
                         user=self.escape(user.display_name),
@@ -5753,7 +5753,7 @@ class Adventure(BaseCog):
                     diplomacy += talk_buff
                     msg += _(
                         "**{user}'s** prayer called upon the mighty {god} to help you. "
-                        "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll}{roll_emoji}\n"
+                        "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll_emoji}({roll})\n"
                     ).format(
                         user=self.escape(user.display_name),
                         god=god,
