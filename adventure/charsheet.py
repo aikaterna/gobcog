@@ -11,12 +11,14 @@ from discord.ext.commands import check
 from discord.ext.commands.converter import Converter
 from discord.ext.commands.errors import BadArgument
 
-from redbot.core import Config, bank, commands
+from redbot.core import Config, commands
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import box
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
+
+from . import bank
 
 log = logging.getLogger("red.cogs.adventure")
 

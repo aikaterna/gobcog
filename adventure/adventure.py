@@ -16,7 +16,7 @@ from typing import List, Optional, Union, MutableMapping
 import discord
 from discord.ext.commands import CheckFailure
 from discord.ext.commands.errors import BadArgument
-from redbot.core import Config, bank, checks, commands
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Context
 from redbot.core.data_manager import bundled_data_path, cog_data_path
@@ -34,8 +34,9 @@ from redbot.core.utils.chat_formatting import (
 from redbot.core.utils.common_filters import filter_various_mentions
 from redbot.core.utils.menus import DEFAULT_CONTROLS, menu, start_adding_reactions
 from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
-from redbot.core.bank import get_max_balance
 import adventure.charsheet
+
+from . import bank
 
 from .charsheet import (
     Character,
@@ -221,6 +222,7 @@ class Adventure(BaseCog):
 
     def __init__(self, bot: Red):
         self.bot = bot
+        bank._init(bot)
         self._last_trade = {}
         self._adv_results = AdventureResults(20)
         self.emojis = SimpleNamespace()
@@ -2789,7 +2791,7 @@ class Adventure(BaseCog):
         try:
             bal = await bank.deposit_credits(to, amount)
         except BalanceTooHigh:
-            bal = await get_max_balance(ctx.guild)
+            bal = await bank.get_max_balance(ctx.guild)
         currency = await bank.get_currency_name(ctx.guild)
         if str(currency).startswith("<:"):
             currency = "credits"
