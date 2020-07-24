@@ -180,9 +180,7 @@ async def set_balance(member: Union[discord.Member, discord.User], amount: int) 
     max_bal = await get_max_balance(guild)
     if amount > max_bal:
         currency = await get_currency_name(guild)
-        raise errors.BalanceTooHigh(
-            user=member.display_name, max_balance=max_bal, currency_name=currency
-        )
+        raise errors.BalanceTooHigh(user=member.display_name, max_balance=max_bal, currency_name=currency)
 
     group = _config.user(member)
     await group.balance.set(amount)
@@ -219,8 +217,7 @@ async def withdraw_credits(member: discord.Member, amount: int) -> int:
     if amount > bal:
         raise ValueError(
             "Insufficient funds {} > {}".format(
-                humanize_number(amount, override_locale="en_US"),
-                humanize_number(bal, override_locale="en_US"),
+                humanize_number(amount, override_locale="en_US"), humanize_number(bal, override_locale="en_US"),
             )
         )
 
@@ -256,9 +253,7 @@ async def deposit_credits(member: discord.Member, amount: int) -> int:
 
 
 async def transfer_credits(
-        from_: Union[discord.Member, discord.User],
-        to: Union[discord.Member, discord.User],
-        amount: int,
+    from_: Union[discord.Member, discord.User], to: Union[discord.Member, discord.User], amount: int,
 ):
     """Transfer a given amount of credits from one account to another with a 50% tax.
     Parameters
@@ -296,9 +291,7 @@ async def transfer_credits(
     new_amount = int(amount * 0.5)
     if await get_balance(to) + new_amount > max_bal:
         currency = await get_currency_name(guild)
-        raise errors.BalanceTooHigh(
-            user=to.display_name, max_balance=max_bal, currency_name=currency
-        )
+        raise errors.BalanceTooHigh(user=to.display_name, max_balance=max_bal, currency_name=currency)
 
     await withdraw_credits(from_, amount)
     return await deposit_credits(to, new_amount)
@@ -399,9 +392,7 @@ async def get_leaderboard(positions: int = None, guild: discord.Guild = None) ->
         return sorted_acc[:positions]
 
 
-async def get_leaderboard_position(
-        member: Union[discord.User, discord.Member]
-) -> Union[int, None]:
+async def get_leaderboard_position(member: Union[discord.User, discord.Member]) -> Union[int, None]:
     """
     Get the leaderboard position for the specified user
     Parameters
@@ -686,9 +677,7 @@ def cost(amount: int):
                     break
 
             if not context.guild and not await is_global():
-                raise commands.UserFeedbackCheckFailure(
-                    _("Can't pay for this command in DM without a global bank.")
-                )
+                raise commands.UserFeedbackCheckFailure(_("Can't pay for this command in DM without a global bank."))
             try:
                 await withdraw_credits(context.author, amount)
             except Exception:
