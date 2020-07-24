@@ -5672,7 +5672,7 @@ class Adventure(BaseCog):
                     fumblelist.append(user)
                     msg += _(
                         "**{user}'s** sermon offended the mighty {god}. {failed_emoji}"
-                        "(-{len_f_list}{attack}/-{len_t_list}{talk}/-{len_m_list}{magic})\n"
+                        "(-{len_f_list}{attack}/-{len_t_list}{talk}/-{len_m_list}{magic}) {roll}{roll_emoji}\n"
                     ).format(
                         user=self.escape(user.display_name),
                         god=god,
@@ -5683,6 +5683,8 @@ class Adventure(BaseCog):
                         len_f_list=humanize_number(pray_att_bonus),
                         len_t_list=humanize_number(pray_diplo_bonus),
                         len_m_list=humanize_number(pray_magic_bonus),
+                        roll_emoji=self.emojis.dice,
+                        roll=roll,
                     )
 
                 else:
@@ -5709,12 +5711,12 @@ class Adventure(BaseCog):
                     if roll == 50:
                         roll_msg = _(
                             "{user} turned into an avatar of mighty {god}. "
-                            "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic})\n"
+                            "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll}{roll_emoji}\n"
                         )
                     else:
                         roll_msg = _(
                             "**{user}** blessed you all in {god}'s name. "
-                            "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic})\n"
+                            "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll}{roll_emoji}\n"
                         )
                     msg += roll_msg.format(
                         user=self.escape(user.display_name),
@@ -5725,6 +5727,8 @@ class Adventure(BaseCog):
                         len_f_list=humanize_number(pray_att_bonus),
                         len_t_list=humanize_number(pray_diplo_bonus),
                         len_m_list=humanize_number(pray_magic_bonus),
+                        roll_emoji=self.emojis.dice,
+                        roll=roll,
                     )
             else:
                 roll = random.randint(1, 10)
@@ -5749,7 +5753,7 @@ class Adventure(BaseCog):
                     diplomacy += talk_buff
                     msg += _(
                         "**{user}'s** prayer called upon the mighty {god} to help you. "
-                        "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic})\n"
+                        "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll}{roll_emoji}\n"
                     ).format(
                         user=self.escape(user.display_name),
                         god=god,
@@ -5759,6 +5763,8 @@ class Adventure(BaseCog):
                         len_f_list=humanize_number(attack_buff),
                         len_t_list=humanize_number(talk_buff),
                         len_m_list=humanize_number(magic_buff),
+                        roll_emoji=self.emojis.dice,
+                        roll=roll,
                     )
                 else:
                     fumblelist.append(user)
