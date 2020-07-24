@@ -1344,6 +1344,19 @@ class EquipmentConverter(Converter):
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
+
+        if argument.lower() in ORDER:
+            for slot in ORDER:
+                if slot == "two handed":
+                    continue
+                equipped_item = getattr(c, slot)
+                if not equipped_item:
+                    continue
+                if (equipped_item.slot[0] == argument.lower()) or (
+                    len(equipped_item.slot) > 1 and "two handed" == argument.lower()
+                ):
+                    return equipped_item
+
         matched = set()
         lookup = list(
             i
