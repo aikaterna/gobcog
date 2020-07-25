@@ -3021,7 +3021,7 @@ class Adventure(BaseCog):
     async def setcost(self, ctx, attr, val):
         """Sets the cost of chests, valid attributes are `normalcost, rarecost, epiccost, legendarycost, setscost`"""
         valid_attr = ["normalcost", "rarecost", "epiccost", "legendarycost", "setscost"]
-	attr = attr.lower()
+        attr = attr.lower()
         if attr in valid_attr:
             await self.config.guild(ctx.guild).get_attr(attr).set(int(val))
             await ctx.send("You set {} as {}".format(attr, val))
