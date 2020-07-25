@@ -7706,10 +7706,8 @@ class Adventure(BaseCog):
         if ctx.invoked_subcommand is not None:
             return
         if ctx.guild.id not in self._sessions:
-            if not self.bot.is_owner(ctx.author):
                 return await smart_embed(ctx, "Umm.... I see no adventures running. You do not have perms to call upon grindsquad for no reason.", False)
-            else:
-                return await smart_embed(ctx, "Hey! Dont abuse your powers! Justin bring down the hammer.", False)
+            
         if ctx.guild.id in self._sessions:
             adventure_obj = self._sessions[ctx.guild.id]
             link = adventure_obj.message.jump_url
@@ -7737,6 +7735,8 @@ class Adventure(BaseCog):
                     msg += f"{user.mention}, "
             msg += f"{(self.bot.get_user(to_ping[-2])).mention} and {(self.bot.get_user(to_ping[-1])).mention} "
         channel = self.bot.get_channel((await self.config.guild(ctx.guild).adventure_channels())[0])
+        if not channel:
+            channel = ctx.channel
         msg += (f"in {channel.mention} to kill {to_kill}" + 
             f"\n\nPls do `!here` if you get this ping and reacted\n\n <:PandaKiller:703297599100420188> <:PandaKiller:703297599100420188> <:PandaKiller:703297599100420188>"
             )
@@ -7750,10 +7750,12 @@ class Adventure(BaseCog):
         adventure_obj = self._sessions[ctx.guild.id]
         link = adventure_obj.message.jump_url
         if ctx.author.id not in (await self.config.guild(ctx.guild).grindsquad()):
-            return await smart_embed(ctx, "You are currently not in grindsquad. Please contact moderators if you want to be added.\n"
-                "{ctx.author.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
+            return await smart_embed(ctx, f"You are currently not in grindsquad. Please contact moderators if you want to be added.\n"
+                f"{ctx.author.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
             )
         channel = self.bot.get_channel((await self.config.guild(ctx.guild).adventure_channels())[0])
+        if not channel:
+            channel = ctx.channel
         msg = f"{ctx.author.mention} has answered the {channel.mention} call to arms."
         if ctx.author.id in self.grindsquad_answered:
             msg =("You have already answered the call to adventure.\nOh wait! You lied about that before? **DID YOU?**\n"
