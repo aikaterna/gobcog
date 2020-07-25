@@ -7749,13 +7749,14 @@ class Adventure(BaseCog):
                 "What are you doing here?\nIf you are lost try !where.\nIf you're still lost do !dad and you shall receive help.")
         adventure_obj = self._sessions[ctx.guild.id]
         link = adventure_obj.message.jump_url
-        if ctx.author.id not in (await self.config.guild(ctx.guild).grindsquad()):
-            return await smart_embed(ctx, f"You are currently not in grindsquad. Please contact moderators if you want to be added.\n"
-                f"{ctx.author.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
-            )
         channel = self.bot.get_channel((await self.config.guild(ctx.guild).adventure_channels())[0])
         if not channel:
             channel = ctx.channel
+        if ctx.author.id not in (await self.config.guild(ctx.guild).grindsquad()):
+            return await smart_embed(ctx, f"You are currently not in grindsquad. Please contact moderators if you want to be added.\n" +
+                f"{ctx.author.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
+            )
+        
         msg = f"{ctx.author.mention} has answered the {channel.mention} call to arms."
         if ctx.author.id in self.grindsquad_answered:
             msg =("You have already answered the call to adventure.\nOh wait! You lied about that before? **DID YOU?**\n"
