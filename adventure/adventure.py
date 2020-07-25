@@ -7705,8 +7705,11 @@ class Adventure(BaseCog):
     async def _grindsquad(self, ctx):
         if ctx.invoked_subcommand is not None:
             return
-        if ctx.guild.id not in self._sessions and not self.bot.is_owner(ctx.author):
-            return await smart_embed(ctx, "Umm.... I see no adventures running. You do not have perms to call upon grindsquad for no reason.")
+        if ctx.guild.id not in self._sessions:
+            if not  or self.bot.is_owner(ctx.author)
+                return await smart_embed(ctx, "Umm.... I see no adventures running. You do not have perms to call upon grindsquad for no reason.", False)
+            else:
+                return await smart_embed(ctx, "Hey! Dont abuse your powers!", False)
         if ctx.guild.id in self._sessions:
             adventure_obj = self._sessions[ctx.guild.id]
             link = adventure_obj.message.jump_url
