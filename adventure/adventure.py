@@ -347,6 +347,11 @@ class Adventure(BaseCog):
             "cart_timeout": 10800,
             "cooldown_timer_manual": 120,
             "rebirth_cost": 100.0,
+            "normalcost": 5000,
+            "rarecost": 10000,
+            "epiccost": 25000,
+            "legendarycost": 80000,
+            "setscost": 400000
         }
         default_global = {
             "god_name": _("Herbert"),
@@ -2984,6 +2989,143 @@ class Adventure(BaseCog):
         }
         item = Item.from_json(item)
         return item
+					       
+    @commands.command()
+    @commands.guild_only()
+    async def lootshop(self, ctx):
+        data = self.config.guild(ctx.guild)
+        normal_cost = await data.normalcost()
+        rare_cost = await data.rarecost()
+        epic_cost = await data.epiccost()
+        legendary_cost = await data.legendarycost()
+        sets_cost = await data.setscost()
+        message = ("**ADVENTURE LOOT SHOP**"
+                   "\n"
+                   "\n"
+                   "**Normal** chest costs **{}**\n"
+                   "**Rare** chest costs **{}**\n"                       
+                   "**Epic** chest costs **{}**\n"
+                   "**Legendary** chest costs **{}**\n"
+                   "**Set** chest costs **{}**".format(normal_cost, rare_cost, epic_cost, legendary_cost, sets_cost))
+
+
+        await smart_embed(ctx, message)
+
+
+    @commands.command()
+    @commands.guild_only()
+    @checks.admin_or_permissions(manage_guild=True)
+    async def setcost(self, ctx, attr, val):
+        """Sets the cost of chests, valid attributes are `normalcost, rarecost, epiccost, legendarycost, setscost`"""
+        valid_attr = ["normalcost", "rarecost", "epiccost", "legendarycost", "setscost"]
+	attr = attr.lower()
+        if attr in valid_attr:
+            await self.config.guild(ctx.guild).get_attr(attr).set(int(val))
+            await ctx.send("You set {} as {}".format(attr, val))
+        else:
+            await ctx.send("Please check if you have used the values correctly")
+
+    @commands.command()
+    @commands.guild_only()
+    async def buyloot(self, ctx: Context, loot_type: str, number: int = 1): #removed user argument 
+        """Use this command to buy treasure chests"""
+
+        user = ctx.author
+        data = self.config.guild(ctx.guild)
+        normal_cost = await data.normalcost()
+        rare_cost = await data.rarecost()
+        epic_cost = await data.epiccost()
+        legendary_cost = await data.legendarycost()
+        sets_cost = await data.setscost()
+        userbalance = await bank.get_balance(ctx.author)
+        successful = False
+
+        loot_types = ["normal", "rare", "epic", "legendary", "set"]
+        if loot_type not in loot_types:
+            return await smart_embed(
+                ctx,
+                (
+                    "Valid loot types: `normal`, `rare`, `epic`, `legendary`, or `set`: "
+                    "ex. `{}buyloot normal 1` "
+                ).format(ctx.prefix),
+            )
+        else:
+            try:
+                c = await Character.from_json(self.config, user, self._daily_bonus)
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+            if loot_type == "rare":
+                total_cost = rare_cost*number
+                if userbalance >= total_cost:
+                    await bank.withdraw_credits(ctx.author, total_cost)
+                    successful = True
+                    c.treasure[1] += number
+                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
+
+                else:
+                    await ctx.send("Insufficient Balance")
+
+            elif loot_type == "epic":
+                total_cost = epic_cost * number
+                if userbalance >= total_cost:
+                    await bank.withdraw_credits(ctx.author, total_cost)
+                    successful = True
+                    c.treasure[2] += number
+                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                else:
+                    await ctx.send("Insufficient Balance")
+
+            elif loot_type == "legendary":
+                total_cost = legendary_cost * number
+                if userbalance >= total_cost:
+                    await bank.withdraw_credits(ctx.author, total_cost)
+                    successful = True
+                    c.treasure[3] += number
+                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                else:
+                    await ctx.send("Insufficient Balance")
+
+            elif loot_type == "set":
+                total_cost = sets_cost * number
+                if userbalance >= total_cost:
+                    await bank.withdraw_credits(ctx.author, total_cost)
+                    successful = True
+                    c.treasure[4] += number
+                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                else:
+                    await ctx.send("Insufficient Balance")
+
+            else:
+                total_cost = normal_cost * number
+                if userbalance >= total_cost:
+                    await bank.withdraw_credits(ctx.author, total_cost)
+                    successful = True
+                    c.treasure[0] += number
+                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                else:
+                    await ctx.send("Insufficient Balance")
+            if successful:
+                await self.config.user(user).set(await c.to_json(self.config))
+                await ctx.send(
+                    box(
+                        _(
+                            "{author} now owns {normal} normal, "
+                            "{rare} rare, {epic} epic, "
+                            "{leg} legendary and {set} set treasure chests."
+                        ).format(
+                            author=self.escape(user.display_name),
+                            normal=str(c.treasure[0]),
+                            rare=str(c.treasure[1]),
+                            epic=str(c.treasure[2]),
+                            leg=str(c.treasure[3]),
+                            set=str(c.treasure[4]),
+                        ),
+                        lang="css",
+                    )
+                )
+
+
 
     @commands.group()
     @commands.guild_only()
