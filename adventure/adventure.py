@@ -2999,14 +2999,18 @@ class Adventure(BaseCog):
         epic_cost = await data.epiccost()
         legendary_cost = await data.legendarycost()
         sets_cost = await data.setscost()
+        message = ("**ADVENTURE LOOT SHOP**"
+                   "\n"
+                   "\n"
+                   "**Normal** chest costs **{}**\n"
+                   "**Rare** chest costs **{}**\n"                       
+                   "**Epic** chest costs **{}**\n"
+                   "**Legendary** chest costs **{}**\n"
+                   "**Set** chest costs **{}**".format(normal_cost, rare_cost, epic_cost, legendary_cost, sets_cost))
 
-        await ctx.send("""
-Normal chest costs {}
-Rare chest costs {}                       
-Epic chest costs {}
-Legendary chest costs {}
-Sets chest costs {}
-                       """.format(normal_cost, rare_cost, epic_cost, legendary_cost, sets_cost))
+
+        await smart_embed(ctx, message)
+
 
     @commands.command()
     @commands.guild_only()
