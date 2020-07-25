@@ -7706,7 +7706,7 @@ class Adventure(BaseCog):
         if ctx.invoked_subcommand is not None:
             return
         if ctx.guild.id not in self._sessions:
-                return await smart_embed(ctx, "Umm.... I see no adventures running. You do not have perms to call upon grindsquad for no reason.", False)
+            return await smart_embed(ctx, "Umm.... I see no adventures running. You do not have perms to call upon grindsquad for no reason.", False)
             
         if ctx.guild.id in self._sessions:
             adventure_obj = self._sessions[ctx.guild.id]
