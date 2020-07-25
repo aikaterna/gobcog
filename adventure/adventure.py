@@ -2989,8 +2989,7 @@ class Adventure(BaseCog):
         }
         item = Item.from_json(item)
         return item
-
-
+					       
     @commands.command()
     @commands.guild_only()
     async def lootshop(self, ctx):
@@ -3015,6 +3014,7 @@ Sets chest costs {}
     async def setcost(self, ctx, attr, val):
         """Sets the cost of chests, valid attributes are `normalcost, rarecost, epiccost, legendarycost, setscost`"""
         valid_attr = ["normalcost", "rarecost", "epiccost", "legendarycost", "setscost"]
+	attr = attr.lower()
         if attr in valid_attr:
             await self.config.guild(ctx.guild).get_attr(attr).set(int(val))
             await ctx.send("You set {} as {}".format(attr, val))
@@ -3023,14 +3023,10 @@ Sets chest costs {}
 
     @commands.command()
     @commands.guild_only()
-    async def buyloot(
-        self, ctx: Context, loot_type: str, user: discord.Member = None, number: int = 1
-    ):
+    async def buyloot(self, ctx: Context, loot_type: str, number: int = 1): #removed user argument 
         """Use this command to buy treasure chests"""
 
-        if user is None:
-            user = ctx.author
-
+        user = ctx.author
         data = self.config.guild(ctx.guild)
         normal_cost = await data.normalcost()
         rare_cost = await data.rarecost()
@@ -3046,7 +3042,7 @@ Sets chest costs {}
                 ctx,
                 (
                     "Valid loot types: `normal`, `rare`, `epic`, `legendary`, or `set`: "
-                    "ex. `{}buyloot normal @locastan 1` "
+                    "ex. `{}buyloot normal 1` "
                 ).format(ctx.prefix),
             )
         else:
@@ -3057,7 +3053,7 @@ Sets chest costs {}
                 return
             if loot_type == "rare":
                 total_cost = rare_cost*number
-                if userbalance > total_cost:
+                if userbalance >= total_cost:
                     await bank.withdraw_credits(ctx.author, total_cost)
                     successful = True
                     c.treasure[1] += number
@@ -3068,7 +3064,7 @@ Sets chest costs {}
 
             elif loot_type == "epic":
                 total_cost = epic_cost * number
-                if userbalance > total_cost:
+                if userbalance >= total_cost:
                     await bank.withdraw_credits(ctx.author, total_cost)
                     successful = True
                     c.treasure[2] += number
@@ -3078,7 +3074,7 @@ Sets chest costs {}
 
             elif loot_type == "legendary":
                 total_cost = legendary_cost * number
-                if userbalance > total_cost:
+                if userbalance >= total_cost:
                     await bank.withdraw_credits(ctx.author, total_cost)
                     successful = True
                     c.treasure[3] += number
@@ -3088,7 +3084,7 @@ Sets chest costs {}
 
             elif loot_type == "set":
                 total_cost = sets_cost * number
-                if userbalance > total_cost:
+                if userbalance >= total_cost:
                     await bank.withdraw_credits(ctx.author, total_cost)
                     successful = True
                     c.treasure[4] += number
@@ -3098,7 +3094,7 @@ Sets chest costs {}
 
             else:
                 total_cost = normal_cost * number
-                if userbalance > total_cost:
+                if userbalance >= total_cost:
                     await bank.withdraw_credits(ctx.author, total_cost)
                     successful = True
                     c.treasure[0] += number
@@ -3124,6 +3120,8 @@ Sets chest costs {}
                         lang="css",
                     )
                 )
+
+
 
     @commands.group()
     @commands.guild_only()
