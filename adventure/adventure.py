@@ -218,7 +218,7 @@ class AdventureResults:
 class Adventure(BaseCog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
-    __version__ = "3.2.32"
+    __version__ = "3.3.0"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -298,6 +298,7 @@ class Adventure(BaseCog):
 
         self.config = Config.get_conf(self, 2_710_801_001, force_registration=True)
         self._daily_bonus = {}
+        self._separate_economy = None
 
         default_user = {
             "exp": 0,
@@ -351,6 +352,7 @@ class Adventure(BaseCog):
             "rebirth_cost": 100.0,
             "themes": {},
             "daily_bonus": {"1": 0, "2": 0, "3": 0.5, "4": 0, "5": 0.5, "6": 1.0, "7": 1.0},
+            "separate_economy": True
         }
         self.RAISINS: list = None
         self.THREATEE: list = None
@@ -389,6 +391,7 @@ class Adventure(BaseCog):
             global _config
             _config = self.config
             theme = await self.config.theme()
+            self._separate_economy = await self.config.separate_economy()
             as_monster_fp = cog_data_path(self) / f"{theme}" / "as_monsters.json"
             attribs_fp = cog_data_path(self) / f"{theme}" / "attribs.json"
             locations_fp = cog_data_path(self) / f"{theme}" / "locations.json"
@@ -1806,6 +1809,16 @@ class Adventure(BaseCog):
         toggle = await self.config.restrict()
         await self.config.restrict.set(not toggle)
         await smart_embed(ctx, _("Adventurers restricted to one adventure at a time: {}").format(not toggle))
+
+    @adventureset.command()
+    @checks.is_owner()
+    async def sepcurrency(self, ctx: Context):
+        """[Owner] Toggle whether the currency should be separated from main bot currency."""
+        toggle = await self.config.separate_economy()
+        await self.config.separate_economy.set(not toggle)
+        self._separate_economy = not toggle
+        await smart_embed(ctx, _("Adventurer currency has been separated: {}").format(_("separated" if not toggle else _("unified"))))
+
 
     @adventureset.command(name="advcooldown", hidden=True)
     @checks.admin_or_permissions(administrator=True)
