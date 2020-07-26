@@ -969,7 +969,11 @@ class Adventure(BaseCog):
         assert isinstance(slot, str) or slot is None
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx, _("You tried to go sell your items but the monster ahead is not allowing you to leave."),
+                ctx,
+                _(
+                    "You tried to go sell your items "
+                    "but the monster ahead is not allowing you to leave."
+                ),
             )
         if rarity:
             rarity = rarity.lower()
@@ -1074,7 +1078,11 @@ class Adventure(BaseCog):
 
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx, _("You tried to go sell your items but the monster ahead is not allowing you to leave."),
+                ctx,
+                _(
+                    "You tried to go sell your items "
+                    "but the monster ahead is not allowing you to leave."
+                ),
             )
         if item.rarity == "forged":
             ctx.command.reset_cooldown(ctx)
@@ -1198,7 +1206,10 @@ class Adventure(BaseCog):
                     await asyncio.sleep(0.1)
                 count += 1
                 if price != 0:
-                    msg += _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
+                    msg += _(
+                        "**{author}** sold all but one of their {old_item} "
+                        "for {price} {currency_name}.\n"
+                    ).format(
                         author=self.escape(ctx.author.display_name),
                         old_item=box(str(item) + " - " + str(old_owned - 1), lang="css"),
                         price=humanize_number(price),
@@ -1235,18 +1246,26 @@ class Adventure(BaseCog):
         if ctx.author == buyer:
             return await smart_embed(
                 ctx,
-                _("You take the item and pass it from one hand to the other. Congratulations, you traded yourself."),
+                _(
+                    "You take the item and pass it from one hand to the other. Congratulations, "
+                    "you traded yourself."
+                ),
             )
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx, _("You tried to trade an item to a party member but the monster ahead commands your attention."),
+                ctx,
+                _(
+                    "You tried to trade an item to a party member "
+                    "but the monster ahead commands your attention."
+                ),
             )
         if self.in_adventure(user=buyer):
             return await smart_embed(
                 ctx,
-                _("**{buyer}** is currently in an adventure... you were unable to reach them via pigeon.").format(
-                    buyer=self.escape(ctx.author.display_name)
-                ),
+                _(
+                    "**{buyer}** is currently in an adventure... "
+                    "you were unable to reach them via pigeon."
+                ).format(buyer=self.escape(ctx.author.display_name)),
             )
         try:
             c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
@@ -1678,7 +1697,11 @@ class Adventure(BaseCog):
         """Equip a saved loadout."""
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx, _("You tried to magically equip multiple items at once, but the monster ahead nearly killed you."),
+                ctx,
+                _(
+                    "You tried to magically equip multiple items at once, "
+                    "but the monster ahead nearly killed you."
+                ),
             )
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -2346,16 +2369,18 @@ class Adventure(BaseCog):
             if box_rarity.lower() == "rare" and c.rebirths < rebirth_rare:
                 return await smart_embed(
                     ctx,
-                    ("**{}**, you need to have {} or more rebirths to convert rare treasure chests.").format(
-                        self.escape(ctx.author.display_name), rebirth_rare
-                    ),
+                    (
+                        "**{}**, you need to have {} or more rebirths to convert "
+                        "rare treasure chests."
+                    ).format(self.escape(ctx.author.display_name), rebirth_rare),
                 )
             elif box_rarity.lower() == "epic" and c.rebirths < rebirth_epic:
                 return await smart_embed(
                     ctx,
-                    ("**{}**, you need to have {} or more rebirths to convert epic treasure chests.").format(
-                        self.escape(ctx.author.display_name), rebirth_epic
-                    ),
+                    (
+                        "**{}**, you need to have {} or more rebirths "
+                        "to convert epic treasure chests."
+                    ).format(self.escape(ctx.author.display_name), rebirth_epic),
                 )
             elif c.rebirths < 2:
                 return await smart_embed(
@@ -2465,9 +2490,10 @@ class Adventure(BaseCog):
             else:
                 await smart_embed(
                     ctx,
-                    _("**{}**, please select between normal, rare, or epic treasure chests to convert.").format(
-                        self.escape(ctx.author.display_name)
-                    ),
+                    _(
+                        "**{}**, please select between normal, rare, or "
+                        "epic treasure chests to convert."
+                    ).format(self.escape(ctx.author.display_name)),
                 )
 
     @commands.command()
@@ -3210,7 +3236,11 @@ class Adventure(BaseCog):
             return await smart_embed(ctx, _("Nice try :smirk:."))
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx, _("You tried to open a loot chest but then realised you left them all back at the inn."),
+                ctx,
+                _(
+                    "You tried to open a loot chest "
+                    "but then realised you left them all back at the inn."
+                ),
             )
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -3315,7 +3345,11 @@ class Adventure(BaseCog):
         if self.in_adventure(ctx):
             ctx.command.reset_cooldown(ctx)
             return await smart_embed(
-                ctx, _("You tried to teleport to another dimension but the monster ahead did not give you a chance."),
+                ctx,
+                _(
+                    "You tried to teleport to another dimension "
+                    "but the monster ahead did not give you a chance."
+                ),
             )
 
         bal = await bank.get_balance(ctx.author)
@@ -3618,8 +3652,14 @@ class Adventure(BaseCog):
                     user_msg = await ctx.send(pet_msg)
                     await asyncio.sleep(2)
                     pet_msg2 = box(
-                        _("{author} started tracking a wild {pet_name} with a roll of {dice}({roll}).").format(
-                            dice=self.emojis.dice, author=self.escape(ctx.author.display_name), pet_name=pet, roll=roll,
+                        _(
+                            "{author} started tracking a wild {pet_name} "
+                            "with a roll of {dice}({roll})."
+                        ).format(
+                            dice=self.emojis.dice,
+                            author=self.escape(ctx.author.display_name),
+                            pet_name=pet,
+                            roll=roll,
                         ),
                         lang="css",
                     )
@@ -3942,7 +3982,11 @@ class Adventure(BaseCog):
         """
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx, _("The skill cleric is back in town and the monster ahead of you is demanding your attention."),
+                ctx,
+                _(
+                    "The skill cleric is back in town and the "
+                    "monster ahead of you is demanding your attention."
+                ),
             )
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -4065,9 +4109,10 @@ class Adventure(BaseCog):
         if sets is None:
             return await smart_embed(
                 ctx,
-                _("`{input}` is not a valid set.\n\nPlease use one of the following full set names: \n{sets}").format(
-                    input=title_cased_set_name, sets=set_list
-                ),
+                _(
+                    "`{input}` is not a valid set.\n\n"
+                    "Please use one of the following full set names: \n{sets}"
+                ).format(input=title_cased_set_name, sets=set_list),
             )
 
         bonus_list = sorted(sets, key=itemgetter("parts"))
@@ -4232,7 +4277,11 @@ class Adventure(BaseCog):
         """
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx, _("You tried to unequip your items, but the monster ahead of you looks mighty hungry..."),
+                ctx,
+                _(
+                    "You tried to unequip your items, "
+                    "but the monster ahead of you looks mighty hungry..."
+                ),
             )
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -5186,9 +5235,10 @@ class Adventure(BaseCog):
                 )
 
             if persuaded:
-                text = _("{b_talkers} almost died in battle, but confounded the {chall} in the last second.").format(
-                    b_talkers=talkers_final_string, chall=session.challenge
-                )
+                text = _(
+                    "{b_talkers} almost died in battle, "
+                    "but confounded the {chall} in the last second."
+                ).format(b_talkers=talkers_final_string, chall=session.challenge)
                 text += await self._reward(
                     ctx,
                     [u for u in talk_list + pray_list if u not in fumblelist],
