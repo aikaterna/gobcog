@@ -3053,18 +3053,22 @@ class Adventure(BaseCog):
         successful = False
         command_in_use = await self.config.user(ctx.author).loot_command_in_use()
         
+        
         if command_in_use is False:
             
             await self.config.user(ctx.author).loot_command_in_use.set(True)
             loot_types = ["normal", "rare", "epic", "legendary", "set"]
             if loot_type not in loot_types:
+                await self.config.user(ctx.author).loot_command_in_use.set(False)
+
                 return await smart_embed(
                     ctx,
                     (
-                        "Valid loot types: `normal`, `rare`, `epic`, `legendary`, or `set`: "
+                        "Valid loot types: `normal`, `rare`, `epic`, `legendary` or `set`:\n "
                         "ex. `{}buyloot normal 1` "
                     ).format(ctx.prefix),
                 )
+                
             else:
                 try:
                     c = await Character.from_json(self.config, user, self._daily_bonus)
@@ -3143,7 +3147,16 @@ class Adventure(BaseCog):
                 await self.config.user(ctx.author).loot_command_in_use.set(False)
             
         else:
-            await ctx.send("Command is already in use please wait for some time after using the command")
+            await ctx.send("Command is already in use please wait for some time after using the comand")
+
+    @commands.command()
+    @commands.guild_only()
+    @checks.mod_or_permissions()
+    async def lootfix(self, ctx, user: discord.Member = None):
+        if user is None:
+            user = ctx.author
+        await self.config.user(user).loot_command_in_use.set(False)
+        await ctx.tick()
 
 
 
