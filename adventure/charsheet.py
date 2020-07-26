@@ -625,7 +625,7 @@ class Character(Item):
         xpmult = (self.gear_set_bonus.get("xpmult") + daymult) - 1
         cpmult = (self.gear_set_bonus.get("cpmult") + daymult) - 1
         return _(
-            "[{user}'s Character Sheet]\n\n"
+            "{user}'s Character Sheet\n\n"
             "{{Rebirths: {rebirths}, \n Max Level: {maxlevel}}}\n"
             "{rebirth_text}"
             "A level {lvl} {class_desc} \n\n- "
