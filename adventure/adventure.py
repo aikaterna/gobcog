@@ -334,6 +334,7 @@ class Adventure(BaseCog):
                 "cooldown": 0,
             },
             "skill": {"pool": 0, "att": 0, "cha": 0, "int": 0},
+            "loot_command_in_use": False
         }
 
         default_guild = {
@@ -3042,91 +3043,99 @@ class Adventure(BaseCog):
         sets_cost = await data.setscost()
         userbalance = await bank.get_balance(ctx.author)
         successful = False
-
-        loot_types = ["normal", "rare", "epic", "legendary", "set"]
-        if loot_type not in loot_types:
-            return await smart_embed(
-                ctx,
-                (
-                    "Valid loot types: `normal`, `rare`, `epic`, `legendary`, or `set`: "
-                    "ex. `{}buyloot normal 1` "
-                ).format(ctx.prefix),
-            )
-        else:
-            try:
-                c = await Character.from_json(self.config, user, self._daily_bonus)
-            except Exception as exc:
-                log.exception("Error with the new character sheet", exc_info=exc)
-                return
-            if loot_type == "rare":
-                total_cost = rare_cost*number
-                if userbalance >= total_cost:
-                    await bank.withdraw_credits(ctx.author, total_cost)
-                    successful = True
-                    c.treasure[1] += number
-                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
-
-                else:
-                    await ctx.send("Insufficient Balance")
-
-            elif loot_type == "epic":
-                total_cost = epic_cost * number
-                if userbalance >= total_cost:
-                    await bank.withdraw_credits(ctx.author, total_cost)
-                    successful = True
-                    c.treasure[2] += number
-                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
-                else:
-                    await ctx.send("Insufficient Balance")
-
-            elif loot_type == "legendary":
-                total_cost = legendary_cost * number
-                if userbalance >= total_cost:
-                    await bank.withdraw_credits(ctx.author, total_cost)
-                    successful = True
-                    c.treasure[3] += number
-                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
-                else:
-                    await ctx.send("Insufficient Balance")
-
-            elif loot_type == "set":
-                total_cost = sets_cost * number
-                if userbalance >= total_cost:
-                    await bank.withdraw_credits(ctx.author, total_cost)
-                    successful = True
-                    c.treasure[4] += number
-                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
-                else:
-                    await ctx.send("Insufficient Balance")
-
-            else:
-                total_cost = normal_cost * number
-                if userbalance >= total_cost:
-                    await bank.withdraw_credits(ctx.author, total_cost)
-                    successful = True
-                    c.treasure[0] += number
-                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
-                else:
-                    await ctx.send("Insufficient Balance")
-            if successful:
-                await self.config.user(user).set(await c.to_json(self.config))
-                await ctx.send(
-                    box(
-                        _(
-                            "{author} now owns {normal} normal, "
-                            "{rare} rare, {epic} epic, "
-                            "{leg} legendary and {set} set treasure chests."
-                        ).format(
-                            author=self.escape(user.display_name),
-                            normal=str(c.treasure[0]),
-                            rare=str(c.treasure[1]),
-                            epic=str(c.treasure[2]),
-                            leg=str(c.treasure[3]),
-                            set=str(c.treasure[4]),
-                        ),
-                        lang="css",
-                    )
+        command_in_use = await self.config.user(ctx.author).loot_command_in_use()
+        
+        if command_in_use is False:
+            
+            await self.config.user(ctx.author).loot_command_in_use.set(True)
+            loot_types = ["normal", "rare", "epic", "legendary", "set"]
+            if loot_type not in loot_types:
+                return await smart_embed(
+                    ctx,
+                    (
+                        "Valid loot types: `normal`, `rare`, `epic`, `legendary`, or `set`: "
+                        "ex. `{}buyloot normal 1` "
+                    ).format(ctx.prefix),
                 )
+            else:
+                try:
+                    c = await Character.from_json(self.config, user, self._daily_bonus)
+                except Exception as exc:
+                    log.exception("Error with the new character sheet", exc_info=exc)
+                    return
+                if loot_type == "rare":
+                    total_cost = rare_cost*number
+                    if userbalance >= total_cost:
+                        await bank.withdraw_credits(ctx.author, total_cost)
+                        successful = True
+                        c.treasure[1] += number
+                        await ctx.send("Chests have been added and {} were removed".format(total_cost))
+
+                    else:
+                        await ctx.send("Insufficient Balance")
+
+                elif loot_type == "epic":
+                    total_cost = epic_cost * number
+                    if userbalance >= total_cost:
+                        await bank.withdraw_credits(ctx.author, total_cost)
+                        successful = True
+                        c.treasure[2] += number
+                        await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                    else:
+                        await ctx.send("Insufficient Balance")
+
+                elif loot_type == "legendary":
+                    total_cost = legendary_cost * number
+                    if userbalance >= total_cost:
+                        await bank.withdraw_credits(ctx.author, total_cost)
+                        successful = True
+                        c.treasure[3] += number
+                        await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                    else:
+                        await ctx.send("Insufficient Balance")
+
+                elif loot_type == "set":
+                    total_cost = sets_cost * number
+                    if userbalance >= total_cost:
+                        await bank.withdraw_credits(ctx.author, total_cost)
+                        successful = True
+                        c.treasure[4] += number
+                        await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                    else:
+                        await ctx.send("Insufficient Balance")
+
+                else:
+                    total_cost = normal_cost * number
+                    if userbalance >= total_cost:
+                        await bank.withdraw_credits(ctx.author, total_cost)
+                        successful = True
+                        c.treasure[0] += number
+                        await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                    else:
+                        await ctx.send("Insufficient Balance")
+                if successful:
+                    await self.config.user(user).set(await c.to_json(self.config))
+                    await ctx.send(
+                        box(
+                            _(
+                                "{author} now owns {normal} normal, "
+                                "{rare} rare, {epic} epic, "
+                                "{leg} legendary and {set} set treasure chests."
+                            ).format(
+                                author=self.escape(user.display_name),
+                                normal=str(c.treasure[0]),
+                                rare=str(c.treasure[1]),
+                                epic=str(c.treasure[2]),
+                                leg=str(c.treasure[3]),
+                                set=str(c.treasure[4]),
+                            ),
+                            lang="css",
+                        )
+                    )
+                await self.config.user(ctx.author).loot_command_in_use.set(False)
+            
+        else:
+            await ctx.send("Command is already in use please wait for some time after using the command")
 
 
 
