@@ -2,6 +2,7 @@
 import argparse
 import asyncio
 import contextlib
+from copy import copy
 import json
 import logging
 import os
@@ -385,6 +386,8 @@ class Adventure(BaseCog):
         log.debug("Creating Task")
         self._init_task = self.bot.loop.create_task(self.initialize())
         self._ready_event = asyncio.Event()
+        
+        self.grindsquad_answered = list()
 
     async def cog_before_invoke(self, ctx: Context):
         await self._ready_event.wait()
@@ -866,7 +869,7 @@ class Adventure(BaseCog):
                         ),
                     )
 
-            backpack_contents = _("[{author}'s backpack] \n\n{backpack}\n").format(
+            backpack_contents = _("{author}'s backpack \n\n{backpack}\n").format(
                 author=self.escape(ctx.author.display_name),
                 backpack=await c.get_backpack(rarity=rarity, slot=slot, show_delta=show_diff),
             )
@@ -1028,7 +1031,8 @@ class Adventure(BaseCog):
             return await smart_embed(
                 ctx,
                 _(
-                    "You tried to go sell your items but the monster ahead is not allowing you to leave."
+                    "You tried to go sell your items "
+                    "but the monster ahead is not allowing you to leave."
                 ),
             )
         if rarity:
@@ -1143,7 +1147,8 @@ class Adventure(BaseCog):
             return await smart_embed(
                 ctx,
                 _(
-                    "You tried to go sell your items but the monster ahead is not allowing you to leave."
+                    "You tried to go sell your items "
+                    "but the monster ahead is not allowing you to leave."
                 ),
             )
         if item.rarity == "forged":
@@ -1277,7 +1282,8 @@ class Adventure(BaseCog):
                 count += 1
                 if price != 0:
                     msg += _(
-                        "**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n"
+                        "**{author}** sold all but one of their {old_item} "
+                        "for {price} {currency_name}.\n"
                     ).format(
                         author=self.escape(ctx.author.display_name),
                         old_item=box(str(item) + " - " + str(old_owned - 1), lang="css"),
@@ -1319,21 +1325,24 @@ class Adventure(BaseCog):
             return await smart_embed(
                 ctx,
                 _(
-                    "You take the item and pass it from one hand to the other. Congratulations, you traded yourself."
+                    "You take the item and pass it from one hand to the other. Congratulations, "
+                    "you traded yourself."
                 ),
             )
         if self.in_adventure(ctx):
             return await smart_embed(
                 ctx,
                 _(
-                    "You tried to trade an item to a party member but the monster ahead commands your attention."
+                    "You tried to trade an item to a party member "
+                    "but the monster ahead commands your attention."
                 ),
             )
         if self.in_adventure(user=buyer):
             return await smart_embed(
                 ctx,
                 _(
-                    "**{buyer}** is currently in an adventure... you were unable to reach them via pigeon."
+                    "**{buyer}** is currently in an adventure... "
+                    "you were unable to reach them via pigeon."
                 ).format(buyer=self.escape(ctx.author.display_name)),
             )
         try:
@@ -1430,11 +1439,13 @@ class Adventure(BaseCog):
                             except Exception as exc:
                                 log.exception("Error with the new character sheet", exc_info=exc)
                                 return
-                            if buy_user.rebirths < c.rebirths:
+                            if buy_user.rebirths - 2 < c.rebirths:
                                 return await smart_embed(
                                     ctx,
                                     _(
-                                        "You can only trade with people the same rebirth level or higher than yours."
+                                        "You can only trade with people that are the same "
+                                        "rebirth level, one rebirth level less than you, "
+                                        "or a higher rebirth level than yours."
                                     ),
                                 )
                             try:
@@ -3042,18 +3053,22 @@ class Adventure(BaseCog):
         successful = False
         command_in_use = await self.config.user(ctx.author).loot_command_in_use()
         
+        
         if command_in_use is False:
             
             await self.config.user(ctx.author).loot_command_in_use.set(True)
             loot_types = ["normal", "rare", "epic", "legendary", "set"]
             if loot_type not in loot_types:
+                await self.config.user(ctx.author).loot_command_in_use.set(False)
+
                 return await smart_embed(
                     ctx,
                     (
-                        "Valid loot types: `normal`, `rare`, `epic`, `legendary`, or `set`: "
+                        "Valid loot types: `normal`, `rare`, `epic`, `legendary` or `set`:\n "
                         "ex. `{}buyloot normal 1` "
                     ).format(ctx.prefix),
                 )
+                
             else:
                 try:
                     c = await Character.from_json(self.config, user, self._daily_bonus)
@@ -3132,7 +3147,16 @@ class Adventure(BaseCog):
                 await self.config.user(ctx.author).loot_command_in_use.set(False)
             
         else:
-            await ctx.send("Command is already in use please wait for some time after using the command")
+            await ctx.send("Command is already in use please wait for some time after using the comand")
+
+    @commands.command()
+    @commands.guild_only()
+    @checks.mod_or_permissions()
+    async def lootfix(self, ctx, user: discord.Member = None):
+        if user is None:
+            user = ctx.author
+        await self.config.user(user).loot_command_in_use.set(False)
+        await ctx.tick()
 
 
 
@@ -3972,17 +3996,16 @@ class Adventure(BaseCog):
                         )
                     )
                 else:
-                    cooldown_time = max(600, (3600 - (c.luck * 2 + c.total_int * 2)))
+                    cooldown_time = max(600, (3600 - ((c.luck + c.total_int) * 2)))
                     if "catch_cooldown" not in c.heroclass:
                         c.heroclass["catch_cooldown"] = cooldown_time + 1
-                    if c.heroclass["catch_cooldown"] + cooldown_time > time.time():
-                        cooldown_time = (
-                            (c.heroclass["catch_cooldown"]) + cooldown_time - time.time()
-                        )
+                    if c.heroclass["catch_cooldown"] > time.time():
+                        cooldown_time = c.heroclass["catch_cooldown"] - time.time()
                         return await smart_embed(
                             ctx,
                             _(
-                                "You caught a pet recently, or you are a brand new Ranger. You will be able to go hunting in {}."
+                                "You caught a pet recently, or you are a brand new Ranger. "
+                                "You will be able to go hunting in {}."
                             ).format(
                                 humanize_timedelta(seconds=int(cooldown_time))
                                 if int(cooldown_time) >= 1
@@ -4081,7 +4104,7 @@ class Adventure(BaseCog):
                                 )
                             await user_msg.edit(content=f"{pet_msg}\n{pet_msg2}\n{pet_msg3}")
                             c.heroclass["pet"] = pet_list[pet]
-                            c.heroclass["catch_cooldown"] = time.time()
+                            c.heroclass["catch_cooldown"] = time.time() + cooldown_time
                             await self.config.user(ctx.author).set(await c.to_json(self.config))
                         elif roll == 1:
                             bonus = _("But they stepped on a twig and scared it away.")
@@ -4133,15 +4156,15 @@ class Adventure(BaseCog):
                         lang="css",
                     )
                 )
-            cooldown_time = max(1800, (7200 - (c.luck * 2 + c.total_int * 2)))
+            cooldown_time = max(1800, (7200 - ((c.luck + c.total_int) * 2)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
-            if c.heroclass["cooldown"] + cooldown_time <= time.time():
+            if c.heroclass["cooldown"] <= time.time():
                 await self._open_chest(ctx, c.heroclass["pet"]["name"], "pet", character=c)
-                c.heroclass["cooldown"] = time.time()
+                c.heroclass["cooldown"] = time.time() + cooldown_time
                 await self.config.user(ctx.author).set(await c.to_json(self.config))
             else:
-                cooldown_time = (c.heroclass["cooldown"] + 7200) - time.time()
+                cooldown_time = c.heroclass["cooldown"] - time.time()
                 return await smart_embed(
                     ctx,
                     _("This command is on cooldown. Try again in {}.").format(
@@ -4691,7 +4714,7 @@ class Adventure(BaseCog):
 
         legend = _("( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE#] | SET (SET PIECES)")
         equipped_gear_msg = _(
-            "[{user}'s Character Sheet]\n\nItems Equipped:\n{legend}{equip}"
+            "{user}'s Character Sheet\n\nItems Equipped:\n{legend}{equip}"
         ).format(legend=legend, equip=c.get_equipment(), user=c.user.display_name)
         await menu(
             ctx,
@@ -4866,7 +4889,7 @@ class Adventure(BaseCog):
                     f"There's already another adventure going on in this server.\nCurrently fighting: [{adventure_obj.challenge}]({link})"
                 ),
             )
-
+        self.grindsquad_answered = list()
         if not await has_funds(ctx.author, 250):
             currency_name = await bank.get_currency_name(ctx.guild)
             return await smart_embed(
@@ -7711,8 +7734,32 @@ class Adventure(BaseCog):
     async def _grindsquad(self, ctx):
         if ctx.invoked_subcommand is not None:
             return
-        to_ping = await self.config.guild(ctx.guild).grindsquad()
+        try:
+            channel = self.bot.get_channel((await self.config.guild(ctx.guild).adventure_channels())[0])
+        except:
+            return smart_embed(ctx, "Set a adventure room using `!setadventure adventureroom <channel>`")
+        if not channel:
+            return smart_embed(ctx, "Set a adventure room using `!setadventure adventureroom <channel>`")
+            
+        if ctx.guild.id not in self._sessions:
+            return await smart_embed(ctx, "Umm.... I see no adventures running. You do not have perms to call upon grindsquad for no reason.", False)
+        
+        adventure_obj = self._sessions[ctx.guild.id]
+        link = adventure_obj.message.jump_url
+        to_kill = f"a {adventure_obj.challenge}"
+        
+        if channel.id != ctx.channel.id:
+            msg = f"{ctx.author.mention} is a nab and is begging for the help of adventure players in {ctx.channel.mention} to kill a monster, ([{adventure_obj.challenge}]({link})), in {channel.mention}"
+            return await smart_embed(ctx, msg)
+            
         msg = f"{ctx.author.mention} is a nab and is begging for the help of "
+            
+        to_ping = copy(await self.config.guild(ctx.guild).grindsquad())
+        answered = self.grindsquad_answered
+        for _id in answered:
+            if _id in to_ping:
+                to_ping.remove(_id)
+        
         if len(to_ping) == 0:
             msg += "adventure players "
         elif len(to_ping) == 1:
@@ -7723,24 +7770,59 @@ class Adventure(BaseCog):
             else:
                 msg += f"adventure players "
         else:
-            for _id in to_ping[:-2]:
+            for _id in to_ping[:-2]:                
                 user = self.bot.get_user(_id)
                 if user:
                     msg += f"{user.mention}, "
             msg += f"{(self.bot.get_user(to_ping[-2])).mention} and {(self.bot.get_user(to_ping[-1])).mention} "
-        channel = self.bot.get_channel((await self.config.guild(ctx.guild).adventure_channels())[0])
-        msg += f"in {channel.mention}.\n\nPls do `!here` if you get this ping and reacted\n\n <:PandaKiller:703297599100420188> <:PandaKiller:703297599100420188> <:PandaKiller:703297599100420188>"
+        
+        
+        msg += (f"in {channel.mention} to kill {to_kill}" + 
+            f"\n\nPls do `!here` if you get this ping and reacted\n\n <:PandaKiller:703297599100420188> <:PandaKiller:703297599100420188> <:PandaKiller:703297599100420188>"
+            )
         await ctx.send(msg)
     
+    @_grindsquad.command(name="here")
+    async def _grindsquad_here(self, ctx):
+        channel = self.bot.get_channel((await self.config.guild(ctx.guild).adventure_channels())[0])
+        if not channel:
+            return await smart_embed(ctx, f"You need to set adventure room using `!adventureset adventureroom`")
+        if ctx.channel != channel:
+            return await smart_embed(ctx, f"You can only answer calls to advenure in {channel.mention}.")
+            
+        if ctx.guild.id not in self._sessions:
+            return await smart_embed(ctx, "Umm.... I see no adventures running."
+                "What are you doing here?\nIf you are lost try !where.\nIf you're still lost do !dad and you shall receive help.")
+                
+        adventure_obj = self._sessions[ctx.guild.id]
+        link = adventure_obj.message.jump_url
+        
+        if ctx.author.id not in (await self.config.guild(ctx.guild).grindsquad()):
+            return await smart_embed(ctx, f"You are currently not in grindsquad. Please contact moderators if you want to be added.\n" +
+                f"{ctx.author.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
+            )
+            
+        if ctx.author.id in self.grindsquad_answered:
+            msg =("You have already answered the call to adventure.\nOh wait! You lied about that before? **DID YOU?**\n"
+                "How will I ever know who to tag?"
+            )
+        else:
+            self.grindsquad_answered.append(ctx.author.id)            
+            msg =  f"{ctx.author.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
+        
+        await smart_embed(ctx, msg)
+            
     @_grindsquad.command(name="add")
+    @checks.mod_or_permissions(manage_guild=True)
     async def _grindsquad_add(self, ctx, *users:discord.User):
         async with self.config.guild(ctx.guild).grindsquad() as to_ping:
             for user in users:
-                if user not in to_ping:
+                if user.id not in to_ping:
                     to_ping.append(user.id)
         await ctx.tick()
         
     @_grindsquad.command(name="remove")
+    @checks.mod_or_permissions(manage_guild=True)
     async def _grindsquad_remove(self, ctx, *users:discord.User):
         async with self.config.guild(ctx.guild).grindsquad() as to_ping:
             for user in users:
