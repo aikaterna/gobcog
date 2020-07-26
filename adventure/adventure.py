@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import calendar
 import contextlib
 import json
 import logging
@@ -16,9 +17,9 @@ from typing import List, Optional, Union, MutableMapping
 import discord
 from discord.ext.commands import CheckFailure
 from discord.ext.commands.errors import BadArgument
-from redbot.core import Config, checks, commands
+from redbot.core import Config, commands
 from redbot.core.bot import Red
-from redbot.core.commands import Context
+from redbot.core.commands import Context, check
 from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator, cog_i18n
@@ -118,6 +119,13 @@ def check_global_setting_admin():
             return await ctx.bot.is_owner(author)
 
     return commands.check(pred)
+
+
+def has_separated_economy():
+    async def predicate(ctx):
+        return ctx.cog and ctx.cog._separate_economy is True
+
+    return check(predicate)
 
 
 class AdventureResults:
@@ -352,7 +360,10 @@ class Adventure(BaseCog):
             "rebirth_cost": 100.0,
             "themes": {},
             "daily_bonus": {"1": 0, "2": 0, "3": 0.5, "4": 0, "5": 0.5, "6": 1.0, "7": 1.0},
-            "separate_economy": True
+            "separate_economy": True,
+            "to_conversion_rate": 10,
+            "from_conversion_rate": 11,
+            "max_allowed_withdraw": 50000,
         }
         self.RAISINS: list = None
         self.THREATEE: list = None
@@ -386,7 +397,7 @@ class Adventure(BaseCog):
 
     async def initialize(self):
         """This will load all the bundled data into respective variables."""
-        await self.bot.wait_until_ready()
+        await self.bot.wait_until_red_ready()
         try:
             global _config
             _config = self.config
@@ -1123,7 +1134,7 @@ class Adventure(BaseCog):
         await menu(ctx, messages, back_pack_sell_controls, timeout=60)
 
     async def _backpack_sell_button_action(self, ctx, emoji, page, item, price_shown, character):
-        currency_name = await bank.get_currency_name(ctx.guild)
+        currency_name = await bank.get_currency_name(ctx.guild,)
         msg = ""
         try:
             if emoji == "\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP}":  # user reacted with one to sell.
@@ -1187,9 +1198,7 @@ class Adventure(BaseCog):
                     await asyncio.sleep(0.1)
                 count += 1
                 if price != 0:
-                    msg += _(
-                        "**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n"
-                    ).format(
+                    msg += _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
                         author=self.escape(ctx.author.display_name),
                         old_item=box(str(item) + " - " + str(old_owned - 1), lang="css"),
                         price=humanize_number(price),
@@ -1230,8 +1239,7 @@ class Adventure(BaseCog):
             )
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx,
-                _("You tried to trade an item to a party member but the monster ahead commands your attention."),
+                ctx, _("You tried to trade an item to a party member but the monster ahead commands your attention."),
             )
         if self.in_adventure(user=buyer):
             return await smart_embed(
@@ -1284,7 +1292,7 @@ class Adventure(BaseCog):
         else:
             item = lookup[0]
             hand = item.slot[0] if len(item.slot) < 2 else "two handed"
-            currency_name = await bank.get_currency_name(ctx.guild)
+            currency_name = await bank.get_currency_name(ctx.guild,)
             if str(currency_name).startswith("<"):
                 currency_name = "credits"
             trade_talk = box(
@@ -1410,8 +1418,8 @@ class Adventure(BaseCog):
             rebirthcost = 1000 * c.rebirths
             current_balance = c.bal
             last_known_currency = c.last_known_currency
-            if current_balance / last_known_currency < 0.75:
-                currency_name = await bank.get_currency_name(ctx.guild)
+            if current_balance / last_known_currency < 0.25:
+                currency_name = await bank.get_currency_name(ctx.guild,)
                 return await smart_embed(
                     ctx,
                     _(
@@ -1422,7 +1430,7 @@ class Adventure(BaseCog):
             else:
                 has_fund = await has_funds(ctx.author, rebirthcost)
             if not has_fund:
-                currency_name = await bank.get_currency_name(ctx.guild)
+                currency_name = await bank.get_currency_name(ctx.guild,)
                 return await smart_embed(
                     ctx, _("You need more {currency_name} to be able to rebirth.").format(currency_name=currency_name),
                 )
@@ -1670,8 +1678,7 @@ class Adventure(BaseCog):
         """Equip a saved loadout."""
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx,
-                _("You tried to magically equip multiple items at once, but the monster ahead nearly killed you."),
+                ctx, _("You tried to magically equip multiple items at once, but the monster ahead nearly killed you."),
             )
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -1743,7 +1750,7 @@ class Adventure(BaseCog):
             )
 
     @adventureset.command()
-    @checks.admin_or_permissions(administrator=True)
+    @commands.admin_or_permissions(administrator=True)
     async def cartroom(self, ctx: Context, room: discord.TextChannel = None):
         """[Admin] Lock carts to a specific text channel."""
         if room is None:
@@ -1755,12 +1762,12 @@ class Adventure(BaseCog):
 
     @adventureset.group(name="locks")
     @commands.bot_has_permissions(add_reactions=True)
-    @checks.admin_or_permissions(administrator=True)
+    @commands.admin_or_permissions(administrator=True)
     async def adventureset_locks(self, ctx: Context):
         """[Admin] Reset Adventure locks."""
 
     @adventureset_locks.command(name="user")
-    @checks.is_owner()
+    @commands.is_owner()
     async def adventureset_locks_user(self, ctx: Context, user: discord.User):
         """[Owner] Reset a guild member's user lock."""
         lock = self.get_lock(user)
@@ -1769,7 +1776,7 @@ class Adventure(BaseCog):
         await ctx.tick()
 
     @adventureset.command(name="dailybonus")
-    @checks.is_owner()
+    @commands.is_owner()
     async def adventureset_daily_bonus(self, ctx: Context, day: DayConverter, percentage: PercentageConverter):
         """[Owner] Set the daily xp and currency bonus.
 
@@ -1803,7 +1810,7 @@ class Adventure(BaseCog):
                 await asyncio.sleep(5)
 
     @adventureset.command()
-    @checks.is_owner()
+    @commands.is_owner()
     async def restrict(self, ctx: Context):
         """[Owner] Set whether or not adventurers are restricted to one adventure at a time."""
         toggle = await self.config.restrict()
@@ -1811,17 +1818,41 @@ class Adventure(BaseCog):
         await smart_embed(ctx, _("Adventurers restricted to one adventure at a time: {}").format(not toggle))
 
     @adventureset.command()
-    @checks.is_owner()
+    @commands.is_owner()
     async def sepcurrency(self, ctx: Context):
         """[Owner] Toggle whether the currency should be separated from main bot currency."""
         toggle = await self.config.separate_economy()
         await self.config.separate_economy.set(not toggle)
         self._separate_economy = not toggle
-        await smart_embed(ctx, _("Adventurer currency has been separated: {}").format(_("separated" if not toggle else _("unified"))))
+        await smart_embed(
+            ctx, _("Adventurer currency has been separated: {}").format(_("separated" if not toggle else _("unified")))
+        )
 
+    @adventureset.group(name="economy")
+    @commands.is_owner()
+    @commands.guild_only()
+    @has_separated_economy()
+    async def commands_adventureset_economy(self, ctx: Context):
+        """[Owner] Manages the adventure economy."""
+
+    @commands_adventureset_economy.command(name="rate")
+    async def commands_adventureset_economy_conversion_rate(self, ctx: Context, *, rate: int):
+        """[Owner] Set how much 1 bank credit is worth in adventure."""
+        if rate < 0:
+            return await smart_embed(ctx, _("You are evil ... please DM me your phone number we need to hangout."))
+        await self.config.to_conversion_rate.set(rate)
+        await self.config.from_conversion_rate.set(int(1.1 * rate))
+        await smart_embed(
+            ctx,
+            _("1 {name} will be worth {rate} {a_name}.").format(
+                name=await bank.get_currency_name(ctx.guild, _forced=True),
+                rate=rate,
+                a_name=await bank.get_currency_name(ctx.guild),
+            ),
+        )
 
     @adventureset.command(name="advcooldown", hidden=True)
-    @checks.admin_or_permissions(administrator=True)
+    @commands.admin_or_permissions(administrator=True)
     @commands.guild_only()
     async def advcooldown(self, ctx: Context, *, time_in_seconds: int):
         """[Admin] Changes the cooldown/gather time after an adventure.
@@ -1842,21 +1873,21 @@ class Adventure(BaseCog):
         await ctx.send(box(_("Adventure version: {}").format(self.__version__)))
 
     @adventureset.command()
-    @checks.admin_or_permissions(administrator=True)
+    @commands.admin_or_permissions(administrator=True)
     async def god(self, ctx: Context, *, name):
         """[Admin] Set the server's name of the god."""
         await self.config.guild(ctx.guild).god_name.set(name)
         await ctx.tick()
 
     @adventureset.command()
-    @checks.is_owner()
+    @commands.is_owner()
     async def globalgod(self, ctx: Context, *, name):
         """[Owner] Set the default name of the god."""
         await self.config.god_name.set(name)
         await ctx.tick()
 
     @adventureset.command(aliases=["embed"])
-    @checks.admin_or_permissions(administrator=True)
+    @commands.admin_or_permissions(administrator=True)
     async def embeds(self, ctx: Context):
         """[Admin] Set whether or not to use embeds for the adventure game."""
         toggle = await self.config.guild(ctx.guild).embed()
@@ -1864,7 +1895,7 @@ class Adventure(BaseCog):
         await smart_embed(ctx, _("Embeds: {}").format(not toggle))
 
     @adventureset.command(aliases=["chests"])
-    @checks.is_owner()
+    @commands.is_owner()
     async def cartchests(self, ctx: Context):
         """[Admin] Set whether or not to sell chests in the cart."""
         toggle = await self.config.enable_chests()
@@ -1872,14 +1903,14 @@ class Adventure(BaseCog):
         await smart_embed(ctx, _("Carts can sell chests: {}").format(not toggle))
 
     @adventureset.command()
-    @checks.admin_or_permissions(administrator=True)
+    @commands.admin_or_permissions(administrator=True)
     async def cartname(self, ctx: Context, *, name):
         """[Admin] Set the server's name of the cart."""
         await self.config.guild(ctx.guild).cart_name.set(name)
         await ctx.tick()
 
     @adventureset.command()
-    @checks.admin_or_permissions(administrator=True)
+    @commands.admin_or_permissions(administrator=True)
     async def carttime(self, ctx: Context, *, time: str):
         """
         [Admin] Set the cooldown of the cart.
@@ -1899,14 +1930,14 @@ class Adventure(BaseCog):
         await ctx.tick()
 
     @adventureset.command(name="clear")
-    @checks.is_owner()
+    @commands.is_owner()
     async def clear_user(self, ctx: Context, *, user: discord.User):
         """[Owner] Lets you clear a users entire character sheet."""
         await self.config.user(user).clear()
         await smart_embed(ctx, _("{user}'s character sheet has been erased.").format(user=user))
 
     @adventureset.command(name="remove")
-    @checks.is_owner()
+    @commands.is_owner()
     async def remove_item(self, ctx: Context, user: discord.Member, *, full_item_name: str):
         """[Owner] Lets you remove an item from a user.
 
@@ -1941,14 +1972,14 @@ class Adventure(BaseCog):
         await ctx.send(_("{item} removed from {user}.").format(item=box(str(item), lang="css"), user=user))
 
     @adventureset.command()
-    @checks.is_owner()
+    @commands.is_owner()
     async def globalcartname(self, ctx: Context, *, name):
         """[Owner] Set the default name of the cart."""
         await self.config.cart_name.set(name)
         await ctx.tick()
 
     @adventureset.command()
-    @checks.is_owner()
+    @commands.is_owner()
     async def theme(self, ctx: Context, *, theme):
         """[Owner] Change the theme for adventure."""
         if theme == "default":
@@ -1988,11 +2019,11 @@ class Adventure(BaseCog):
 
     @commands.group()
     @commands.guild_only()
-    @checks.admin_or_permissions(administrator=True)
+    @commands.admin_or_permissions(administrator=True)
     async def themeset(self, ctx: Context):
         """[Admin] Modify themes."""
 
-    @checks.is_owner()
+    @commands.is_owner()
     @themeset.group(name="add")
     async def themeset_add(self, ctx: Context):
         """[Owner] Add/Update objects in the specified theme."""
@@ -2070,7 +2101,7 @@ class Adventure(BaseCog):
         embed = discord.Embed(description=text, colour=await ctx.embed_colour())
         await ctx.send(embed=embed)
 
-    @checks.is_owner()
+    @commands.is_owner()
     @themeset.group(name="delete", aliases=["del", "rem", "remove"])
     async def themeset_delete(self, ctx: Context):
         """[Owner] Remove objects in the specified theme."""
@@ -2174,7 +2205,7 @@ class Adventure(BaseCog):
             await menu(ctx, embed_list, DEFAULT_CONTROLS)
 
     @adventureset.command()
-    @checks.admin_or_permissions(administrator=True)
+    @commands.admin_or_permissions(administrator=True)
     @commands.guild_only()
     async def cart(self, ctx: Context, *, channel: discord.TextChannel = None):
         """[Admin] Add or remove a text channel that the Trader cart can appear in.
@@ -2793,49 +2824,12 @@ class Adventure(BaseCog):
 
     @commands.group()
     @commands.guild_only()
-    @checks.admin_or_permissions(manage_guild=True)
+    @commands.admin_or_permissions(manage_guild=True)
     async def give(self, ctx: Context):
         """[Admin] Commands to add things to players' inventories."""
 
-    @give.command(name="funds")
-    @check_global_setting_admin()
-    async def _give_funds(self, ctx: Context, amount: int = 1, *, to: discord.Member = None):
-        """[Admin] Adds currency to a specified member's balance."""
-        if to is None:
-            return await smart_embed(
-                ctx, _("You need to specify a receiving member, **{}**.").format(self.escape(ctx.author.display_name)),
-            )
-        to_fund = discord.utils.find(lambda m: m.name == to.name, ctx.guild.members)
-        if not to_fund:
-            return await smart_embed(
-                ctx,
-                _("I could not find that user, **{}**. Try using their full Discord name (name#0000).").format(
-                    self.escape(ctx.author.display_name)
-                ),
-            )
-        amount = max(amount, 0)
-        try:
-            bal = await bank.deposit_credits(to, amount)
-        except BalanceTooHigh:
-            bal = await bank.get_max_balance(ctx.guild)
-        currency = await bank.get_currency_name(ctx.guild)
-        if str(currency).startswith("<:"):
-            currency = "credits"
-        await ctx.send(
-            box(
-                _("{author}, you funded {amount} {currency}. {to} now has {bal} {currency}.").format(
-                    author=self.escape(ctx.author.display_name),
-                    amount=humanize_number(amount),
-                    currency=currency,
-                    to=self.escape(to.display_name),
-                    bal=bal,
-                ),
-                lang="css",
-            )
-        )
-
     @give.command(name="item")
-    @checks.is_owner()
+    @commands.is_owner()
     async def _give_item(self, ctx: Context, user: discord.Member, item_name: str, *, stats: Stats):
         """[Owner] Adds a custom item to a specified member.
 
@@ -2878,7 +2872,7 @@ class Adventure(BaseCog):
         )
 
     @give.command(name="loot")
-    @checks.is_owner()
+    @commands.is_owner()
     async def _give_loot(self, ctx: Context, loot_type: str, user: discord.Member = None, number: int = 1):
         """[Owner] Give treasure chest(s) to a specified member."""
 
@@ -3028,7 +3022,7 @@ class Adventure(BaseCog):
             elif clz in classes and action is None:
                 async with self.get_lock(ctx.author):
                     bal = await bank.get_balance(ctx.author)
-                    currency_name = await bank.get_currency_name(ctx.guild)
+                    currency_name = await bank.get_currency_name(ctx.guild,)
                     if str(currency_name).startswith("<"):
                         currency_name = "credits"
                     spend = round(bal * 0.2)
@@ -3321,12 +3315,11 @@ class Adventure(BaseCog):
         if self.in_adventure(ctx):
             ctx.command.reset_cooldown(ctx)
             return await smart_embed(
-                ctx,
-                _("You tried to teleport to another dimension but the monster ahead did not give you a chance."),
+                ctx, _("You tried to teleport to another dimension but the monster ahead did not give you a chance."),
             )
 
         bal = await bank.get_balance(ctx.author)
-        currency_name = await bank.get_currency_name(ctx.guild)
+        currency_name = await bank.get_currency_name(ctx.guild,)
         if offering is None:
             ctx.command.reset_cooldown(ctx)
             return await smart_embed(
@@ -3966,7 +3959,7 @@ class Adventure(BaseCog):
                 if last_reset + 3600 > time.time():
                     return await smart_embed(ctx, _("You reset your skills within the last hour, try again later."))
                 bal = c.bal
-                currency_name = await bank.get_currency_name(ctx.guild)
+                currency_name = await bank.get_currency_name(ctx.guild,)
                 offering = min(int(bal / 5 + (c.total_int // 3)), 1000000000)
                 nv_msg = await ctx.send(
                     _(
@@ -4072,9 +4065,9 @@ class Adventure(BaseCog):
         if sets is None:
             return await smart_embed(
                 ctx,
-                _(
-                    "`{input}` is not a valid set.\n\nPlease use one of the following full set names: \n{sets}"
-                ).format(input=title_cased_set_name, sets=set_list),
+                _("`{input}` is not a valid set.\n\nPlease use one of the following full set names: \n{sets}").format(
+                    input=title_cased_set_name, sets=set_list
+                ),
             )
 
         bonus_list = sorted(sets, key=itemgetter("parts"))
@@ -4351,7 +4344,7 @@ class Adventure(BaseCog):
             )
 
         if not await has_funds(ctx.author, 250):
-            currency_name = await bank.get_currency_name(ctx.guild)
+            currency_name = await bank.get_currency_name(ctx.guild,)
             return await smart_embed(
                 ctx, _("You need {req} {name} to start an adventure.").format(req=250, name=currency_name),
             )
@@ -4862,7 +4855,7 @@ class Adventure(BaseCog):
         self._current_traders[guild.id]["users"].append(user)
         spender = user
         channel = reaction.message.channel
-        currency_name = await bank.get_currency_name(guild)
+        currency_name = await bank.get_currency_name(guild,)
         if currency_name.startswith("<"):
             currency_name = "credits"
         item_data = box(items["item"].formatted_name + " - " + humanize_number(items["price"]), lang="css")
@@ -5082,7 +5075,7 @@ class Adventure(BaseCog):
                 treasure = False
         if session.miniboss and failed:
             session.participants = set(fight_list + talk_list + pray_list + magic_list + fumblelist)
-            currency_name = await bank.get_currency_name(ctx.guild)
+            currency_name = await bank.get_currency_name(ctx.guild,)
             for user in session.participants:
                 try:
                     c = await Character.from_json(self.config, user, self._daily_bonus)
@@ -5132,7 +5125,7 @@ class Adventure(BaseCog):
         if session.miniboss and not slain and not persuaded:
             lost = True
             session.participants = set(fight_list + talk_list + pray_list + magic_list + fumblelist)
-            currency_name = await bank.get_currency_name(ctx.guild)
+            currency_name = await bank.get_currency_name(ctx.guild,)
             for user in session.participants:
                 try:
                     c = await Character.from_json(self.config, user, self._daily_bonus)
@@ -5206,7 +5199,7 @@ class Adventure(BaseCog):
 
             if not slain and not persuaded:
                 lost = True
-                currency_name = await bank.get_currency_name(ctx.guild)
+                currency_name = await bank.get_currency_name(ctx.guild,)
                 users = set(fight_list + magic_list + talk_list + pray_list + fumblelist)
                 for user in users:
                     try:
@@ -5366,7 +5359,7 @@ class Adventure(BaseCog):
 
             if not slain and not persuaded:
                 lost = True
-                currency_name = await bank.get_currency_name(ctx.guild)
+                currency_name = await bank.get_currency_name(ctx.guild,)
                 users = set(fight_list + magic_list + talk_list + pray_list + fumblelist)
                 for user in users:
                     try:
@@ -6349,7 +6342,7 @@ class Adventure(BaseCog):
                     await bank.deposit_credits(ctx.author, price)
                 except BalanceTooHigh as e:
                     await bank.set_balance(ctx.author, e.max_balance)
-            currency_name = await bank.get_currency_name(ctx.guild)
+            currency_name = await bank.get_currency_name(ctx.guild,)
             if str(currency_name).startswith("<"):
                 currency_name = "credits"
             await open_msg.edit(
@@ -6488,7 +6481,7 @@ class Adventure(BaseCog):
                 self._rewards[user.id]["special"] = False
             rewards_list.append(f"**{self.escape(user.display_name)}**")
 
-        currency_name = await bank.get_currency_name(ctx.guild)
+        currency_name = await bank.get_currency_name(ctx.guild,)
         to_reward = " and ".join(
             [", ".join(rewards_list[:-1]), rewards_list[-1]] if len(rewards_list) > 2 else rewards_list
         )
@@ -6585,7 +6578,7 @@ class Adventure(BaseCog):
         self._curent_trader_stock[ctx.guild.id] = (stockcount, controls)
 
         stock = await self._trader_get_items(stockcount)
-        currency_name = await bank.get_currency_name(ctx.guild)
+        currency_name = await bank.get_currency_name(ctx.guild,)
         if str(currency_name).startswith("<"):
             currency_name = "credits"
         for (index, item) in enumerate(stock):
@@ -7040,3 +7033,183 @@ class Adventure(BaseCog):
             elif account_number == pos:
                 pages.append(box("\n".join(entries), lang="md"))
         return pages
+
+    @commands.command(name="apayday")
+    @has_separated_economy()
+    async def commands_apayday(self, ctx: commands.Context):
+        """Get some free gold."""
+        author = ctx.author
+        cur_time = calendar.timegm(ctx.message.created_at.utctimetuple())
+        adventure_credits_name = await bank.get_currency_name(ctx.guild)
+        next_payday = await bank.get_next_payday(author) + 600  # Make customizable? hard coded to every 10 mins
+        amount = 500  # Make Customizable?
+        if cur_time >= next_payday:
+            try:
+                await bank.deposit_credits(author, amount)
+            except BalanceTooHigh as exc:
+                await bank.set_balance(author, exc.max_balance)
+                await smart_embed(
+                    ctx,
+                    _(
+                        "You're struggling to move under the weight of all your {currency}!"
+                        "Please spend some more \N{GRIMACING FACE}\n\n"
+                        "You currently have {new_balance} {currency}."
+                    ).format(currency=adventure_credits_name, new_balance=humanize_number(exc.max_balance)),
+                )
+                return
+            # Sets the current time as the latest payday
+            await bank.set_next_payday(author, cur_time)
+            await smart_embed(
+                ctx,
+                _(
+                    "You receive a letter by post from the town's courier!"
+                    "{author.mention}, you've gained some interest on your {currency}. "
+                    "You've been paid +{amount} {currency}!\n\n"
+                    "You currently have {new_balance} {currency}."
+                ).format(
+                    author=author,
+                    currency=adventure_credits_name,
+                    amount=humanize_number(amount),  # Make customizable?
+                    new_balance=humanize_number(await bank.get_balance(author)),
+                ),
+            )
+        else:
+            dtime = humanize_timedelta(seconds=next_payday - cur_time) or _("one second")
+            await smart_embed(
+                ctx,
+                _("{author.mention}, you haven't gained any interest on your savings yet. Try again in {time}.").format(
+                    author=author, time=dtime
+                ),
+            )
+
+    @commands.group(name="atransfer")
+    @has_separated_economy()
+    async def commands_atransfer(self, ctx: commands.Context):
+        """Transfer currency between players/bank."""
+
+    @commands_atransfer.command(name="deposit")
+    @commands.guild_only()
+    async def commands_atransfer_deposit(self, ctx: commands.Context, *, amount: int):
+        """Convert bank currency to gold."""
+        from_conversion_rate = await self.config.to_conversion_rate()
+        transferable_amount = amount * from_conversion_rate
+        if amount <= 0:
+            await smart_embed(
+                ctx,
+                _("{author.mention} You can't deposit 0 or negative values.").format(
+                    author=ctx.author, name=await bank.get_currency_name(ctx.guild, _forced=True)
+                ),
+            )
+            return
+        if not bank.can_spend(ctx.author, amount=amount, _forced=True):
+            await smart_embed(
+                ctx,
+                _("{author.mention} You don't have enough {name}.").format(
+                    author=ctx.author, name=await bank.get_currency_name(ctx.guild, _forced=True)
+                ),
+            )
+            return
+        await bank.withdraw_credits(member=ctx.author, amount=amount, _forced=True)
+        try:
+            await bank.deposit_credits(member=ctx.author, amount=transferable_amount)
+        except BalanceTooHigh as exc:
+            await bank.set_balance(member=ctx.author, amount=exc.max_balance)
+        await smart_embed(
+            ctx,
+            _("{author.mention} you converted {amount} {currency} to {a_amount} {a_currency}.").format(
+                author=ctx.author,
+                amount=humanize_number(amount),
+                a_amount=humanize_number(transferable_amount),
+                a_currency=await bank.get_currency_name(ctx.guild),
+                currency=await bank.get_currency_name(ctx.guild, _forced=True),
+            ),
+        )
+
+    @commands_atransfer.command(name="withdraw")
+    @commands.guild_only()
+    async def commands_atransfer_withdraw(self, ctx: commands.Context, *, amount: int):
+        """Convert gold to bank currency."""
+        # Todo: Limit the number of transfers allowed bet rebirth.
+        configs = await self.config.all()
+        max_allowed_withdraw = configs.get("max_allowed_withdraw")
+        from_conversion_rate = configs.get("from_conversion_rate")
+        transferable_amount = amount // from_conversion_rate
+        if amount <= 0:
+            await smart_embed(
+                ctx,
+                _("{author.mention} You can't withdraw 0 or negative values.").format(
+                    author=ctx.author, name=await bank.get_currency_name(ctx.guild)
+                ),
+            )
+            return
+        if max_allowed_withdraw < 1:
+            return await smart_embed(
+                ctx, _("{author.mention} my owner has disabled this option.").format(author=ctx.author)
+            )
+        if not bank.can_spend(member=ctx.author, amount=amount):
+            return await smart_embed(
+                ctx,
+                _("{author.mention} you don't have enough {name}.").format(
+                    author=ctx.author, name=await bank.get_currency_name(ctx.guild)
+                ),
+            )
+
+        if transferable_amount > max_allowed_withdraw:
+            return await smart_embed(
+                ctx,
+                _("{author.mention} I can't allow you to transfer {amount} to {bank}.").format(
+                    author=ctx.author,
+                    amount=humanize_number(transferable_amount),
+                    bank=await bank.get_bank_name(ctx.guild),
+                ),
+            )
+        try:
+            await bank.deposit_credits(member=ctx.author, amount=transferable_amount, _forced=True)
+        except BalanceTooHigh as exc:
+            await bank.set_balance(ctx.author, exc.max_balance, _forced=True)
+        await bank.withdraw_credits(member=ctx.author, amount=amount)
+        await smart_embed(
+            ctx,
+            _("{author.mention} you converted {a_amount} {a_currency} to {amount} {currency}.").format(
+                author=ctx.author,
+                a_amount=humanize_number(amount),
+                amount=humanize_number(transferable_amount),
+                a_currency=await bank.get_currency_name(ctx.guild),
+                currency=await bank.get_currency_name(ctx.guild, _forced=True),
+            ),
+        )
+
+    @commands_atransfer.command(name="player")
+    @commands.guild_only()
+    async def commands_atransfer_player(self, ctx: commands.Context, amount: int, *, player: discord.User):
+        """Transfer gold to another player."""
+        if amount <= 0:
+            await smart_embed(
+                ctx,
+                _("{author.mention} You can't transfer 0 or negative values.").format(
+                    author=ctx.author, name=await bank.get_currency_name(ctx.guild)
+                ),
+            )
+            return
+        currency = await bank.get_currency_name(ctx.guild)
+        if not bank.can_spend(member=ctx.author, amount=amount):
+            return await smart_embed(
+                ctx,
+                _("{author.mention} you don't have enough {name}.").format(
+                    author=ctx.author, name=await bank.get_currency_name(ctx.guild)
+                ),
+            )
+
+        try:
+            await bank.transfer_credits(from_=ctx.author, to=player, amount=amount, tax=0.0)  # Customizable Tax
+        except (ValueError, BalanceTooHigh) as e:
+            return await ctx.send(str(e))
+
+        await ctx.send(
+            _("{user} transferred {num} {currency} to {other_user}").format(
+                user=ctx.author.display_name,
+                num=humanize_number(amount),
+                currency=currency,
+                other_user=player.display_name,
+            )
+        )

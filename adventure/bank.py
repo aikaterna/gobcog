@@ -46,11 +46,13 @@ __all__ = [
     "cost",
     "AbortPurchase",
     "bank_prune",
+    "get_next_payday",
+    "set_next_payday",
 ]
 
 _MAX_BALANCE = 2 ** 63 - 1
 
-_DEFAULT_MEMBER = {"balance": 0}
+_DEFAULT_MEMBER = {"balance": 0, "next_payday": 0}
 
 
 _config: Config = None
@@ -62,16 +64,16 @@ def _init(bot: Red):
     if _config is None:
         _config = Config.get_conf(None, 384734293238749, cog_name="AdventureBank", force_registration=True)
         _config.register_user(**_DEFAULT_MEMBER)
-    if _bot is None:
-        _bot = bot
+    _bot = bot
 
 
 class AdventureAccount:
     """A single account.
     This class should ONLY be instantiated by the bank itself."""
 
-    def __init__(self, balance: int):
+    def __init__(self, balance: int, next_payday: int):
         self.balance = balance
+        self.next_payday = next_payday
 
 
 def _encoded_current_time() -> int:
@@ -119,7 +121,7 @@ def _decode_time(time: int) -> datetime.datetime:
     return datetime.datetime.utcfromtimestamp(time)
 
 
-async def get_balance(member: discord.Member) -> int:
+async def get_balance(member: discord.Member, _forced: bool = False) -> int:
     """Get the current balance of a member.
     Parameters
     ----------
@@ -130,11 +132,50 @@ async def get_balance(member: discord.Member) -> int:
     int
         The member's balance
     """
+    acc = await get_account(member, _forced=_forced)
+    return acc.balance
+
+
+async def get_next_payday(member: discord.Member) -> int:
+    """Get the current balance of a member.
+    Parameters
+    ----------
+    member : discord.Member
+        The member whose balance to check.
+    Returns
+    -------
+    int
+        The member's balance
+    """
+    if (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
+        return 0
+
     acc = await get_account(member)
     return acc.balance
 
 
-async def can_spend(member: discord.Member, amount: int) -> bool:
+async def set_next_payday(member: Union[discord.Member, discord.User], amount: int) -> int:
+    """Set an account next payday.
+    Parameters
+    ----------
+    member : Union[discord.Member, discord.User]
+        The member whose next payday to set.
+    amount : int
+        The amount to set the next payday to.
+    Returns
+    -------
+    int
+        New account next payday.
+    """
+    if (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
+        return 0
+
+    group = _config.user(member)
+    await group.next_payday.set(amount)
+    return amount
+
+
+async def can_spend(member: discord.Member, amount: int, _forced: bool = False) -> bool:
     """Determine if a member can spend the given amount.
     Parameters
     ----------
@@ -148,10 +189,10 @@ async def can_spend(member: discord.Member, amount: int) -> bool:
         :code:`True` if the member has a sufficient balance to spend the
         amount, else :code:`False`.
     """
-    return await get_balance(member) >= amount
+    return await get_balance(member, _forced=_forced) >= amount
 
 
-async def set_balance(member: Union[discord.Member, discord.User], amount: int) -> int:
+async def set_balance(member: Union[discord.Member, discord.User], amount: int, _forced: bool = False) -> int:
     """Set an account balance.
     Parameters
     ----------
@@ -173,7 +214,7 @@ async def set_balance(member: Union[discord.Member, discord.User], amount: int) 
         If attempting to set the balance to a value greater than
         ``bank._MAX_BALANCE``.
     """
-    if (cog := _bot.get_cog("Adventure") is None) or not cog._separate_economy:
+    if _forced or (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
         return await bank.set_balance(member=member, amount=amount)
 
     guild = getattr(member, "guild", None)
@@ -187,7 +228,7 @@ async def set_balance(member: Union[discord.Member, discord.User], amount: int) 
     return amount
 
 
-async def withdraw_credits(member: discord.Member, amount: int) -> int:
+async def withdraw_credits(member: discord.Member, amount: int, _forced: bool = False) -> int:
     """Remove a certain amount of credits from an account.
     Parameters
     ----------
@@ -207,7 +248,7 @@ async def withdraw_credits(member: discord.Member, amount: int) -> int:
     TypeError
         If the withdrawal amount is not an `int`.
     """
-    if (cog := _bot.get_cog("Adventure") is None) or not cog._separate_economy:
+    if _forced or (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
         return await bank.withdraw_credits(member=member, amount=amount)
 
     if not isinstance(amount, int):
@@ -224,7 +265,7 @@ async def withdraw_credits(member: discord.Member, amount: int) -> int:
     return await set_balance(member, bal - amount)
 
 
-async def deposit_credits(member: discord.Member, amount: int) -> int:
+async def deposit_credits(member: discord.Member, amount: int, _forced: bool = False) -> int:
     """Add a given amount of credits to an account.
     Parameters
     ----------
@@ -243,7 +284,7 @@ async def deposit_credits(member: discord.Member, amount: int) -> int:
     TypeError
         If the deposit amount is not an `int`.
     """
-    if (cog := _bot.get_cog("Adventure") is None) or not cog._separate_economy:
+    if _forced or (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
         return await bank.deposit_credits(member=member, amount=amount)
     if not isinstance(amount, int):
         raise TypeError("Deposit amount must be of type int, not {}.".format(type(amount)))
@@ -253,7 +294,7 @@ async def deposit_credits(member: discord.Member, amount: int) -> int:
 
 
 async def transfer_credits(
-    from_: Union[discord.Member, discord.User], to: Union[discord.Member, discord.User], amount: int,
+    from_: Union[discord.Member, discord.User], to: Union[discord.Member, discord.User], amount: int, tax: float = 0.0
 ):
     """Transfer a given amount of credits from one account to another with a 50% tax.
     Parameters
@@ -280,7 +321,7 @@ async def transfer_credits(
         If the balance after the transfer would be greater than
         ``bank._MAX_BALANCE``.
     """
-    if (cog := _bot.get_cog("Adventure") is None) or not cog._separate_economy:
+    if (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
         return await bank.transfer_credits(from_=from_, to=to, amount=amount)
 
     if not isinstance(amount, int):
@@ -288,7 +329,7 @@ async def transfer_credits(
 
     guild = getattr(to, "guild", None)
     max_bal = await get_max_balance(guild)
-    new_amount = int(amount * 0.5)
+    new_amount = int(amount - (amount * tax))
     if await get_balance(to) + new_amount > max_bal:
         currency = await get_currency_name(guild)
         raise errors.BalanceTooHigh(user=to.display_name, max_balance=max_bal, currency_name=currency)
@@ -305,7 +346,7 @@ async def wipe_bank(guild: Optional[discord.Guild] = None) -> None:
         The guild to clear accounts for. If unsupplied and the bank is
         per-server, all accounts in every guild will be wiped.
     """
-    if (cog := _bot.get_cog("Adventure") is None) or not cog._separate_economy:
+    if (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
         return await bank.wipe_bank(guild=guild)
     await _config.clear_all_users()
 
@@ -327,7 +368,7 @@ async def bank_prune(bot: Red, guild: discord.Guild = None, user_id: int = None)
     BankPruneError
         If guild is :code:`None` and the bank is Local.
     """
-    if (cog := _bot.get_cog("Adventure") is None) or not cog._separate_economy:
+    if (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
         return await bank.bank_prune(bot=bot, guild=guild, user_id=user_id)
 
     _guilds = set()
@@ -377,7 +418,7 @@ async def get_leaderboard(positions: int = None, guild: discord.Guild = None) ->
     TypeError
         If the bank is guild-specific and no guild was specified
     """
-    if (cog := _bot.get_cog("Adventure") is None) or not cog._separate_economy:
+    if (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
         return await bank.get_leaderboard(positions=positions, guild=guild)
     raw_accounts = await _config.all_users()
     if guild is not None:
@@ -424,7 +465,9 @@ async def get_leaderboard_position(member: Union[discord.User, discord.Member]) 
             return pos[0]
 
 
-async def get_account(member: Union[discord.Member, discord.User]) -> Union[Account, AdventureAccount]:
+async def get_account(
+    member: Union[discord.Member, discord.User], _forced: bool = False
+) -> Union[Account, AdventureAccount]:
     """Get the appropriate account for the given user or member.
     A member is required if the bank is currently guild specific.
     Parameters
@@ -436,12 +479,12 @@ async def get_account(member: Union[discord.Member, discord.User]) -> Union[Acco
     Account
         The user's account.
     """
-    if (cog := _bot.get_cog("Adventure") is None) or not cog._separate_economy:
+    if _forced or (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
         return await bank.get_account(member)
 
     all_accounts = await _config.all_users()
     if member.id not in all_accounts:
-        acc_data = {"balance": 250}
+        acc_data = {"balance": 250, "next_payday": 0}
     else:
         acc_data = all_accounts[member.id]
     return AdventureAccount(**acc_data)
@@ -454,7 +497,7 @@ async def is_global() -> bool:
     bool
         :code:`True` if the bank is global, otherwise :code:`False`.
     """
-    if (cog := _bot.get_cog("Adventure") is None) or not cog._separate_economy:
+    if (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
         return await bank.is_global()
     return True
 
@@ -519,7 +562,7 @@ async def set_bank_name(name: str, guild: discord.Guild = None) -> str:
     return await bank.set_bank_name(name=name, guild=guild)
 
 
-async def get_currency_name(guild: discord.Guild = None) -> str:
+async def get_currency_name(guild: discord.Guild = None, _forced: bool = False) -> str:
     """Get the currency name of the bank.
     Parameters
     ----------
@@ -535,7 +578,9 @@ async def get_currency_name(guild: discord.Guild = None) -> str:
     RuntimeError
         If the bank is guild-specific and guild was not provided.
     """
-    return await bank.get_currency_name(guild=guild)
+    if _forced or (cog := _bot.get_cog("Adventure")) is None or not cog._separate_economy:
+        return await bank.get_currency_name(guild=guild)
+    return _("gold")
 
 
 async def set_currency_name(name: str, guild: discord.Guild = None) -> str:
