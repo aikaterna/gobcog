@@ -869,7 +869,7 @@ class Adventure(BaseCog):
                         ),
                     )
 
-            backpack_contents = _("[{author}'s backpack] \n\n{backpack}\n").format(
+            backpack_contents = _("{author}'s backpack \n\n{backpack}\n").format(
                 author=self.escape(ctx.author.display_name),
                 backpack=await c.get_backpack(rarity=rarity, slot=slot, show_delta=show_diff),
             )
@@ -1031,7 +1031,8 @@ class Adventure(BaseCog):
             return await smart_embed(
                 ctx,
                 _(
-                    "You tried to go sell your items but the monster ahead is not allowing you to leave."
+                    "You tried to go sell your items "
+                    "but the monster ahead is not allowing you to leave."
                 ),
             )
         if rarity:
@@ -1146,7 +1147,8 @@ class Adventure(BaseCog):
             return await smart_embed(
                 ctx,
                 _(
-                    "You tried to go sell your items but the monster ahead is not allowing you to leave."
+                    "You tried to go sell your items "
+                    "but the monster ahead is not allowing you to leave."
                 ),
             )
         if item.rarity == "forged":
@@ -1280,7 +1282,8 @@ class Adventure(BaseCog):
                 count += 1
                 if price != 0:
                     msg += _(
-                        "**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n"
+                        "**{author}** sold all but one of their {old_item} "
+                        "for {price} {currency_name}.\n"
                     ).format(
                         author=self.escape(ctx.author.display_name),
                         old_item=box(str(item) + " - " + str(old_owned - 1), lang="css"),
@@ -1322,21 +1325,24 @@ class Adventure(BaseCog):
             return await smart_embed(
                 ctx,
                 _(
-                    "You take the item and pass it from one hand to the other. Congratulations, you traded yourself."
+                    "You take the item and pass it from one hand to the other. Congratulations, "
+                    "you traded yourself."
                 ),
             )
         if self.in_adventure(ctx):
             return await smart_embed(
                 ctx,
                 _(
-                    "You tried to trade an item to a party member but the monster ahead commands your attention."
+                    "You tried to trade an item to a party member "
+                    "but the monster ahead commands your attention."
                 ),
             )
         if self.in_adventure(user=buyer):
             return await smart_embed(
                 ctx,
                 _(
-                    "**{buyer}** is currently in an adventure... you were unable to reach them via pigeon."
+                    "**{buyer}** is currently in an adventure... "
+                    "you were unable to reach them via pigeon."
                 ).format(buyer=self.escape(ctx.author.display_name)),
             )
         try:
@@ -1433,11 +1439,13 @@ class Adventure(BaseCog):
                             except Exception as exc:
                                 log.exception("Error with the new character sheet", exc_info=exc)
                                 return
-                            if buy_user.rebirths < c.rebirths:
+                            if buy_user.rebirths - 2 < c.rebirths:
                                 return await smart_embed(
                                     ctx,
                                     _(
-                                        "You can only trade with people the same rebirth level or higher than yours."
+                                        "You can only trade with people that are the same "
+                                        "rebirth level, one rebirth level less than you, "
+                                        "or a higher rebirth level than yours."
                                     ),
                                 )
                             try:
@@ -3975,17 +3983,16 @@ class Adventure(BaseCog):
                         )
                     )
                 else:
-                    cooldown_time = max(600, (3600 - (c.luck * 2 + c.total_int * 2)))
+                    cooldown_time = max(600, (3600 - ((c.luck + c.total_int) * 2)))
                     if "catch_cooldown" not in c.heroclass:
                         c.heroclass["catch_cooldown"] = cooldown_time + 1
-                    if c.heroclass["catch_cooldown"] + cooldown_time > time.time():
-                        cooldown_time = (
-                            (c.heroclass["catch_cooldown"]) + cooldown_time - time.time()
-                        )
+                    if c.heroclass["catch_cooldown"] > time.time():
+                        cooldown_time = c.heroclass["catch_cooldown"] - time.time()
                         return await smart_embed(
                             ctx,
                             _(
-                                "You caught a pet recently, or you are a brand new Ranger. You will be able to go hunting in {}."
+                                "You caught a pet recently, or you are a brand new Ranger. "
+                                "You will be able to go hunting in {}."
                             ).format(
                                 humanize_timedelta(seconds=int(cooldown_time))
                                 if int(cooldown_time) >= 1
@@ -4084,7 +4091,7 @@ class Adventure(BaseCog):
                                 )
                             await user_msg.edit(content=f"{pet_msg}\n{pet_msg2}\n{pet_msg3}")
                             c.heroclass["pet"] = pet_list[pet]
-                            c.heroclass["catch_cooldown"] = time.time()
+                            c.heroclass["catch_cooldown"] = time.time() + cooldown_time
                             await self.config.user(ctx.author).set(await c.to_json(self.config))
                         elif roll == 1:
                             bonus = _("But they stepped on a twig and scared it away.")
@@ -4136,15 +4143,15 @@ class Adventure(BaseCog):
                         lang="css",
                     )
                 )
-            cooldown_time = max(1800, (7200 - (c.luck * 2 + c.total_int * 2)))
+            cooldown_time = max(1800, (7200 - ((c.luck + c.total_int) * 2)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
-            if c.heroclass["cooldown"] + cooldown_time <= time.time():
+            if c.heroclass["cooldown"] <= time.time():
                 await self._open_chest(ctx, c.heroclass["pet"]["name"], "pet", character=c)
-                c.heroclass["cooldown"] = time.time()
+                c.heroclass["cooldown"] = time.time() + cooldown_time
                 await self.config.user(ctx.author).set(await c.to_json(self.config))
             else:
-                cooldown_time = (c.heroclass["cooldown"] + 7200) - time.time()
+                cooldown_time = c.heroclass["cooldown"] - time.time()
                 return await smart_embed(
                     ctx,
                     _("This command is on cooldown. Try again in {}.").format(
@@ -4694,7 +4701,7 @@ class Adventure(BaseCog):
 
         legend = _("( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE#] | SET (SET PIECES)")
         equipped_gear_msg = _(
-            "[{user}'s Character Sheet]\n\nItems Equipped:\n{legend}{equip}"
+            "{user}'s Character Sheet\n\nItems Equipped:\n{legend}{equip}"
         ).format(legend=legend, equip=c.get_equipment(), user=c.user.display_name)
         await menu(
             ctx,
