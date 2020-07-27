@@ -5386,8 +5386,16 @@ class Adventure(BaseCog):
         if not await self.has_perm(user):
             return
         if guild.id in self._sessions:
+            adventure_obj = self._sessions[guild.id]
+            link = adventure_obj.message.jump_url
             if reaction.message.id == self._sessions[guild.id].message_id:
                 await self._handle_adventure(reaction, user)
+                channel = reaction.message.channel
+                if user.id not in self.grindsquad_answered:                 
+                    self.grindsquad_answered.append(user.id)         
+                    msg =  f"{user.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
+                    colour = discord.Colour.dark_green()
+                    return await channel.send(embed=discord.Embed(description=msg, color=colour))
         if guild.id in self._current_traders:
             if reaction.message.id == self._current_traders[guild.id][
                 "msg"
@@ -8293,18 +8301,4 @@ class Adventure(BaseCog):
         if channel and message:
             await channel.send(box(message, lang="python"))
             
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-        if user.bot:
-            return
-        guild = reaction.message.guild
-        if guild.id in self._sessions:
-            adventure_obj = self._sessions[guild.id]
-            link = adventure_obj.message.jump_url
-            if reaction.message.id == self._sessions[guild.id].message.id:
-                channel = reaction.message.channel
-                if user.id not in self.grindsquad_answered:                 
-                    self.grindsquad_answered.append(user.id)         
-                    msg =  f"{user.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
-                    colour = discord.Colour.dark_green()
-                    return await channel.send(embed=discord.Embed(description=msg, color=colour))
+    
