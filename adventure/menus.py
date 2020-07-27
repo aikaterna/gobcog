@@ -151,8 +151,8 @@ class ScoreboardSource(WeeklyScoreboardSource):
         if self._legend is None:
             self._legend = (
                 "React with the following to go to the specified filter:\n"
-                "\N{FACE WITH PARTY HORN AND PARTY HAT}: Fumble scoreboard\n"
-                "\N{FIRE}: Losses scoreboard\n"
+                "\N{FACE WITH PARTY HORN AND PARTY HAT}: Win scoreboard\n"
+                "\N{FIRE}: Loss scoreboard\n"
                 "\N{DAGGER KNIFE}: Physical attack scoreboard\n"
                 "\N{SPARKLES}: Magic attack scoreboard\n"
                 "\N{LEFT SPEECH BUBBLE}: Diplomacy scoreboard\n"

@@ -1832,7 +1832,7 @@ class Adventure(BaseCog):
         await self.config.separate_economy.set(not toggle)
         self._separate_economy = not toggle
         await smart_embed(
-            ctx, _("Adventurer currency has been separated: {}").format(_("separated" if not toggle else _("unified")))
+            ctx, _("Adventurer currency is: **{}**").format(_("Separated" if not toggle else _("Unified")))
         )
 
     @adventureset.group(name="economy")
