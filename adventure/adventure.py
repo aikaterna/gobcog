@@ -38,7 +38,14 @@ from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 import adventure.charsheet
 
 from . import bank
-
+from .menus import (
+    LeaderboardSource,
+    ScoreboardSource,
+    BaseMenu,
+    ScoreBoardMenu,
+    WeeklyScoreboardSource,
+    LeaderboardMenu,
+)
 from .charsheet import (
     Character,
     GameSession,
@@ -969,11 +976,7 @@ class Adventure(BaseCog):
         assert isinstance(slot, str) or slot is None
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx,
-                _(
-                    "You tried to go sell your items "
-                    "but the monster ahead is not allowing you to leave."
-                ),
+                ctx, _("You tried to go sell your items but the monster ahead is not allowing you to leave."),
             )
         if rarity:
             rarity = rarity.lower()
@@ -1078,11 +1081,7 @@ class Adventure(BaseCog):
 
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx,
-                _(
-                    "You tried to go sell your items "
-                    "but the monster ahead is not allowing you to leave."
-                ),
+                ctx, _("You tried to go sell your items but the monster ahead is not allowing you to leave."),
             )
         if item.rarity == "forged":
             ctx.command.reset_cooldown(ctx)
@@ -1206,10 +1205,7 @@ class Adventure(BaseCog):
                     await asyncio.sleep(0.1)
                 count += 1
                 if price != 0:
-                    msg += _(
-                        "**{author}** sold all but one of their {old_item} "
-                        "for {price} {currency_name}.\n"
-                    ).format(
+                    msg += _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
                         author=self.escape(ctx.author.display_name),
                         old_item=box(str(item) + " - " + str(old_owned - 1), lang="css"),
                         price=humanize_number(price),
@@ -1246,26 +1242,18 @@ class Adventure(BaseCog):
         if ctx.author == buyer:
             return await smart_embed(
                 ctx,
-                _(
-                    "You take the item and pass it from one hand to the other. Congratulations, "
-                    "you traded yourself."
-                ),
+                _("You take the item and pass it from one hand to the other. Congratulations, you traded yourself."),
             )
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx,
-                _(
-                    "You tried to trade an item to a party member "
-                    "but the monster ahead commands your attention."
-                ),
+                ctx, _("You tried to trade an item to a party member but the monster ahead commands your attention."),
             )
         if self.in_adventure(user=buyer):
             return await smart_embed(
                 ctx,
-                _(
-                    "**{buyer}** is currently in an adventure... "
-                    "you were unable to reach them via pigeon."
-                ).format(buyer=self.escape(ctx.author.display_name)),
+                _("**{buyer}** is currently in an adventure... you were unable to reach them via pigeon.").format(
+                    buyer=self.escape(ctx.author.display_name)
+                ),
             )
         try:
             c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
@@ -1697,11 +1685,7 @@ class Adventure(BaseCog):
         """Equip a saved loadout."""
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx,
-                _(
-                    "You tried to magically equip multiple items at once, "
-                    "but the monster ahead nearly killed you."
-                ),
+                ctx, _("You tried to magically equip multiple items at once, but the monster ahead nearly killed you."),
             )
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -1938,7 +1922,7 @@ class Adventure(BaseCog):
         """
         [Admin] Set the cooldown of the cart.
         Time can be in seconds, minutes, hours, or days.
-        Examples: `1h 30m`, `2 days`, `300` 
+        Examples: `1h 30m`, `2 days`, `300`
         The bot assumes seconds if no units are given.
         """
         time_delta = parse_timedelta(time)
@@ -2233,7 +2217,7 @@ class Adventure(BaseCog):
     async def cart(self, ctx: Context, *, channel: discord.TextChannel = None):
         """[Admin] Add or remove a text channel that the Trader cart can appear in.
 
-        If the channel is already in the list, it will be removed. 
+        If the channel is already in the list, it will be removed.
         Use `[p]adventureset cart` with no arguments to show the channel list.
         """
 
@@ -2369,18 +2353,16 @@ class Adventure(BaseCog):
             if box_rarity.lower() == "rare" and c.rebirths < rebirth_rare:
                 return await smart_embed(
                     ctx,
-                    (
-                        "**{}**, you need to have {} or more rebirths to convert "
-                        "rare treasure chests."
-                    ).format(self.escape(ctx.author.display_name), rebirth_rare),
+                    ("**{}**, you need to have {} or more rebirths to convert rare treasure chests.").format(
+                        self.escape(ctx.author.display_name), rebirth_rare
+                    ),
                 )
             elif box_rarity.lower() == "epic" and c.rebirths < rebirth_epic:
                 return await smart_embed(
                     ctx,
-                    (
-                        "**{}**, you need to have {} or more rebirths "
-                        "to convert epic treasure chests."
-                    ).format(self.escape(ctx.author.display_name), rebirth_epic),
+                    ("**{}**, you need to have {} or more rebirths to convert epic treasure chests.").format(
+                        self.escape(ctx.author.display_name), rebirth_epic
+                    ),
                 )
             elif c.rebirths < 2:
                 return await smart_embed(
@@ -2490,10 +2472,9 @@ class Adventure(BaseCog):
             else:
                 await smart_embed(
                     ctx,
-                    _(
-                        "**{}**, please select between normal, rare, or "
-                        "epic treasure chests to convert."
-                    ).format(self.escape(ctx.author.display_name)),
+                    _("**{}**, please select between normal, rare, or epic treasure chests to convert.").format(
+                        self.escape(ctx.author.display_name)
+                    ),
                 )
 
     @commands.command()
@@ -3236,11 +3217,7 @@ class Adventure(BaseCog):
             return await smart_embed(ctx, _("Nice try :smirk:."))
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx,
-                _(
-                    "You tried to open a loot chest "
-                    "but then realised you left them all back at the inn."
-                ),
+                ctx, _("You tried to open a loot chest but then realised you left them all back at the inn."),
             )
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -3345,11 +3322,7 @@ class Adventure(BaseCog):
         if self.in_adventure(ctx):
             ctx.command.reset_cooldown(ctx)
             return await smart_embed(
-                ctx,
-                _(
-                    "You tried to teleport to another dimension "
-                    "but the monster ahead did not give you a chance."
-                ),
+                ctx, _("You tried to teleport to another dimension but the monster ahead did not give you a chance."),
             )
 
         bal = await bank.get_balance(ctx.author)
@@ -3652,14 +3625,8 @@ class Adventure(BaseCog):
                     user_msg = await ctx.send(pet_msg)
                     await asyncio.sleep(2)
                     pet_msg2 = box(
-                        _(
-                            "{author} started tracking a wild {pet_name} "
-                            "with a roll of {dice}({roll})."
-                        ).format(
-                            dice=self.emojis.dice,
-                            author=self.escape(ctx.author.display_name),
-                            pet_name=pet,
-                            roll=roll,
+                        _("{author} started tracking a wild {pet_name} with a roll of {dice}({roll}).").format(
+                            dice=self.emojis.dice, author=self.escape(ctx.author.display_name), pet_name=pet, roll=roll,
                         ),
                         lang="css",
                     )
@@ -3982,11 +3949,7 @@ class Adventure(BaseCog):
         """
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx,
-                _(
-                    "The skill cleric is back in town and the "
-                    "monster ahead of you is demanding your attention."
-                ),
+                ctx, _("The skill cleric is back in town and the monster ahead of you is demanding your attention."),
             )
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -4109,10 +4072,9 @@ class Adventure(BaseCog):
         if sets is None:
             return await smart_embed(
                 ctx,
-                _(
-                    "`{input}` is not a valid set.\n\n"
-                    "Please use one of the following full set names: \n{sets}"
-                ).format(input=title_cased_set_name, sets=set_list),
+                _("`{input}` is not a valid set.\n\nPlease use one of the following full set names: \n{sets}").format(
+                    input=title_cased_set_name, sets=set_list
+                ),
             )
 
         bonus_list = sorted(sets, key=itemgetter("parts"))
@@ -4277,11 +4239,7 @@ class Adventure(BaseCog):
         """
         if self.in_adventure(ctx):
             return await smart_embed(
-                ctx,
-                _(
-                    "You tried to unequip your items, "
-                    "but the monster ahead of you looks mighty hungry..."
-                ),
+                ctx, _("You tried to unequip your items, but the monster ahead of you looks mighty hungry..."),
             )
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -5235,10 +5193,9 @@ class Adventure(BaseCog):
                 )
 
             if persuaded:
-                text = _(
-                    "{b_talkers} almost died in battle, "
-                    "but confounded the {chall} in the last second."
-                ).format(b_talkers=talkers_final_string, chall=session.challenge)
+                text = _("{b_talkers} almost died in battle, but confounded the {chall} in the last second.").format(
+                    b_talkers=talkers_final_string, chall=session.challenge
+                )
                 text += await self._reward(
                     ctx,
                     [u for u in talk_list + pray_list if u not in fumblelist],
@@ -6787,15 +6744,21 @@ class Adventure(BaseCog):
             return sorted_acc[:positions]
 
     @commands.command()
-    @commands.bot_has_permissions(add_reactions=True)
+    @commands.bot_has_permissions(add_reactions=True, embed_links=True)
     @commands.guild_only()
     async def aleaderboard(self, ctx: Context, show_global: bool = False):
         """Print the leaderboard."""
         guild = ctx.guild
-        rebirth_sorted = await self.get_leaderboard(guild=guild if not show_global else None, positions=40)
+        rebirth_sorted = await self.get_leaderboard(guild=guild if not show_global else None)
         if rebirth_sorted:
-            pages = await self._format_leaderboard_pages(ctx, accounts=rebirth_sorted)
-            await menu(ctx, pages, DEFAULT_CONTROLS, timeout=60)
+            await LeaderboardMenu(
+                source=LeaderboardSource(entries=rebirth_sorted),
+                delete_message_after=True,
+                clear_reactions_after=True,
+                timeout=60,
+                cog=self,
+                show_global=show_global,
+            ).start(ctx=ctx)
         else:
             await smart_embed(ctx, _("There are no adventurers in the server."))
 
@@ -6831,7 +6794,7 @@ class Adventure(BaseCog):
                 if not guild.get_member(acc):
                     del raw_accounts[acc]
         raw_accounts_new = {}
-        async for (k, v) in AsyncIter(raw_accounts.items()):
+        async for (k, v) in AsyncIter(raw_accounts.items(), steps=200):
             user_data = {}
             for item in ["adventures", "rebirths"]:
                 if item not in v:
@@ -6861,46 +6824,40 @@ class Adventure(BaseCog):
             return sorted_acc[:positions]
 
     @commands.command()
-    @commands.bot_has_permissions(add_reactions=True)
+    @commands.bot_has_permissions(add_reactions=True, embed_links=True)
     @commands.guild_only()
-    async def scoreboard(self, ctx: Context, stats: Optional[str] = None, show_global: bool = False):
-        """Print the scoreboard.
+    async def scoreboard(self, ctx: Context, show_global: bool = False):
+        """Print the scoreboard."""
 
-        Defaults to top 10 based on wins.
-        """
-        possible_stats = ["wins", "loses", "fight", "spell", "talk", "pray", "run", "fumbles"]
-        if stats and stats.lower() not in possible_stats:
-            return await smart_embed(
-                ctx, _("Stats must be one of the following: {}").format(humanize_list(possible_stats)),
-            )
-        elif stats is None:
-            stats = "wins"
-
-        guild = ctx.guild
-        rebirth_sorted = await self.get_global_scoreboard(
-            guild=guild if not show_global else None, keyword=stats.lower(), positions=40
-        )
+        rebirth_sorted = await self.get_global_scoreboard(guild=ctx.guild if not show_global else None, keyword="wins")
         if rebirth_sorted:
-            pages = await self._format_scoreboard_pages(ctx, accounts=rebirth_sorted, stats=stats.lower())
-            await menu(ctx, pages, DEFAULT_CONTROLS, timeout=60)
+            await ScoreBoardMenu(
+                source=ScoreboardSource(entries=rebirth_sorted, stat="wins"),
+                delete_message_after=True,
+                clear_reactions_after=True,
+                timeout=60,
+                cog=self,
+                show_global=show_global,
+            ).start(ctx=ctx)
         else:
             await smart_embed(ctx, _("There are no adventurers in the server."))
 
     @commands.command()
-    @commands.bot_has_permissions(add_reactions=True)
+    @commands.bot_has_permissions(add_reactions=True, embed_links=True)
     @commands.guild_only()
     async def wscoreboard(self, ctx: Context, show_global: bool = False):
-        """Print the weekly scoreboard.
-
-        Defaults to top 10 based on wins.
-        """
+        """Print the weekly scoreboard."""
 
         stats = "adventures"
         guild = ctx.guild
         adventures = await self.get_weekly_scoreboard(guild=guild if not show_global else None)
         if adventures:
-            pages = await self._format_scoreboard_pages(ctx, accounts=adventures, stats=stats.lower(), positions=40)
-            await menu(ctx, pages, DEFAULT_CONTROLS, timeout=60)
+            await BaseMenu(
+                source=WeeklyScoreboardSource(entries=adventures, stat=stats.lower()),
+                delete_message_after=True,
+                clear_reactions_after=True,
+                timeout=60,
+            ).start(ctx=ctx)
         else:
             await smart_embed(ctx, _("No stats to show for this week."))
 
@@ -6934,7 +6891,7 @@ class Adventure(BaseCog):
                 if not guild.get_member(acc):
                     del raw_accounts[acc]
         raw_accounts_new = {}
-        async for (k, v) in AsyncIter(raw_accounts.items()):
+        async for (k, v) in AsyncIter(raw_accounts.items(), steps=200):
             user_data = {}
             for item in ["weekly_score"]:
                 if item not in v:
@@ -6959,130 +6916,6 @@ class Adventure(BaseCog):
             return sorted_acc
         else:
             return sorted_acc[:positions]
-
-    async def _format_leaderboard_pages(self, ctx: Context, **kwargs) -> List[str]:
-        _accounts = kwargs.pop("accounts", {})
-        rebirth_len = len(humanize_number(_accounts[0][1]["rebirths"])) + 3
-        account_number = len(_accounts)
-        pos_len = len(humanize_number(account_number)) + 2
-
-        rebirth_len = (len("Rebirths") if len("Rebirths") > rebirth_len else rebirth_len) + 2
-        set_piece_len = len("Set Pieces") + 2
-        level_len = len("Level") + 2
-        header = (
-            f"{'#':{pos_len}}{'Rebirths':{rebirth_len}}"
-            f"{'Level':{level_len}}{'Set Pieces':{set_piece_len}}{'Name':2}"
-        )
-
-        if ctx is not None:
-            author = ctx.author
-        else:
-            author = None
-
-        if getattr(ctx, "guild", None):
-            guild = ctx.guild
-        else:
-            guild = None
-        entries = [header]
-        pages = []
-        async for (pos, (user_id, account_data)) in AsyncIter(_accounts).enumerate(start=1):
-            if guild is not None:
-                member = guild.get_member(user_id)
-            else:
-                member = None
-
-            if member is not None:
-                username = member.display_name
-            else:
-                user = self.bot.get_user(user_id)
-                if user is None:
-                    username = user_id
-                else:
-                    username = user.name
-
-            if user_id == author.id:
-                # Highlight the author's position
-                username = f"<<{username}>>"
-
-            pos_str = humanize_number(pos)
-            balance = humanize_number(account_data["rebirths"])
-            set_items = humanize_number(account_data["set_items"])
-            level = humanize_number(account_data["lvl"])
-
-            data = (
-                f"{f'{pos_str}.': <{pos_len}} "
-                f"{balance: <{rebirth_len}} "
-                f"{level: <{level_len}} "
-                f"{set_items: <{set_piece_len}} "
-                f"{username}"
-            )
-            entries.append(data)
-            if pos % 10 == 0:
-                pages.append(box("\n".join(entries), lang="md"))
-                entries = [header]
-            elif account_number == pos:
-                pages.append(box("\n".join(entries), lang="md"))
-        return pages
-
-    async def _format_scoreboard_pages(self, ctx: Context, **kwargs) -> List[str]:
-        _accounts = kwargs.pop("accounts", {})
-        _importantStats = kwargs.pop("stats", "wins")
-        stats_len = len(humanize_number(_accounts[0][1][_importantStats])) + 3
-        account_number = len(_accounts)
-        pos_len = len(humanize_number(account_number)) + 2
-
-        stats_plural = _importantStats if _importantStats.endswith("s") else f"{_importantStats}s"
-        stats_len = (len(stats_plural) if len(stats_plural) > stats_len else stats_len) + 2
-        rebirth_len = len("Rebirths") + 2
-        header = f"{'#':{pos_len}}{stats_plural.title().ljust(stats_len)}{'Rebirths':{rebirth_len}}{'Name':2}"
-
-        if ctx is not None:
-            author = ctx.author
-        else:
-            author = None
-
-        if getattr(ctx, "guild", None):
-            guild = ctx.guild
-        else:
-            guild = None
-        entries = [header]
-        pages = []
-        async for (pos, (user_id, account_data)) in AsyncIter(_accounts).enumerate(start=1):
-            if guild is not None:
-                member = guild.get_member(user_id)
-            else:
-                member = None
-
-            if member is not None:
-                username = member.display_name
-            else:
-                user = self.bot.get_user(user_id)
-                if user is None:
-                    username = user_id
-                else:
-                    username = user.name
-
-            if user_id == author.id:
-                # Highlight the author's position
-                username = f"<<{username}>>"
-
-            pos_str = humanize_number(pos)
-            rebirths = humanize_number(account_data["rebirths"])
-            stats_value = humanize_number(account_data[_importantStats.lower()])
-
-            data = (
-                f"{f'{pos_str}.': <{pos_len}} "
-                f"{stats_value: <{stats_len}} "
-                f"{rebirths: <{rebirth_len}} "
-                f"{username}"
-            )
-            entries.append(data)
-            if pos % 10 == 0:
-                pages.append(box("\n".join(entries), lang="md"))
-                entries = [header]
-            elif account_number == pos:
-                pages.append(box("\n".join(entries), lang="md"))
-        return pages
 
     @commands.command(name="apayday")
     @has_separated_economy()
