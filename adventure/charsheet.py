@@ -95,13 +95,13 @@ DAY_REGEX = re.compile(
 )
 
 _DAY_MAPPING = {
-    "monday": "1",
-    "tuesday": "2",
-    "wednesday": "3",
-    "thursday": "4",
-    "friday": "5",
-    "saturday": "6",
-    "sunday": "7",
+    "monday": "0",
+    "tuesday": "1",
+    "wednesday": "2",
+    "thursday": "3",
+    "friday": "4",
+    "saturday": "5",
+    "sunday": "6",
 }
 
 
