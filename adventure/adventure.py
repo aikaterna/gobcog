@@ -1367,7 +1367,7 @@ class Adventure(BaseCog):
                 _(
                     "**{buyer}** is currently in an adventure... "
                     "you were unable to reach them via pigeon."
-                ).format(buyer=self.escape(ctx.author.display_name)),
+                ).format(buyer=self.escape(buyer.display_name)),
             )
         try:
             c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
@@ -1463,7 +1463,7 @@ class Adventure(BaseCog):
                             except Exception as exc:
                                 log.exception("Error with the new character sheet", exc_info=exc)
                                 return
-                            if buy_user.rebirths - 2 < c.rebirths:
+                            if buy_user.rebirths + 1 < c.rebirths:
                                 return await smart_embed(
                                     ctx,
                                     _(
