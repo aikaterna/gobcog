@@ -840,6 +840,11 @@ class Adventure(BaseCog):
 
         Note: An item **degrade** level is how many rebirths it will last, before it is broken down.
         """
+        
+        if ctx.guild.id in self._sessions:
+            if ctx.channel.id == self._sessions[ctx.guild.id].message.channel.id:
+                return await smart_embed(ctx, "*Please use the respective spam channels* <:pandacop:375143122474369046>", False)
+                
         assert isinstance(rarity, str) or rarity is None
         assert isinstance(slot, str) or slot is None
         if not await self.allow_in_dm(ctx):
@@ -901,6 +906,11 @@ class Adventure(BaseCog):
     @_backpack.command(name="equip")
     async def backpack_equip(self, ctx: Context, *, equip_item: EquipableItemConverter):
         """Equip an item from your backpack."""
+        
+        if ctx.guild.id in self._sessions:
+            if ctx.channel.id == self._sessions[ctx.guild.id].message.channel.id:
+                return await smart_embed(ctx, "*Please use the respective spam channels* <:pandacop:375143122474369046>", False)
+                
         assert isinstance(equip_item, Item)
         if self.in_adventure(ctx):
             return await smart_embed(
@@ -963,6 +973,11 @@ class Adventure(BaseCog):
         This will provide a chance for a chest,
         or the item might break while you are handling it...
         """
+        
+        if ctx.guild.id in self._sessions:
+            if ctx.channel.id == self._sessions[ctx.guild.id].message.channel.id:
+                return await smart_embed(ctx, "*Please use the respective spam channels* <:pandacop:375143122474369046>", False)
+                
         assert isinstance(backpack_item, Item)
         if self.in_adventure(ctx):
             return await smart_embed(
@@ -1025,6 +1040,11 @@ class Adventure(BaseCog):
         slot: Optional[SlotConverter] = None,
     ):
         """Sell all items in your backpack. Optionally specify rarity or slot."""
+        
+        if ctx.guild.id in self._sessions:
+            if ctx.channel.id == self._sessions[ctx.guild.id].message.channel.id:
+                return await smart_embed(ctx, "*Please use the respective spam channels* <:pandacop:375143122474369046>", False)
+                
         assert isinstance(rarity, str) or rarity is None
         assert isinstance(slot, str) or slot is None
         if self.in_adventure(ctx):
@@ -1143,6 +1163,10 @@ class Adventure(BaseCog):
     async def backpack_sell(self, ctx: Context, *, item: ItemConverter):
         """Sell an item from your backpack."""
 
+        if ctx.guild.id in self._sessions:
+            if ctx.channel.id == self._sessions[ctx.guild.id].message.channel.id:
+                return await smart_embed(ctx, "*Please use the respective spam channels* <:pandacop:375143122474369046>", False)
+                
         if self.in_adventure(ctx):
             return await smart_embed(
                 ctx,
@@ -2463,7 +2487,9 @@ class Adventure(BaseCog):
         Trade 25 rare chests for 1 epic chest.
         Trade 25 epic chests for 1 legendary chest.
         """
-
+        if ctx.guild.id in self._sessions:
+            if ctx.channel.id == self._sessions[ctx.guild.id].message.channel.id:
+                return await smart_embed(ctx, "*Please use the respective spam channels* <:pandacop:375143122474369046>", False)
         # Thanks to flare#0001 for the idea and writing the first instance of this
         if self.in_adventure(ctx):
             return await smart_embed(
@@ -2634,6 +2660,7 @@ class Adventure(BaseCog):
     @commands.command()
     async def equip(self, ctx: Context, *, item: EquipableItemConverter):
         """This equips an item from your backpack."""
+        
         if self.in_adventure(ctx):
             return await smart_embed(
                 ctx,
@@ -2651,6 +2678,9 @@ class Adventure(BaseCog):
 
         This allows a Tinkerer to forge two items into a device. (1h cooldown)
         """
+        if ctx.guild.id in self._sessions:
+            if ctx.channel.id == self._sessions[ctx.guild.id].message.channel.id:
+                return await smart_embed(ctx, "*Please use the respective spam channels* <:pandacop:375143122474369046>", False)
         if self.in_adventure(ctx):
             return await smart_embed(
                 ctx, _("You tried to forge an item but there were no forges nearby.")
@@ -3041,7 +3071,10 @@ class Adventure(BaseCog):
     @commands.guild_only()
     async def buyloot(self, ctx: Context, loot_type: str, number: int = 1): #removed user argument 
         """Use this command to buy treasure chests"""
-
+        if ctx.guild.id in self._sessions:
+            if ctx.channel.id == self._sessions[ctx.guild.id].message.channel.id:
+                return await smart_embed(ctx, "*Please use the respective spam channels* <:pandacop:375143122474369046>", False)
+                
         user = ctx.author
         data = self.config.guild(ctx.guild)
         normal_cost = await data.normalcost()
@@ -3051,103 +3084,95 @@ class Adventure(BaseCog):
         sets_cost = await data.setscost()
         userbalance = await bank.get_balance(ctx.author)
         successful = False
-        command_in_use = await self.config.user(ctx.author).loot_command_in_use()
         
-        
-        if command_in_use is False:
-            
-            await self.config.user(ctx.author).loot_command_in_use.set(True)
-            loot_types = ["normal", "rare", "epic", "legendary", "set"]
+        async with self.get_lock(user):
+            loot_types = RARITIES
             if loot_type not in loot_types:
                 await self.config.user(ctx.author).loot_command_in_use.set(False)
 
                 return await smart_embed(
                     ctx,
                     (
-                        "Valid loot types: `normal`, `rare`, `epic`, `legendary` or `set`:\n "
+                        "Valid loot types: `{}`:\n "
                         "ex. `{}buyloot normal 1` "
-                    ).format(ctx.prefix),
+                    ).format(humanize_list(RARITIES), ctx.prefix),
                 )
                 
-            else:
-                try:
-                    c = await Character.from_json(self.config, user, self._daily_bonus)
-                except Exception as exc:
-                    log.exception("Error with the new character sheet", exc_info=exc)
-                    return
-                if loot_type == "rare":
-                    total_cost = rare_cost*number
-                    if userbalance >= total_cost:
-                        await bank.withdraw_credits(ctx.author, total_cost)
-                        successful = True
-                        c.treasure[1] += number
-                        await ctx.send("Chests have been added and {} were removed".format(total_cost))
-
-                    else:
-                        await ctx.send("Insufficient Balance")
-
-                elif loot_type == "epic":
-                    total_cost = epic_cost * number
-                    if userbalance >= total_cost:
-                        await bank.withdraw_credits(ctx.author, total_cost)
-                        successful = True
-                        c.treasure[2] += number
-                        await ctx.send("Chests have been added and {} were removed".format(total_cost))
-                    else:
-                        await ctx.send("Insufficient Balance")
-
-                elif loot_type == "legendary":
-                    total_cost = legendary_cost * number
-                    if userbalance >= total_cost:
-                        await bank.withdraw_credits(ctx.author, total_cost)
-                        successful = True
-                        c.treasure[3] += number
-                        await ctx.send("Chests have been added and {} were removed".format(total_cost))
-                    else:
-                        await ctx.send("Insufficient Balance")
-
-                elif loot_type == "set":
-                    total_cost = sets_cost * number
-                    if userbalance >= total_cost:
-                        await bank.withdraw_credits(ctx.author, total_cost)
-                        successful = True
-                        c.treasure[4] += number
-                        await ctx.send("Chests have been added and {} were removed".format(total_cost))
-                    else:
-                        await ctx.send("Insufficient Balance")
+            try:
+                c = await Character.from_json(self.config, user, self._daily_bonus)
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+            if loot_type == "rare":
+                total_cost = rare_cost*number
+                if userbalance >= total_cost:
+                    await bank.withdraw_credits(ctx.author, total_cost)
+                    successful = True
+                    c.treasure[1] += number
+                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
 
                 else:
-                    total_cost = normal_cost * number
-                    if userbalance >= total_cost:
-                        await bank.withdraw_credits(ctx.author, total_cost)
-                        successful = True
-                        c.treasure[0] += number
-                        await ctx.send("Chests have been added and {} were removed".format(total_cost))
-                    else:
-                        await ctx.send("Insufficient Balance")
-                if successful:
-                    await self.config.user(user).set(await c.to_json(self.config))
-                    await ctx.send(
-                        box(
-                            _(
-                                "{author} now owns {normal} normal, "
-                                "{rare} rare, {epic} epic, "
-                                "{leg} legendary and {set} set treasure chests."
-                            ).format(
-                                author=self.escape(user.display_name),
-                                normal=str(c.treasure[0]),
-                                rare=str(c.treasure[1]),
-                                epic=str(c.treasure[2]),
-                                leg=str(c.treasure[3]),
-                                set=str(c.treasure[4]),
-                            ),
-                            lang="css",
-                        )
+                    await ctx.send("Insufficient Balance")
+
+            elif loot_type == "epic":
+                total_cost = epic_cost * number
+                if userbalance >= total_cost:
+                    await bank.withdraw_credits(ctx.author, total_cost)
+                    successful = True
+                    c.treasure[2] += number
+                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                else:
+                    await ctx.send("Insufficient Balance")
+
+            elif loot_type == "legendary":
+                total_cost = legendary_cost * number
+                if userbalance >= total_cost:
+                    await bank.withdraw_credits(ctx.author, total_cost)
+                    successful = True
+                    c.treasure[3] += number
+                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                else:
+                    await ctx.send("Insufficient Balance")
+
+            elif loot_type == "set":
+                total_cost = sets_cost * number
+                if userbalance >= total_cost:
+                    await bank.withdraw_credits(ctx.author, total_cost)
+                    successful = True
+                    c.treasure[4] += number
+                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                else:
+                    await ctx.send("Insufficient Balance")
+
+            else:
+                total_cost = normal_cost * number
+                if userbalance >= total_cost:
+                    await bank.withdraw_credits(ctx.author, total_cost)
+                    successful = True
+                    c.treasure[0] += number
+                    await ctx.send("Chests have been added and {} were removed".format(total_cost))
+                else:
+                    await ctx.send("Insufficient Balance")
+            if successful:
+                await self.config.user(user).set(await c.to_json(self.config))
+                await ctx.send(
+                    box(
+                        _(
+                            "{author} now owns {normal} normal, "
+                            "{rare} rare, {epic} epic, "
+                            "{leg} legendary and {set} set treasure chests."
+                        ).format(
+                            author=self.escape(user.display_name),
+                            normal=str(c.treasure[0]),
+                            rare=str(c.treasure[1]),
+                            epic=str(c.treasure[2]),
+                            leg=str(c.treasure[3]),
+                            set=str(c.treasure[4]),
+                        ),
+                        lang="css",
                     )
-                await self.config.user(ctx.author).loot_command_in_use.set(False)
-            
-        else:
-            await ctx.send("Command is already in use please wait for some time after using the comand")
+                )
+            await self.config.user(ctx.author).loot_command_in_use.set(False)
 
     @commands.command()
     @commands.guild_only()
@@ -3613,6 +3638,11 @@ class Adventure(BaseCog):
 
         Use the box rarity type with the command: normal, rare, epic, legendary or set.
         """
+        
+        if ctx.guild.id in self._sessions:
+            if ctx.channel.id == self._sessions[ctx.guild.id].message.channel.id:
+                return await smart_embed(ctx, "*Please use the respective spam channels* <:pandacop:375143122474369046>", False)
+                
         if number > 100 or number < 1:
             return await smart_embed(ctx, _("Nice try :smirk:."))
         if self.in_adventure(ctx):
@@ -7786,31 +7816,52 @@ class Adventure(BaseCog):
     async def _grindsquad_here(self, ctx):
         channel = self.bot.get_channel((await self.config.guild(ctx.guild).adventure_channels())[0])
         if not channel:
-            return await smart_embed(ctx, f"You need to set adventure room using `!adventureset adventureroom`")
+            return await smart_embed(ctx, f"You need to set adventure room using `!adventureset adventureroom`", False)
         if ctx.channel != channel:
-            return await smart_embed(ctx, f"You can only answer calls to advenure in {channel.mention}.")
+            return await smart_embed(ctx, f"You can only answer calls to adventure in {channel.mention}.", False)
             
         if ctx.guild.id not in self._sessions:
             return await smart_embed(ctx, "Umm.... I see no adventures running."
                 "What are you doing here?\nIf you are lost try !where.\nIf you're still lost do !dad and you shall receive help.")
-                
+        
+        
         adventure_obj = self._sessions[ctx.guild.id]
+        user_has_reacted = False
         link = adventure_obj.message.jump_url
+        cache_msg = await ctx.fetch_message(adventure_obj.message.id)
+        print('1', cache_msg.reactions)
+        for reaction in cache_msg.reactions:
+            print('2', reaction.emoji)
+            reacted_users = await reaction.users().flatten()
+            for user in reacted_users:
+                print('3', user.id)
+                if ctx.author.id == user.id:
+                    user_has_reacted = True
+                    break
+            if user_has_reacted:
+                break
+        if not user_has_reacted:
+            return await smart_embed(ctx, f"You have not reacted to adventure.\n"
+            f"How will I ever know who to tag if you lie to me.\n"
+            f"Now be good, {ctx.author.mention} , and react to [{adventure_obj.challenge}]({link}) before the timer runs out.",
+            False
+            )
+        
         
         if ctx.author.id not in (await self.config.guild(ctx.guild).grindsquad()):
             return await smart_embed(ctx, f"You are currently not in grindsquad. Please contact moderators if you want to be added.\n" +
-                f"{ctx.author.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
+                f"{ctx.author.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link}).",
+                True
             )
             
         if ctx.author.id in self.grindsquad_answered:
-            msg =("You have already answered the call to adventure.\nOh wait! You lied about that before? **DID YOU?**\n"
-                "How will I ever know who to tag?"
+            msg =("You have already answered the call to adventure. Thank you for your time. 🙂 "
             )
         else:
             self.grindsquad_answered.append(ctx.author.id)            
             msg =  f"{ctx.author.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
         
-        await smart_embed(ctx, msg)
+        await smart_embed(ctx, msg, True)
             
     @_grindsquad.command(name="add")
     @checks.mod_or_permissions(manage_guild=True)
@@ -8242,3 +8293,18 @@ class Adventure(BaseCog):
         if channel and message:
             await channel.send(box(message, lang="python"))
             
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        if user.bot:
+            return
+        guild = reaction.message.guild
+        if guild.id in self._sessions:
+            adventure_obj = self._sessions[guild.id]
+            link = adventure_obj.message.jump_url
+            if reaction.message.id == self._sessions[guild.id].message.id:
+                channel = reaction.message.channel
+                if user.id not in self.grindsquad_answered:                 
+                    self.grindsquad_answered.append(user.id)         
+                    msg =  f"{user.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
+                    colour = discord.Colour.dark_green()
+                    return await channel.send(embed=discord.Embed(description=msg, color=colour))
