@@ -4834,12 +4834,18 @@ class Adventure(commands.Cog):
             return
         if guild.id in self._sessions:
             if reaction.message.id == self._sessions[guild.id].message_id:
-                await self._handle_adventure(reaction, user)
+                if guild.id in self._adventure_countdown:
+                    (timer, done, sremain) = self._adventure_countdown[guild.id]
+                    if sremain > 3:
+                        await self._handle_adventure(reaction, user)
         if guild.id in self._current_traders:
             if reaction.message.id == self._current_traders[guild.id]["msg"] and not self.in_adventure(user=user):
                 if user in self._current_traders[guild.id]["users"]:
                     return
-                await self._handle_cart(reaction, user)
+                if guild.id in self._trader_countdown:
+                    (timer, done, sremain) = self._trader_countdown[guild.id]
+                    if sremain > 3:
+                        await self._handle_cart(reaction, user)
 
     async def _handle_adventure(self, reaction, user):
         action = {v: k for k, v in self._adventure_controls.items()}[str(reaction.emoji)]
