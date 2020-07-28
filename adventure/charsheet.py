@@ -804,7 +804,14 @@ class Character(Item):
         return final
 
     async def get_backpack(
-        self, forging: bool = False, consumed=None, rarity=None, slot=None, show_delta=False, equippable=False
+        self,
+        forging: bool = False,
+        consumed=None,
+        rarity=None,
+        slot=None,
+        show_delta=False,
+        equippable=False,
+        set_name: str = None,
     ):
         if consumed is None:
             consumed = []
@@ -827,6 +834,8 @@ class Character(Item):
                 if slot is not None and slot != slot_name:
                     continue
                 if equippable and not can_equip(self, item[1]):
+                    continue
+                if set_name is not None and set_name != item[1].set:
                     continue
 
                 settext = ""

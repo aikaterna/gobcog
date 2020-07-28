@@ -4119,6 +4119,12 @@ class Adventure(commands.Cog):
                 ),
             )
 
+        try:
+            c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+        except Exception as exc:
+            log.exception("Error with the new character sheet", exc_info=exc)
+            return
+
         bonus_list = sorted(sets, key=itemgetter("parts"))
         msg_list = []
         for bonus in bonus_list:
@@ -4166,7 +4172,6 @@ class Adventure(commands.Cog):
         stats_msg += breakdown
         stats_msg += "Multiple complete set bonuses stack."
         msg_list.append(box(stats_msg, lang="ini"))
-
         set_items = {key: value for key, value in self.TR_GEAR_SET.items() if value["set"] == title_cased_set_name}
 
         d = {}
@@ -4181,6 +4186,12 @@ class Adventure(commands.Cog):
         set_msg = _("{set_name} Set Pieces\n\n").format(set_name=title_cased_set_name)
         set_msg += loadout_display
         msg_list.append(box(set_msg, lang="css"))
+
+        backpack_contents = _("{author}'s backpack \n\n{backpack}\n").format(
+            author=self.escape(ctx.author.display_name), backpack=await c.get_backpack(set_name=title_cased_set_name),
+        )
+        async for page in AsyncIter(pagify(backpack_contents, delims=["\n"], shorten_by=20, page_length=1950)):
+            msg_list.append(box(page, lang="css"))
 
         await menu(ctx, pages=msg_list, controls=DEFAULT_CONTROLS)
 
