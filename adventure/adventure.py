@@ -3793,7 +3793,6 @@ class Adventure(commands.Cog):
                 return await ctx.send(box(_("You don't have a pet."), lang="css"))
 
     @commands.command()
-    @commands.guild_only()
     async def bless(self, ctx: Context):
         """[Cleric Class Only]
 
@@ -3842,7 +3841,6 @@ class Adventure(commands.Cog):
                     )
 
     @commands.command()
-    @commands.guild_only()
     async def rage(self, ctx: Context):
         """[Berserker Class Only]
 
@@ -3891,7 +3889,6 @@ class Adventure(commands.Cog):
                     )
 
     @commands.command()
-    @commands.guild_only()
     async def focus(self, ctx: Context):
         """[Wizard Class Only]
 
@@ -3940,7 +3937,6 @@ class Adventure(commands.Cog):
                     )
 
     @commands.command()
-    @commands.guild_only()
     async def music(self, ctx: Context):
         """[Bard Class Only]
 
