@@ -4718,6 +4718,11 @@ class Adventure(BaseCog):
         """This draws up a character sheet of you or an optionally specified member."""
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
+            
+        if ctx.guild.id in self._sessions:
+            if ctx.channel.id == self._sessions[ctx.guild.id].message.channel.id:
+                return await smart_embed(ctx, "*Please use the respective spam channels* <:pandacop:375143122474369046>", False)
+                
         if user is None:
             user = ctx.author
         if user.bot:
