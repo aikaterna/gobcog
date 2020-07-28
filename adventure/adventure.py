@@ -352,6 +352,7 @@ class Adventure(commands.Cog):
             "cart_timeout": 10800,
             "cooldown_timer_manual": 120,
             "rebirth_cost": 100.0,
+            "disallow_withdraw": True,
         }
         default_global = {
             "god_name": _("Herbert"),
@@ -369,6 +370,7 @@ class Adventure(commands.Cog):
             "to_conversion_rate": 10,
             "from_conversion_rate": 11,
             "max_allowed_withdraw": 50000,
+            "disallow_withdraw": False,
         }
         self.RAISINS: list = None
         self.THREATEE: list = None
@@ -1882,12 +1884,13 @@ class Adventure(commands.Cog):
         )
 
     @adventureset.group(name="economy")
-    @commands.is_owner()
+    @commands.admin_or_permissions(administrator=True)
     @commands.guild_only()
     @has_separated_economy()
     async def commands_adventureset_economy(self, ctx: Context):
-        """[Owner] Manages the adventure economy."""
+        """[Admin] Manages the adventure economy."""
 
+    @commands.is_owner()
     @commands_adventureset_economy.command(name="rate")
     async def commands_adventureset_economy_conversion_rate(self, ctx: Context, *, rate: int):
         """[Owner] Set how much 1 bank credit is worth in adventure."""
@@ -1903,6 +1906,26 @@ class Adventure(commands.Cog):
                 a_name=await bank.get_currency_name(ctx.guild),
             ),
         )
+
+    @commands_adventureset_economy.command(name="withdraw")
+    async def commands_adventureset_economy_conversion_rate(self, ctx: Context):
+        """[Admin] Toggle whether users are allowed to withdraw from adventure currency to main currency."""
+
+        if bank.is_global(_forced=True):
+            state = await self.config.disallow_withdraw()
+            await self.config.disallow_withdraw.set(not state)
+        else:
+            state = await self.config.guild(ctx.guild).disallow_withdraw()
+            await self.config.guild(ctx.guild).disallow_withdraw.set(not state)
+
+        await smart_embed(
+            ctx,
+            _("Adventurers are now {state} to withdraw money from adventure currency.").format(
+                state=_("allowed") if not state else _("disallowed")
+            ),
+        )
+
+
 
     @adventureset.command(name="advcooldown", hidden=True)
     @commands.admin_or_permissions(administrator=True)
@@ -7072,10 +7095,21 @@ class Adventure(commands.Cog):
     async def commands_atransfer_withdraw(self, ctx: commands.Context, *, amount: int):
         """Convert gold to bank currency."""
         # Todo: Limit the number of transfers allowed bet rebirth.
-        configs = await self.config.all()
-        max_allowed_withdraw = configs.get("max_allowed_withdraw")
-        from_conversion_rate = configs.get("from_conversion_rate")
-        transferable_amount = amount // from_conversion_rate
+        if bank.is_global(_forced=True):
+            can_withdraw = await self.config.disallow_withdraw()
+            is_global = True
+        else:
+            can_withdraw = await self.config.guild(ctx.guild).disallow_withdraw()
+            is_global = False
+        if not can_withdraw:
+            if is_global:
+                string = _("{author.mention} my owner has disabled this option.")
+            else:
+                string = _("{author.mention} the admins of this server do not allow you to withdraw here.")
+            await smart_embed(
+                ctx, string.format(author=ctx.author),
+            )
+            return
         if amount <= 0:
             await smart_embed(
                 ctx,
@@ -7084,6 +7118,10 @@ class Adventure(commands.Cog):
                 ),
             )
             return
+        configs = await self.config.all()
+        max_allowed_withdraw = configs.get("max_allowed_withdraw")
+        from_conversion_rate = configs.get("from_conversion_rate")
+        transferable_amount = amount // from_conversion_rate
         if max_allowed_withdraw < 1:
             return await smart_embed(
                 ctx, _("{author.mention} my owner has disabled this option.").format(author=ctx.author)
