@@ -6164,7 +6164,7 @@ class Adventure(BaseCog):
                     c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
                     parsed_users.append(user)
                 await self.config.user(user).set(await c.to_json(self.config))
-        await self.send_log(ctx, log_msg)
+        await self.send_log(ctx, log_msg, True)
 
     async def handle_run(self, guild_id, attack, diplomacy, magic):
         runners = []
