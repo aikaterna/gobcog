@@ -70,8 +70,6 @@ from .charsheet import (
     EquipableItemConverter,
 )
 
-BaseCog = getattr(commands, "Cog", object)
-
 _ = Translator("Adventure", __file__)
 
 log = logging.getLogger("red.cogs.adventure")
@@ -230,7 +228,7 @@ class AdventureResults:
 
 
 @cog_i18n(_)
-class Adventure(BaseCog):
+class Adventure(commands.Cog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
     __version__ = "3.3.0"
@@ -793,6 +791,54 @@ class Adventure(BaseCog):
         user_data = await self.config.user(user).all()
         await self.config.user(ctx.author).set(user_data)
         await ctx.tick()
+
+    @commands.command(name="ebackpack")
+    @commands.bot_has_permissions(add_reactions=True)
+    async def commands_equipable_backpack(
+        self,
+        ctx: Context,
+        show_diff: Optional[bool] = False,
+        rarity: Optional[RarityConverter] = None,
+        *,
+        slot: Optional[SlotConverter] = None,
+    ):
+        """This shows the contents of your backpack that can be equipped.
+
+        Give it a rarity and/or slot to filter what backpack items to show.
+
+        Note: An item **degrade** level is how many rebirths it will last, before it is broken down.
+        """
+        assert isinstance(rarity, str) or rarity is None
+        assert isinstance(slot, str) or slot is None
+        if not await self.allow_in_dm(ctx):
+            return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
+        if not ctx.invoked_subcommand:
+            try:
+                c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+            if rarity:
+                rarity = rarity.lower()
+                if rarity not in RARITIES:
+                    return await smart_embed(
+                        ctx, _("{} is not a valid rarity, select one of {}").format(rarity, humanize_list(RARITIES)),
+                    )
+            if slot:
+                slot = slot.lower()
+                if slot not in ORDER:
+                    return await smart_embed(
+                        ctx, _("{} is not a valid slot, select one of {}").format(slot, humanize_list(ORDER)),
+                    )
+
+            backpack_contents = _("{author}'s backpack \n\n{backpack}\n").format(
+                author=self.escape(ctx.author.display_name),
+                backpack=await c.get_backpack(rarity=rarity, slot=slot, show_delta=show_diff, equippable=True),
+            )
+            msgs = []
+            async for page in AsyncIter(pagify(backpack_contents, delims=["\n"], shorten_by=20, page_length=1900)):
+                msgs.append(box(page, lang="css"))
+            return await menu(ctx, msgs, DEFAULT_CONTROLS)
 
     @commands.group(name="backpack", autohelp=False)
     @commands.bot_has_permissions(add_reactions=True)

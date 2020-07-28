@@ -803,7 +803,9 @@ class Character(Item):
         final.sort(key=lambda i: ORDER.index(i[0][1].slot[0]) if len(i[0][1].slot) == 1 else ORDER.index("two handed"))
         return final
 
-    async def get_backpack(self, forging: bool = False, consumed=None, rarity=None, slot=None, show_delta=False):
+    async def get_backpack(
+        self, forging: bool = False, consumed=None, rarity=None, slot=None, show_delta=False, equippable=False
+    ):
         if consumed is None:
             consumed = []
         bkpk = await self.get_sorted_backpack(self.backpack, slot=slot, rarity=rarity)
@@ -823,6 +825,8 @@ class Character(Item):
                 if rarity is not None and rarity != item[1].rarity:
                     continue
                 if slot is not None and slot != slot_name:
+                    continue
+                if equippable and not can_equip(self, item[1]):
                     continue
 
                 settext = ""
