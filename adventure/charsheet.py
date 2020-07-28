@@ -213,19 +213,19 @@ class Item:
             # epic and legendary stats too similar so make level req's
             # the same
             rarity_multiplier = max(min(RARITIES.index(self.rarity) if self.rarity in RARITIES else 1, 5), 1)
-            mult = 1 + (rarity_multiplier / 5)
+            mult = 1 + (rarity_multiplier / 10)
             positive_stats = (
                 sum([i for i in [self.att, self.int, self.cha, self.dex, self.luck] if i > 0])
                 * mult
-                * (2 if len(self.slot) == 2 else 1)
+                * (1.7 if len(self.slot) == 2 else 1)
             )
             negative_stats = (
                 sum([i for i in [self.att, self.int, self.cha, self.dex, self.luck] if i < 0])
                 / 2
-                * (2 if len(self.slot) == 2 else 1)
+                * (1.7 if len(self.slot) == 2 else 1)
             )
-            lvl = int(positive_stats + negative_stats)
-        return max(round(lvl), 1)
+            lvl = positive_stats + negative_stats
+        return max(int(lvl), 1)
 
     @staticmethod
     def remove_markdowns(item):
