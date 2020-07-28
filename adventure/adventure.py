@@ -333,8 +333,7 @@ class Adventure(BaseCog):
                 "desc": _("Your basic adventuring hero."),
                 "cooldown": 0,
             },
-            "skill": {"pool": 0, "att": 0, "cha": 0, "int": 0},
-            "loot_command_in_use": False
+            "skill": {"pool": 0, "att": 0, "cha": 0, "int": 0}
         }
 
         default_guild = {
@@ -353,7 +352,9 @@ class Adventure(BaseCog):
             "rarecost": 10000,
             "epiccost": 25000,
             "legendarycost": 80000,
-            "setscost": 400000
+            "setscost": 400000,
+            "private_log": None,
+            "public_log": None
         }
         default_global = {
             "god_name": _("Herbert"),
@@ -366,8 +367,7 @@ class Adventure(BaseCog):
             "schema_version": 1,
             "rebirth_cost": 100.0,
             "themes": {},
-            "daily_bonus": {"1": 0, "2": 0, "3": 0.5, "4": 0, "5": 0.5, "6": 1.0, "7": 1.0},
-            "record_keeper": None
+            "daily_bonus": {"1": 0, "2": 0, "3": 0.5, "4": 0, "5": 0.5, "6": 1.0, "7": 1.0}
         }
         self.RAISINS: list = None
         self.THREATEE: list = None
@@ -3088,8 +3088,6 @@ class Adventure(BaseCog):
         async with self.get_lock(user):
             loot_types = RARITIES
             if loot_type not in loot_types:
-                await self.config.user(ctx.author).loot_command_in_use.set(False)
-
                 return await smart_embed(
                     ctx,
                     (
@@ -3172,18 +3170,6 @@ class Adventure(BaseCog):
                         lang="css",
                     )
                 )
-            await self.config.user(ctx.author).loot_command_in_use.set(False)
-
-    @commands.command()
-    @commands.guild_only()
-    @checks.mod_or_permissions()
-    async def lootfix(self, ctx, user: discord.Member = None):
-        if user is None:
-            user = ctx.author
-        await self.config.user(user).loot_command_in_use.set(False)
-        await ctx.tick()
-
-
 
     @commands.group()
     @commands.guild_only()
@@ -4943,7 +4929,9 @@ class Adventure(BaseCog):
                     else _("1 second")
                 ),
             )
-        await self.send_log(f"Starting adventure on: {str(datetime.now())}\n")
+        # Log message
+        await self.send_log(ctx, f"Starting adventure on: {str(datetime.now())}\n")
+        await self.send_log(ctx, f"Starting adventure on: {str(datetime.now())}\n", True)
         
         if challenge and not (self.is_dev(ctx.author) or await ctx.bot.is_owner(ctx.author)):
             # Only let the bot owner specify a specific challenge
@@ -5053,8 +5041,13 @@ class Adventure(BaseCog):
             choice = random.choice(list(monsters.keys()) * 3)
         else:
             choice = random.choice(possible_monsters)
-        log_msg += (f"Selected monster: {choice} with base stats {monsters[choice]['hp'] if (stat_range['stat_type'] == 'attack') else monsters[choice]['dipl']} for {stat_range['stat_type']}\n")
-        await self.send_log(log_msg)
+        log_msg += (f"Selected monster: {choice} with base stats :"
+            f"{monsters[choice]['hp'] if (stat_range['stat_type'] == 'attack') else monsters[choice]['dipl']} for {stat_range['stat_type']}\n")
+        log_msg += (f"and\n"
+            f"{monsters[choice]['hp'] if (stat_range['stat_type'] == 'dipl') else monsters[choice]['hp']} for \n"
+            f"{'talk' if (stat_range['stat_type'] == 'attack') else 'attack'}"
+        )
+        await self.send_log(ctx, log_msg, True)
         return choice
 
     def _dynamic_monster_stats(self, ctx: Context, choice: MutableMapping):
@@ -5394,8 +5387,7 @@ class Adventure(BaseCog):
                 if user.id not in self.grindsquad_answered:                 
                     self.grindsquad_answered.append(user.id)         
                     msg =  f"{user.mention} has answered the {channel.mention} call to arms. Lets kill [{adventure_obj.challenge}]({link})."
-                    colour = discord.Colour.dark_green()
-                    return await channel.send(embed=discord.Embed(description=msg, color=colour))
+                    await self.send_log(reaction.message, msg, False, True, discord.Colour.dark_green())
         if guild.id in self._current_traders:
             if reaction.message.id == self._current_traders[guild.id][
                 "msg"
@@ -5601,9 +5593,9 @@ class Adventure(BaseCog):
             * self.ATTRIBS[challenge_attrib][1]
             * session.monster_stats
         )
-        log_msg += (f"Monster attack hp is {session.monster_modified_stats['hp']} * {self.ATTRIBS[challenge_attrib][0]} * {session.monster_stats} = {hp} using base_stat*attribute value*session stats.\n")
+        log_msg += (f"Monster attack hp is {session.monster_modified_stats['hp']} * {self.ATTRIBS[challenge_attrib][0]} * {session.monster_stats} = {hp} using base_stat * attribute value * session stats.\n")
         log_msg += (f"Monster talk hp is {session.monster_modified_stats['dipl']} * {self.ATTRIBS[challenge_attrib][1]} * {session.monster_stats} = {dipl}\n")
-
+        
         dmg_dealt = int(attack + magic)
         diplomacy = int(diplomacy)
         slain = dmg_dealt >= int(hp)
@@ -6167,7 +6159,7 @@ class Adventure(BaseCog):
                     c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
                     parsed_users.append(user)
                 await self.config.user(user).set(await c.to_json(self.config))
-        await self.send_log(log_msg)
+        await self.send_log(ctx, log_msg)
 
     async def handle_run(self, guild_id, attack, diplomacy, magic):
         runners = []
@@ -7241,7 +7233,7 @@ class Adventure(BaseCog):
                 cp=humanize_number(int(newcp)),
                 currency_name=currency_name,
             )
-        await self.send_log(log_msg)
+        await self.send_log(ctx, log_msg)
         return phrase
 
     @staticmethod
@@ -8182,7 +8174,7 @@ class Adventure(BaseCog):
             log.exception("Error with the new character sheet", exc_info=exc)
             return
             
-        backpack_contents = _("[{author}'s backpack] \n\n{backpack}\n").format(
+        backpack_contents = _("{author}'s backpack \n\n{backpack}\n").format(
             author=self.escape(ctx.author.display_name),
             backpack=await c.get_custom_backpack(required),
         )
@@ -8291,14 +8283,28 @@ class Adventure(BaseCog):
         return required
         
     @commands.command()
+    @commands.guild_only()
     @commands.is_owner()
-    async def setadventurelog(self, ctx, channel:discord.TextChannel):
-        await self.config.record_keeper.set(channel.id)
+    async def setadventurelog(self, ctx, channel:discord.TextChannel, private:bool = False, colour = None):
+        if private:
+            await self.config.guild(ctx.guild).private_log.set(channel.id)
+        else:
+            await self.config.guild(ctx.guild).public_log.set(channel.id)
         await ctx.tick()
         
-    async def send_log(self, message):
-        channel = await self.bot.fetch_channel( await self.config.record_keeper())
+    async def send_log(self, ctx, message, private:bool = False, use_embed = False, colour = discord.Colour.dark_red()):
+        if private:
+            channel = await self.bot.fetch_channel( await self.config.guild(ctx.guild).private_log())
+        else:
+            channel = await self.bot.fetch_channel( await self.config.guild(ctx.guild).public_log())
         if channel and message:
-            await channel.send(box(message, lang="python"))
+            if use_embed and colour:
+                await channel.send(embed=discord.Embed(description=message, color=colour))
+            elif use_embed and colour is None:
+                raise BadArgument
+            else:
+                await channel.send(box(message, lang="python"))
+
+        
             
     
