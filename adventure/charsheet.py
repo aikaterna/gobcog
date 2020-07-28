@@ -177,6 +177,8 @@ class Item:
         self.set: bool = kwargs.get("set", False)
         self.parts: int = kwargs.get("parts")
         self.total_stats: int = self.att + self.int + self.cha + self.dex + self.luck
+        if len(self.slot) > 2:
+            self.total_stats *= 2
         self.max_main_stat = max(self.att, self.int, self.cha, 1)
         self.lvl: int = (
             kwargs.get("lvl") or self.get_equip_level()
@@ -210,8 +212,19 @@ class Item:
         if self.rarity not in ["forged"]:
             # epic and legendary stats too similar so make level req's
             # the same
-            rarity_multiplier = min(RARITIES.index(self.rarity) if self.rarity in RARITIES else 1, 5)
-            lvl = self.max_main_stat * (rarity_multiplier + 3)
+            rarity_multiplier = max(min(RARITIES.index(self.rarity) if self.rarity in RARITIES else 1, 5), 1)
+            mult = 1 + (rarity_multiplier / 5)
+            positive_stats = (
+                sum([i for i in [self.att, self.int, self.cha, self.dex, self.luck] if i > 0])
+                * mult
+                * (2 if len(self.slot) == 2 else 1)
+            )
+            negative_stats = (
+                sum([i for i in [self.att, self.int, self.cha, self.dex, self.luck] if i < 0])
+                / 2
+                * (2 if len(self.slot) == 2 else 1)
+            )
+            lvl = int(positive_stats + negative_stats)
         return max(round(lvl), 1)
 
     @staticmethod
@@ -1526,7 +1539,7 @@ class PercentageConverter(Converter):
 
 
 def equip_level(char, item):
-    return item.lvl if item.rarity == "event" else max((item.lvl - min(max(char.rebirths // 2 - 1, 0), 50)), 1)
+    return item.lvl if item.rarity == "event" else max(item.lvl - min(max(char.rebirths // 2 - 1, 0), 50), 1)
 
 
 def can_equip(char: Character, item: Item):
