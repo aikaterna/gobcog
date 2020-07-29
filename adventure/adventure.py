@@ -5783,9 +5783,8 @@ class Adventure(commands.Cog):
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 continue
-
+            rebirths = c.rebirths * (3 if c.heroclass["name"] == "Cleric" else 1)
             if c.heroclass["name"] == "Cleric":
-                rebirths = c.rebirths * 3 if c.heroclass["name"] == "Cleric" else 0
                 crit_mod = max(c.dex, c.luck) + (c.total_int // 20)
                 mod = 0
                 max_roll = 50 if c.rebirths >= 15 else 20
@@ -5801,7 +5800,6 @@ class Adventure(commands.Cog):
                     msg += _("**{}** blessed like a madman but nobody was there to receive it.\n").format(
                         self.escape(user.display_name)
                     )
-
                 if roll == 1:
                     pray_att_bonus = 0
                     pray_diplo_bonus = 0
@@ -5888,11 +5886,11 @@ class Adventure(commands.Cog):
                     talk_buff = 0
                     magic_buff = 0
                     if fight_list:
-                        attack_buff = 10 * (len(fight_list) + c.rebirths // 15)
+                        attack_buff = 10 * (len(fight_list) + rebirths // 15)
                     if talk_list:
-                        talk_buff = 10 * (len(talk_list) + c.rebirths // 15)
+                        talk_buff = 10 * (len(talk_list) + rebirths // 15)
                     if magic_list:
-                        magic_buff = 10 * (len(magic_list) + c.rebirths // 15)
+                        magic_buff = 10 * (len(magic_list) + rebirths // 15)
 
                     attack += attack_buff
                     magic += magic_buff
