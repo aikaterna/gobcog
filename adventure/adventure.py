@@ -353,6 +353,7 @@ class Adventure(commands.Cog):
             "cooldown_timer_manual": 120,
             "rebirth_cost": 100.0,
             "disallow_withdraw": True,
+            "max_allowed_withdraw": 50000,
         }
         default_global = {
             "god_name": _("Herbert"),
@@ -1907,8 +1908,24 @@ class Adventure(commands.Cog):
             ),
         )
 
+    @commands_adventureset_economy.command(name="maxwithdraw")
+    async def commands_adventureset_economy_maxwithdraw(self, ctx: Context, *, amount: int):
+        """[Admin] Set how much players are allowed to withdraw."""
+        if amount < 0:
+            return await smart_embed(ctx, _("You are evil ... please DM me your phone number we need to hangout."))
+        if bank.is_global(_forced=True):
+            await self.config.max_allowed_withdraw.set(amount)
+        else:
+            await self.config.guild(ctx.guild).max_allowed_withdraw.set(amount)
+        await smart_embed(
+            ctx,
+            _(
+                "Adventurers will be able to withdraw up to {amount} {name} from their adventure bank and deposit into their bot economy."
+            ).format(name=await bank.get_currency_name(ctx.guild, _forced=True), amount=humanize_number(amount),),
+        )
+
     @commands_adventureset_economy.command(name="withdraw")
-    async def commands_adventureset_economy_conversion_rate(self, ctx: Context):
+    async def commands_adventureset_economy_withdraw(self, ctx: Context):
         """[Admin] Toggle whether users are allowed to withdraw from adventure currency to main currency."""
 
         if bank.is_global(_forced=True):
@@ -1924,8 +1941,6 @@ class Adventure(commands.Cog):
                 state=_("allowed") if not state else _("disallowed")
             ),
         )
-
-
 
     @adventureset.command(name="advcooldown", hidden=True)
     @commands.admin_or_permissions(administrator=True)
@@ -7048,7 +7063,7 @@ class Adventure(commands.Cog):
     @commands.group(name="atransfer")
     @has_separated_economy()
     async def commands_atransfer(self, ctx: commands.Context):
-        """Transfer currency between players/bank."""
+        """Transfer currency between players/economies."""
 
     @commands_atransfer.command(name="deposit")
     @commands.guild_only()
@@ -7092,14 +7107,17 @@ class Adventure(commands.Cog):
     @commands.guild_only()
     async def commands_atransfer_withdraw(self, ctx: commands.Context, *, amount: int):
         """Convert gold to bank currency."""
-        # Todo: Limit the number of transfers allowed bet rebirth.
         if bank.is_global(_forced=True):
-            can_withdraw = await self.config.disallow_withdraw()
+            global_config = await self.config.all()
+            can_withdraw = global_config["disallow_withdraw"]
+            max_allowed_withdraw = global_config["max_allowed_withdraw"]
             is_global = True
         else:
-            can_withdraw = await self.config.guild(ctx.guild).disallow_withdraw()
+            guild_config = await self.config.guild(ctx.guild).all()
+            can_withdraw = guild_config["disallow_withdraw"]
+            max_allowed_withdraw = guild_config["max_allowed_withdraw"]
             is_global = False
-        if not can_withdraw:
+        if not can_withdraw or max_allowed_withdraw < 1:
             if is_global:
                 string = _("{author.mention} my owner has disabled this option.")
             else:
@@ -7117,13 +7135,8 @@ class Adventure(commands.Cog):
             )
             return
         configs = await self.config.all()
-        max_allowed_withdraw = configs.get("max_allowed_withdraw")
         from_conversion_rate = configs.get("from_conversion_rate")
         transferable_amount = amount // from_conversion_rate
-        if max_allowed_withdraw < 1:
-            return await smart_embed(
-                ctx, _("{author.mention} my owner has disabled this option.").format(author=ctx.author)
-            )
         if not bank.can_spend(member=ctx.author, amount=amount):
             return await smart_embed(
                 ctx,
@@ -7131,7 +7144,6 @@ class Adventure(commands.Cog):
                     author=ctx.author, name=await bank.get_currency_name(ctx.guild)
                 ),
             )
-
         if transferable_amount > max_allowed_withdraw:
             return await smart_embed(
                 ctx,
