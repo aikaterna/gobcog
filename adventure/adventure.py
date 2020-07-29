@@ -5807,11 +5807,11 @@ class Adventure(commands.Cog):
                     pray_diplo_bonus = 0
                     pray_magic_bonus = 0
                     if fight_list:
-                        pray_att_bonus = (5 * len(fight_list)) - ((5 * len(fight_list)) * max(c.rebirths * 0.01, 1.5))
+                        pray_att_bonus = (5 * len(fight_list)) - ((5 * len(fight_list)) * max(rebirths * 0.01, 1.5))
                     if talk_list:
-                        pray_diplo_bonus = (5 * len(talk_list)) - ((5 * len(talk_list)) * max(c.rebirths * 0.01, 1.5))
+                        pray_diplo_bonus = (5 * len(talk_list)) - ((5 * len(talk_list)) * max(rebirths * 0.01, 1.5))
                     if magic_list:
-                        pray_magic_bonus = (5 * len(magic_list)) - ((5 * len(magic_list)) * max(c.rebirths * 0.01, 1.5))
+                        pray_magic_bonus = (5 * len(magic_list)) - ((5 * len(magic_list)) * max(rebirths * 0.01, 1.5))
                     attack -= pray_att_bonus
                     diplomacy -= pray_diplo_bonus
                     magic -= pray_magic_bonus
@@ -5841,15 +5841,15 @@ class Adventure(commands.Cog):
 
                     if fight_list:
                         pray_att_bonus = int(
-                            (mod * len(fight_list)) + ((mod * len(fight_list)) * max(c.rebirths * 0.01, 1.5))
+                            (mod * len(fight_list)) + ((mod * len(fight_list)) * max(rebirths * 0.01, 1.5))
                         )
                     if talk_list:
                         pray_diplo_bonus = int(
-                            (mod * len(talk_list)) + ((mod * len(talk_list)) * max(c.rebirths * 0.01, 1.5))
+                            (mod * len(talk_list)) + ((mod * len(talk_list)) * max(rebirths * 0.01, 1.5))
                         )
                     if magic_list:
                         pray_magic_bonus = int(
-                            (mod * len(magic_list)) + ((mod * len(magic_list)) * max(c.rebirths * 0.01, 1.5))
+                            (mod * len(magic_list)) + ((mod * len(magic_list)) * max(rebirths * 0.01, 1.5))
                         )
                     attack += pray_att_bonus
                     magic += pray_magic_bonus
