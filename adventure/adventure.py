@@ -1300,7 +1300,7 @@ class Adventure(commands.Cog):
             return await smart_embed(
                 ctx,
                 _("**{buyer}** is currently in an adventure... you were unable to reach them via pigeon.").format(
-                    buyer=self.escape(ctx.author.display_name)
+                    buyer=self.escape(buyer.display_name)
                 ),
             )
         try:
