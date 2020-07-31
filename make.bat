@@ -18,7 +18,7 @@ black --check -l 120 .
 exit /B %ERRORLEVEL%
 
 :stylediff
-isort --atomic --check --diff --line-length 120 --use-parentheses .;
+isort --atomic --check --diff --line-length 120 --use-parentheses .
 black --check --diff -l 120 .
 exit /B %ERRORLEVEL%
 
