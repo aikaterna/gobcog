@@ -12,3 +12,5 @@ venv/
 !/adventure/data/default/gen.py
 .idea/pylint.xml
 !/adventure/data/default/temp.json
+.mypy_cache
+.venv/
