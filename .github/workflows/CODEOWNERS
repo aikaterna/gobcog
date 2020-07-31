@@ -1,0 +1,8 @@
+adventure/**                             @aikaterna
+adventure/charsheet.py                   @aikaterna @TrustyJAID
+adventure/adventure.py                   @aikaterna @TrustyJAID
+adventure/bank.py                        @Drapersniper
+adventure/menus.py                       @Drapersniper
+
+change_logs/**                           @aikaterna
+README.md                                @aikaterna
