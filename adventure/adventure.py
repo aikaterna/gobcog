@@ -3430,7 +3430,7 @@ class Adventure(commands.Cog):
             ctx.command.reset_cooldown(ctx)
             return await smart_embed(ctx, _("The gods refuse your pitiful offering."))
         if offering > bal:
-            offering = bal
+            offering = int(bal)
         lock = self.get_lock(ctx.author)
         await lock.acquire()
         try:
