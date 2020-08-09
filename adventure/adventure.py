@@ -4456,8 +4456,9 @@ class Adventure(commands.Cog):
 
         if not await has_funds(ctx.author, 250):
             currency_name = await bank.get_currency_name(ctx.guild,)
+            extra = _("\nRun `{ctx.clean_prefix}apayday` to get some gold.").format(ctx=ctx) if self._separate_economy else ""
             return await smart_embed(
-                ctx, _("You need {req} {name} to start an adventure.").format(req=250, name=currency_name),
+                ctx, _("You need {req} {name} to start an adventure.{extra}").format(req=250, name=currency_name, extra=extra),
             )
         guild_settings = await self.config.guild(ctx.guild).all()
         cooldown = guild_settings["cooldown"]
