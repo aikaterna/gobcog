@@ -7265,7 +7265,7 @@ class Adventure(commands.Cog):
             )
         )
 
-    @commands_atransfer.give(name="give")
+    @commands_atransfer.command(name="give")
     @commands.is_owner()
     async def commands_atransfer_give(self, ctx: commands.Context, amount: int, *players: discord.User):
         """[Owner] Give gold to adventurers."""
