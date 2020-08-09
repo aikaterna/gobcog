@@ -18,7 +18,7 @@ from discord.ext.commands import CheckFailure
 from discord.ext.commands.errors import BadArgument
 from redbot.core import Config, commands
 from redbot.core.bot import Red
-from redbot.core.commands import Context, check
+from redbot.core.commands import Context, check, get_dict_converter
 from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator, cog_i18n
@@ -27,6 +27,7 @@ from redbot.core.utils.chat_formatting import box, escape, humanize_list, humani
 from redbot.core.utils.common_filters import filter_various_mentions
 from redbot.core.utils.menus import DEFAULT_CONTROLS, menu, start_adding_reactions
 from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
+from tabulate import tabulate
 
 import adventure.charsheet
 from . import bank
@@ -71,6 +72,7 @@ REBIRTH_LVL = 20
 REBIRTH_STEP = 10
 _SCHEMA_VERSION = 4
 _config: Config = None
+TaxesConverter = get_dict_converter(delims=[" ", ",", ";"])
 
 
 async def smart_embed(ctx, message, success=None):
@@ -1895,23 +1897,24 @@ class Adventure(commands.Cog):
     async def commands_adventureset_economy(self, ctx: Context):
         """[Admin] Manages the adventure economy."""
 
-    @commands_adventureset_economy.command(name="tax")
+    @commands_adventureset_economy.command(name="tax", usage=" gold,tax gold,tax ...")
     @commands.is_owner()
-    async def commands_adventureset_economy_tax(self, ctx: Context, threshold: int, percentage: PercentageConverter):
-        """[Owner] Set the daily xp and currency bonus.
+    async def commands_adventureset_economy_tax(self, ctx: Context, *, taxes: TaxesConverter):
+        """[Owner] Set the tax thresholds.
 
-        **threshold** must be positive
-        **percentage** must be between 0% and 100%.
+        **gold** must be positive
+        **percentage** must be between 0 and 1.
+
         """
-        if threshold <= 0:
-            return await smart_embed(ctx, _("You are evil ... please DM me your phone number we need to hangout."))
-        async with self.config.tax_brackets.all() as tax_brackets_data:
-            tax_brackets_data[str(threshold)] = percentage
+        new_taxes = {}
+        for k, v in taxes.items():
+            if int(k) >= 0 and 0 <= float(v) <= 1:
+                new_taxes[k] = float(v)
+        new_taxes = {k: v for k, v in sorted(new_taxes.items(), key=lambda item: item[1])}
+        await self.config.tax_brackets.set(new_taxes)
+        headers = ["Tax %", "Tax Threshold"]
         await smart_embed(
-            ctx,
-            _("Players will be taxed after `{tax:.2%}` when earning more than `{gold}`.").format(
-                tax=percentage, gold=humanize_number(threshold)
-            ),
+            ctx, box(tabulate([(f"{v:.2%}", humanize_number(int(k))) for k, v in new_taxes.items()], headers=headers))
         )
 
     @commands.is_owner()
@@ -2638,8 +2641,11 @@ class Adventure(commands.Cog):
                             humanize_timedelta(seconds=int(cooldown_time)) if cooldown_time >= 1 else _("1 second")
                         ),
                     )
+                ignored_rarities = ["forged", "set", "event"]
+                if c.rebirths < 30:
+                    ignored_rarities.append("ascended")
                 consumed = []
-                forgeables_items = [str(i) for n, i in c.backpack.items() if i.rarity not in ["forged", "set"]]
+                forgeables_items = [str(i) for n, i in c.backpack.items() if i.rarity not in ignored_rarities]
 
                 if len(forgeables_items) <= 1:
                     return await smart_embed(
@@ -7239,9 +7245,11 @@ class Adventure(commands.Cog):
             await smart_embed(
                 ctx, _("{author.mention} You can't transfer 0 or negative values.").format(author=ctx.author),
             )
+            ctx.command.reset_cooldown(ctx)
             return
         currency = await bank.get_currency_name(ctx.guild)
         if not await bank.can_spend(member=ctx.author, amount=amount):
+            ctx.command.reset_cooldown(ctx)
             return await smart_embed(
                 ctx,
                 _("{author.mention} you don't have enough {name}.").format(
@@ -7252,22 +7260,28 @@ class Adventure(commands.Cog):
         highest = 0
         for tax, percent in tax.items():
             tax = int(tax)
-            if tax > amount:
+            if tax >= amount:
                 break
             highest = percent
 
         try:
-            await bank.transfer_credits(from_=ctx.author, to=player, amount=amount, tax=tax)  # Customizable Tax
+            transfered = await bank.transfer_credits(
+                from_=ctx.author, to=player, amount=amount, tax=tax
+            )  # Customizable Tax
         except (ValueError, BalanceTooHigh) as e:
+            ctx.command.reset_cooldown(ctx)
             return await ctx.send(str(e))
 
         await ctx.send(
-            _("{user} transferred {num} {currency} to {other_user} (You have been taxed {tax:.2%})").format(
+            _(
+                "{user} transferred {num} {currency} to {other_user} (You have been taxed {tax:.2%}, total transfered: {transfered})"
+            ).format(
                 user=ctx.author.display_name,
                 num=humanize_number(amount),
                 currency=currency,
                 other_user=player.display_name,
                 tax=highest,
+                transfered=humanize_number(transfered),
             )
         )
 

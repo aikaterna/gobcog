@@ -18,5 +18,6 @@
 		"rpg",
 		"adventure"
 	],
-	"type": "COG"
+	"type": "COG",
+	"requirements": ["tabulate"]
 }
