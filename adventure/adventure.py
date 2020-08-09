@@ -226,7 +226,7 @@ class AdventureResults:
 class Adventure(commands.Cog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
 
-    __version__ = "3.3.4"
+    __version__ = "3.3.5"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -4456,9 +4456,16 @@ class Adventure(commands.Cog):
 
         if not await has_funds(ctx.author, 250):
             currency_name = await bank.get_currency_name(ctx.guild,)
-            extra = _("\nRun `{ctx.clean_prefix}apayday` to get some gold.").format(ctx=ctx) if self._separate_economy else ""
+            extra = (
+                _("\nRun `{ctx.clean_prefix}apayday` to get some gold.").format(ctx=ctx)
+                if self._separate_economy
+                else ""
+            )
             return await smart_embed(
-                ctx, _("You need {req} {name} to start an adventure.{extra}").format(req=250, name=currency_name, extra=extra),
+                ctx,
+                _("You need {req} {name} to start an adventure.{extra}").format(
+                    req=250, name=currency_name, extra=extra
+                ),
             )
         guild_settings = await self.config.guild(ctx.guild).all()
         cooldown = guild_settings["cooldown"]
@@ -7097,10 +7104,7 @@ class Adventure(commands.Cog):
         transferable_amount = amount * from_conversion_rate
         if amount <= 0:
             await smart_embed(
-                ctx,
-                _("{author.mention} You can't deposit 0 or negative values.").format(
-                    author=ctx.author, name=await bank.get_currency_name(ctx.guild, _forced=True)
-                ),
+                ctx, _("{author.mention} You can't deposit 0 or negative values.").format(author=ctx.author),
             )
             return
         if not await bank.can_spend(ctx.author, amount=amount, _forced=True):
@@ -7162,10 +7166,7 @@ class Adventure(commands.Cog):
             return
         if amount <= 0:
             await smart_embed(
-                ctx,
-                _("{author.mention} You can't withdraw 0 or negative values.").format(
-                    author=ctx.author, name=await bank.get_currency_name(ctx.guild)
-                ),
+                ctx, _("{author.mention} You can't withdraw 0 or negative values.").format(author=ctx.author),
             )
             return
         configs = await self.config.all()
@@ -7209,10 +7210,7 @@ class Adventure(commands.Cog):
         """Transfer gold to another player."""
         if amount <= 0:
             await smart_embed(
-                ctx,
-                _("{author.mention} You can't transfer 0 or negative values.").format(
-                    author=ctx.author, name=await bank.get_currency_name(ctx.guild)
-                ),
+                ctx, _("{author.mention} You can't transfer 0 or negative values.").format(author=ctx.author),
             )
             return
         currency = await bank.get_currency_name(ctx.guild)
@@ -7236,4 +7234,29 @@ class Adventure(commands.Cog):
                 currency=currency,
                 other_user=player.display_name,
             )
+        )
+
+    @commands_atransfer.give(name="give")
+    @commands.is_owner()
+    async def commands_atransfer_give(self, ctx: commands.Context, amount: int, *players: discord.User):
+        """[Owner] Give gold to adventurers."""
+        if amount <= 0:
+            await smart_embed(
+                ctx, _("{author.mention} You can't give 0 or negative values.").format(author=ctx.author),
+            )
+            return
+        players_string = ""
+        for player in players:
+            try:
+                await bank.deposit_credits(member=player, amount=amount)
+                players_string += f"{player.display_name}\n"
+            except BalanceTooHigh as exc:
+                await bank.set_balance(member=player, amount=exc.max_balance)
+                players_string += f"{player.display_name}\n"
+
+        await smart_embed(
+            ctx,
+            _("{author.mention} I've given {amount} to the following adventurers:\n\n{players").format(
+                author=ctx.author, amount=humanize_number(amount), players=players_string
+            ),
         )
