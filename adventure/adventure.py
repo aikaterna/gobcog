@@ -7323,7 +7323,10 @@ class Adventure(commands.Cog):
 
         await smart_embed(
             ctx,
-            _("{author.mention} I've given {amount} to the following adventurers:\n\n{players}").format(
-                author=ctx.author, amount=humanize_number(amount), players=players_string
+            _("{author.mention} I've given {amount} {name} to the following adventurers:\n\n{players}").format(
+                author=ctx.author,
+                amount=humanize_number(amount),
+                players=players_string,
+                name=await bank.get_currency_name(ctx.guild),
             ),
         )
