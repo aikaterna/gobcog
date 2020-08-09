@@ -54,5 +54,48 @@
   },
   "West": {
     "the": true
+  },
+  "Supreme One": {
+    "the": true,
+    "att": 15,
+    "cha": 15,
+    "int": 15,
+    "dex": 15
+  },
+  "Destiny": {
+    "luck": 12
+  },
+  "Fate": {
+    "luck": 10
+  },
+  "Champions": {
+    "att": 12
+  },
+  "Conquerors": {
+    "att": 10,
+    "cha": -12
+  },
+  "Wisdom": {
+    "int": 12
+  },
+  "Sage": {
+    "the": true,
+    "int": 10
+  },
+  "Mind": {
+    "the": true,
+    "cha": 12
+  },
+  "Priest": {
+    "the": true,
+    "cha": 10
+  },
+  "Nimble": {
+    "the": true,
+    "dex": 12
+  },
+  "Thief": {
+    "the": true,
+    "dex": 10
   }
 }
