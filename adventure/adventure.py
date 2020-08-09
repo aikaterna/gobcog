@@ -4332,7 +4332,7 @@ class Adventure(commands.Cog):
             return
 
         legend = _("( ATT | CHA | INT | DEX | LUCK ) | LEVEL REQ | [DEGRADE#] | SET (SET PIECES)")
-        equipped_gear_msg = _("[{user}'s Character Sheet]\n\nItems Equipped:\n{legend}{equip}").format(
+        equipped_gear_msg = _("{user}'s Character Sheet\n\nItems Equipped:\n{legend}{equip}").format(
             legend=legend, equip=c.get_equipment(), user=c.user.display_name
         )
         await menu(

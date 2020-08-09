@@ -811,7 +811,7 @@ class Character(Item):
         return final
 
     async def looted(self, how_many: int = 1) -> List[Tuple[str, int]]:
-        items = [i for n, i in self.backpack.items() if i.rarity not in ["forged"]]
+        items = [i for n, i in self.backpack.items() if i.rarity not in ["normal", "rare", "epic", "forged"]]
         looted_so_far = 0
         looted = []
         while how_many > looted_so_far:
