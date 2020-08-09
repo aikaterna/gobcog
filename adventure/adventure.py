@@ -7230,7 +7230,7 @@ class Adventure(commands.Cog):
             ),
         )
 
-    @commands_atransfer.command(name="player")
+    @commands_atransfer.command(name="player", cooldown_after_parsing=True)
     @commands.guild_only()
     @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
     async def commands_atransfer_player(self, ctx: commands.Context, amount: int, *, player: discord.User):
