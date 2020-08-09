@@ -819,6 +819,7 @@ class Character(Item):
         show_delta=False,
         equippable=False,
         set_name: str = None,
+        clean: bool = False,
     ):
         if consumed is None:
             consumed = []
@@ -831,20 +832,21 @@ class Character(Item):
         async for slot_group in AsyncIter(bkpk):
             slot_name_org = slot_group[0][1].slot
             slot_name = slot_name_org[0] if len(slot_name_org) < 2 else "two handed"
-            form_string += f"\n\n {slot_name.title()} slot\n"
+            if slot is not None and slot != slot_name:
+                continue
+            if clean and not slot_group:
+                continue
+            slot_string = ""
             current_equipped = getattr(self, slot_name if slot != "two handed" else "left", None)
             async for item in AsyncIter(slot_group):
                 if forging and (item[1].rarity in ["forged", "set"] or item[1] in consumed_list):
                     continue
                 if rarity is not None and rarity != item[1].rarity:
                     continue
-                if slot is not None and slot != slot_name:
-                    continue
                 if equippable and not can_equip(self, item[1]):
                     continue
                 if set_name is not None and set_name != item[1].set:
                     continue
-
                 settext = ""
                 att_space = " " if len(str(item[1].att)) >= 1 else ""
                 cha_space = " " if len(str(item[1].cha)) >= 1 else ""
@@ -886,7 +888,9 @@ class Character(Item):
                     f"{luck_space}{luck:<{rjuststat}} )"
                 )
 
-                form_string += f"\n{str(item[1]):<{rjust}} - " f"{stats}" f" | Lvl {level:<5}" f"{owned}{settext}"
+                slot_string += f"\n{str(item[1]):<{rjust}} - " f"{stats}" f" | Lvl {level:<5}" f"{owned}{settext}"
+            if clean and slot_string:
+                form_string += f"\n\n {slot_name.title()} slot\n{slot_string}"
 
         return form_string + "\n"
 

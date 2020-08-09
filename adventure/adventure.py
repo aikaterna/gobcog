@@ -2649,7 +2649,7 @@ class Adventure(commands.Cog):
                         ),
                     )
                 forgeables = _("[{author}'s forgeables]\n{bc}\n").format(
-                    author=self.escape(ctx.author.display_name), bc=await c.get_backpack(True)
+                    author=self.escape(ctx.author.display_name), bc=await c.get_backpack(forging=True, clean=True)
                 )
                 pages = pagify(forgeables, delims=["\n"], shorten_by=20, page_length=1900)
                 pages = [box(page, lang="css") for page in pages]
@@ -3329,7 +3329,7 @@ class Adventure(commands.Cog):
 
         Use the box rarity type with the command: normal, rare, epic, legendary or set.
         """
-        if number > 100 or number < 1:
+        if (not self.is_dev(ctx.author) and number > 100) or number < 1:
             return await smart_embed(ctx, _("Nice try :smirk:."))
         if self.in_adventure(ctx):
             return await smart_embed(
@@ -4262,7 +4262,8 @@ class Adventure(commands.Cog):
         msg_list.append(box(set_msg, lang="css"))
 
         backpack_contents = _("{author}'s backpack \n\n{backpack}\n").format(
-            author=self.escape(ctx.author.display_name), backpack=await c.get_backpack(set_name=title_cased_set_name),
+            author=self.escape(ctx.author.display_name),
+            backpack=await c.get_backpack(set_name=title_cased_set_name, clean=True),
         )
         async for page in AsyncIter(pagify(backpack_contents, delims=["\n"], shorten_by=20, page_length=1950)):
             msg_list.append(box(page, lang="css"))
