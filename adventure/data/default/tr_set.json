@@ -129,5 +129,16 @@
     "King Solomons Lower Robe": {"slot": ["legs"], "set": "The King of Mages", "parts": 9, "att": -50, "cha": 5, "int": 30, "dex": 10, "luck": 0, "rarity": "set"},
     "King Solomons Shoes": {"slot": ["boots"], "set": "The King of Mages", "parts": 9, "att": -50, "cha": 5, "int": 30, "dex": 10, "luck": 0, "rarity": "set"},
     "King Solomons 10 Rings": {"slot": ["left", "right"], "set": "The King of Mages","parts": 9, "att": -50, "cha": 5, "int": 30, "dex": 10, "luck": 0, "rarity": "set"},
-    "King Solomons Markings": {"slot": ["charm"], "set": "The King of Mages", "parts": 9, "att": -50, "cha": 5, "int": 30, "dex": 10, "luck": 0, "rarity": "set"}
+    "King Solomons Markings": {"slot": ["charm"], "set": "The King of Mages", "parts": 9, "att": -50, "cha": 5, "int": 30, "dex": 10, "luck": 0, "rarity": "set"},
+
+    "King Titan Galea": {"slot": ["head"], "set": "King Titan", "parts": 10, "att": 30, "cha": 5, "int": -50, "dex": 10, "luck": 0, "rarity": "set"},
+    "King Titan Ocrea": {"slot": ["neck"], "set": "King Titan", "parts": 10, "att": 30, "cha": 5, "int": -50, "dex": 10, "luck": 0, "rarity": "set"},
+    "King Titan Skin": {"slot": ["chest"], "set": "King Titan", "parts": 10, "att": 30, "cha": 5, "int": -50, "dex": 10, "luck": 0, "rarity": "set"},
+    "King Titan Manica": {"slot": ["gloves"], "set": "King Titan", "parts": 10, "att": 30, "cha": 5, "int": -50, "dex": 10, "luck": 0, "rarity": "set"},
+    "King Titan Balteus": {"slot": ["belt"], "set": "King Titan", "parts": 10, "att": 30, "cha": 5, "int": -50, "dex": 10, "luck": 0, "rarity": "set"},
+    "King Titan Fasciae": {"slot": ["legs"], "set": "King Titan", "parts": 10, "att": 30, "cha": 5, "int": -50, "dex": 10, "luck": 0, "rarity": "set"},
+    "King Titan Sandals": {"slot": ["boots"], "set": "King Titan", "parts": 10, "att": 30, "cha": 5, "int": -50, "dex": 10, "luck": 0, "rarity": "set"},
+    "King Titan Gladius": {"slot": ["right"], "set": "King Titan","parts": 10, "att": 30, "cha": 5, "int": -50, "dex": 10, "luck": 0, "rarity": "set"},
+    "King Titan Scutum": {"slot": ["left"], "set": "King Titan","parts": 10, "att": 30, "cha": 5, "int": -50, "dex": 10, "luck": 0, "rarity": "set"},
+    "King Titan Chains": {"slot": ["charm"], "set": "King Titan", "parts": 10, "att": 30, "cha": 5, "int": -50, "dex": 10, "luck": 0, "rarity": "set"}
 }

@@ -20,5 +20,6 @@
     "Fangs of the Father": [{"parts": 2, "att": 10, "cha": 10, "int": 5, "dex": 100, "luck": 50, "statmult": 1, "xpmult": 1.2, "cpmult": 1.4}],
     "Titanic Empowerment": [{"parts": 2, "att": 80, "int": -20, "dex": 80, "statmult": 1.1, "xpmult": 1.2, "cpmult": 1}],
     "Demonbane Armor": [{"parts": 6, "att": -100, "cha": 50, "int": 25, "dex": 25, "luck": 25, "statmult": 1.15, "xpmult": 1.2, "cpmult": 1.5}],
-    "The King of Mages": [{"parts": 9, "att": -9000, "cha": -9000, "int": 0, "dex": -9000, "luck": -9000, "statmult": 1.7, "xpmult": 0.25, "cpmult": 1}]
+    "The King of Mages": [{"parts": 9, "att": -9000, "cha": -9000, "int": 0, "dex": -9000, "luck": -9000, "statmult": 1.7, "xpmult": 0.25, "cpmult": 1}],
+    "King Titan": [{"parts": 10, "att": 0, "cha": -9000, "int": -9000, "dex": -9000, "luck": -9000, "statmult": 1.7, "xpmult": 0.25, "cpmult": 1}]
 }
