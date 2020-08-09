@@ -362,6 +362,7 @@ class Adventure(commands.Cog):
             "rebirth_cost": 100.0,
             "themes": {},
             "daily_bonus": {"1": 0, "2": 0, "3": 0.5, "4": 0, "5": 0.5, "6": 1.0, "7": 1.0},
+            "tax_brackets": {"1000": 0.1, "5000": 0.2, "10000": 0.3, "50000": 0.4, "100000": 0.5},
             "separate_economy": True,
             "to_conversion_rate": 10,
             "from_conversion_rate": 11,
@@ -1888,6 +1889,25 @@ class Adventure(commands.Cog):
     @has_separated_economy()
     async def commands_adventureset_economy(self, ctx: Context):
         """[Admin] Manages the adventure economy."""
+
+    @commands_adventureset_economy.command(name="tax")
+    @commands.is_owner()
+    async def commands_adventureset_economy_tax(self, ctx: Context, threshold: int, percentage: PercentageConverter):
+        """[Owner] Set the daily xp and currency bonus.
+
+        **threshold** must be positive
+        **percentage** must be between 0% and 100%.
+        """
+        if threshold <= 0:
+            return await smart_embed(ctx, _("You are evil ... please DM me your phone number we need to hangout."))
+        async with self.config.tax_brackets.all() as tax_brackets_data:
+            tax_brackets_data[str(threshold)] = percentage
+        await smart_embed(
+            ctx,
+            _("Players will be taxed after `{tax:.2%}` when earning more than `{gold}`.").format(
+                tax=percentage, gold=humanize_number(threshold)
+            ),
+        )
 
     @commands.is_owner()
     @commands_adventureset_economy.command(name="rate")
@@ -7206,6 +7226,7 @@ class Adventure(commands.Cog):
 
     @commands_atransfer.command(name="player")
     @commands.guild_only()
+    @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
     async def commands_atransfer_player(self, ctx: commands.Context, amount: int, *, player: discord.User):
         """Transfer gold to another player."""
         if amount <= 0:
@@ -7221,18 +7242,26 @@ class Adventure(commands.Cog):
                     author=ctx.author, name=await bank.get_currency_name(ctx.guild)
                 ),
             )
+        tax = await self.config.tax_brackets.all()
+        highest = 0
+        for tax, percent in tax.items():
+            tax = int(tax)
+            if tax > amount:
+                break
+            highest = percent
 
         try:
-            await bank.transfer_credits(from_=ctx.author, to=player, amount=amount, tax=0.0)  # Customizable Tax
+            await bank.transfer_credits(from_=ctx.author, to=player, amount=amount, tax=tax)  # Customizable Tax
         except (ValueError, BalanceTooHigh) as e:
             return await ctx.send(str(e))
 
         await ctx.send(
-            _("{user} transferred {num} {currency} to {other_user}").format(
+            _("{user} transferred {num} {currency} to {other_user} (You have been taxed {tax:.2%})").format(
                 user=ctx.author.display_name,
                 num=humanize_number(amount),
                 currency=currency,
                 other_user=player.display_name,
+                tax=highest,
             )
         )
 
