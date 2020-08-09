@@ -8,15 +8,18 @@ setlocal ENABLEDELAYEDEXPANSION
 goto %1
 
 :reformat
-isort --atomic --line-length 120 --use-parentheses .; black -l 120 .
+isort --atomic --line-length 120 --use-parentheses .
+black -l 120 .
 exit /B %ERRORLEVEL%
 
 :stylecheck
-isort --atomic --check --line-length 120 --use-parentheses .; black --check -l 120 .
+isort --atomic --check --line-length 120 --use-parentheses .
+black --check -l 120 .
 exit /B %ERRORLEVEL%
 
 :stylediff
-isort --atomic --check --diff --line-length 120 --use-parentheses .; black --check --diff -l 120 .
+isort --atomic --check --diff --line-length 120 --use-parentheses .
+black --check --diff -l 120 .
 exit /B %ERRORLEVEL%
 
 :help
