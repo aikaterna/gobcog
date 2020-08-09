@@ -405,37 +405,67 @@ class Adventure(commands.Cog):
             _config = self.config
             theme = await self.config.theme()
             self._separate_economy = await self.config.separate_economy()
-            as_monster_fp = cog_data_path(self) / f"{theme}" / "as_monsters.json"
-            attribs_fp = cog_data_path(self) / f"{theme}" / "attribs.json"
-            locations_fp = cog_data_path(self) / f"{theme}" / "locations.json"
-            monster_fp = cog_data_path(self) / f"{theme}" / "monsters.json"
-            pets_fp = cog_data_path(self) / f"{theme}" / "pets.json"
-            raisins_fp = cog_data_path(self) / f"{theme}" / "raisins.json"
-            threatee_fp = cog_data_path(self) / f"{theme}" / "threatee.json"
-            tr_set_fp = cog_data_path(self) / f"{theme}" / "tr_set.json"
-            prefixes_fp = cog_data_path(self) / f"{theme}" / "prefixes.json"
-            materials_fp = cog_data_path(self) / f"{theme}" / "materials.json"
-            equipment_fp = cog_data_path(self) / f"{theme}" / "equipment.json"
-            suffixes_fp = cog_data_path(self) / f"{theme}" / "suffixes.json"
-            set_bonuses = cog_data_path(self) / f"{theme}" / "set_bonuses.json"
-            files = {
-                "pets": pets_fp,
-                "attr": attribs_fp,
-                "monster": monster_fp,
-                "location": locations_fp,
-                "raisins": raisins_fp,
-                "threatee": threatee_fp,
-                "set": tr_set_fp,
-                "as_monsters": as_monster_fp,
-                "prefixes": prefixes_fp,
-                "materials": materials_fp,
-                "equipment": equipment_fp,
-                "suffixes": suffixes_fp,
-                "set_bonuses": set_bonuses,
-            }
-            for (name, file) in files.items():
-                if not file.exists():
-                    files[name] = bundled_data_path(self) / "default" / f"{file.name}"
+            if "default" == theme:
+                as_monster_fp = bundled_data_path(self) / "default" / "as_monsters.json"
+                attribs_fp = bundled_data_path(self) / "default" / "attribs.json"
+                locations_fp = bundled_data_path(self) / "default" / "locations.json"
+                monster_fp = bundled_data_path(self) / "default" / "monsters.json"
+                pets_fp = bundled_data_path(self) / "default" / "pets.json"
+                raisins_fp = bundled_data_path(self) / "default" / "raisins.json"
+                threatee_fp = bundled_data_path(self) / "default" / "threatee.json"
+                tr_set_fp = bundled_data_path(self) / "default" / "tr_set.json"
+                prefixes_fp = bundled_data_path(self) / "default" / "prefixes.json"
+                materials_fp = bundled_data_path(self) / "default" / "materials.json"
+                equipment_fp = bundled_data_path(self) / "default" / "equipment.json"
+                suffixes_fp = bundled_data_path(self) / "default" / "suffixes.json"
+                set_bonuses = bundled_data_path(self) / "default" / "set_bonuses.json"
+                files = {
+                    "pets": pets_fp,
+                    "attr": attribs_fp,
+                    "monster": monster_fp,
+                    "location": locations_fp,
+                    "raisins": raisins_fp,
+                    "threatee": threatee_fp,
+                    "set": tr_set_fp,
+                    "as_monsters": as_monster_fp,
+                    "prefixes": prefixes_fp,
+                    "materials": materials_fp,
+                    "equipment": equipment_fp,
+                    "suffixes": suffixes_fp,
+                    "set_bonuses": set_bonuses,
+                }
+            else:
+                as_monster_fp = cog_data_path(self) / f"{theme}" / "as_monsters.json"
+                attribs_fp = cog_data_path(self) / f"{theme}" / "attribs.json"
+                locations_fp = cog_data_path(self) / f"{theme}" / "locations.json"
+                monster_fp = cog_data_path(self) / f"{theme}" / "monsters.json"
+                pets_fp = cog_data_path(self) / f"{theme}" / "pets.json"
+                raisins_fp = cog_data_path(self) / f"{theme}" / "raisins.json"
+                threatee_fp = cog_data_path(self) / f"{theme}" / "threatee.json"
+                tr_set_fp = cog_data_path(self) / f"{theme}" / "tr_set.json"
+                prefixes_fp = cog_data_path(self) / f"{theme}" / "prefixes.json"
+                materials_fp = cog_data_path(self) / f"{theme}" / "materials.json"
+                equipment_fp = cog_data_path(self) / f"{theme}" / "equipment.json"
+                suffixes_fp = cog_data_path(self) / f"{theme}" / "suffixes.json"
+                set_bonuses = cog_data_path(self) / f"{theme}" / "set_bonuses.json"
+                files = {
+                    "pets": pets_fp,
+                    "attr": attribs_fp,
+                    "monster": monster_fp,
+                    "location": locations_fp,
+                    "raisins": raisins_fp,
+                    "threatee": threatee_fp,
+                    "set": tr_set_fp,
+                    "as_monsters": as_monster_fp,
+                    "prefixes": prefixes_fp,
+                    "materials": materials_fp,
+                    "equipment": equipment_fp,
+                    "suffixes": suffixes_fp,
+                    "set_bonuses": set_bonuses,
+                }
+                for (name, file) in files.items():
+                    if not file.exists():
+                        files[name] = bundled_data_path(self) / "default" / f"{file.name}"
 
             with files["pets"].open("r") as f:
                 self.PETS = json.load(f)
