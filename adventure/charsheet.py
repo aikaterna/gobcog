@@ -1038,7 +1038,7 @@ class Character(Item):
             data["treasure"].append(0)
 
         if len(data["treasure"]) == 5:
-            data["treasure"].inset(4, 0)
+            data["treasure"].insert(4, 0)
 
         if heroclass["name"] == "Ranger":
             if heroclass.get("pet"):
