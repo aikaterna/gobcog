@@ -3751,7 +3751,7 @@ class Adventure(commands.Cog):
                     pet_msg4 = ""
                     can_catch = True
                     force_catch = False
-                    if "Ainz Ooal Gown" in c.sets:
+                    if any(x in c.sets for x in ["The Supreme One", "Ainz Ooal Gown"]):
                         can_catch = True
                         pet = random.choice(
                             ["Albedo", "Rubedo", "Guardians of Nazarick", *random.choices(pet_choices, k=10),]
@@ -3788,7 +3788,7 @@ class Adventure(commands.Cog):
                         else:
                             roll = random.randint(0, 2 if roll in [50, 25] else 5)
                         if roll == 0:
-                            if force_catch and "Ainz Ooal Gown" in c.sets:
+                            if force_catch and any(x in c.sets for x in ["The Supreme One", "Ainz Ooal Gown"]):
                                 msg = random.choice(
                                     [
                                         _("{author} commands {pet} into submission.").format(
@@ -6110,7 +6110,7 @@ class Adventure(commands.Cog):
                     except Exception as exc:
                         log.exception("Error with the new character sheet", exc_info=exc)
                         continue
-                    if "Ainz Ooal Gown" in c.sets:
+                    if any(x in c.sets for x in ["The Supreme One", "Ainz Ooal Gown"]):
                         failed = False
                         break
                     with contextlib.suppress(KeyError):

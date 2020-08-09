@@ -1,5 +1,6 @@
 {
-    "Ainz Ooal Gown" : [{"parts": 10, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 0, "statmult": 3, "xpmult": 0, "cpmult": 2}],
+    "The Supreme One" : [{"parts": 11, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 0, "statmult": 2.0, "xpmult": 1.0, "cpmult": 2.0}],
+    "Ainz Ooal Gown" : [{"parts": 10, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 0, "statmult": 1.8, "xpmult": 0, "cpmult": 1.5}],
     "Skrrtis": [{"parts": 2, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 2, "statmult": 1, "xpmult": 1.4, "cpmult": 1}],
     "Heavenswheel": [{"parts": 5, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 5, "statmult": 1, "xpmult": 1, "cpmult": 2.0}],
     "Titan": [{"parts": 8, "att": 80, "cha": 0, "int": 0, "dex": -10, "luck": 0, "statmult": 1, "xpmult": 0.2, "cpmult": 0.1}],
@@ -15,5 +16,5 @@
     "Fangs of the Father": [{"parts": 2, "att": 10, "cha": 10, "int": 5, "dex": 100, "luck": 50, "statmult": 1, "xpmult": 1.2, "cpmult": 1.4}],
     "Titanic Empowerment": [{"parts": 2, "att": 80, "int": -20, "dex": 80, "statmult": 1.1, "xpmult": 1.2, "cpmult": 1}],
     "Demonbane Armor": [{"parts": 6, "att": -100, "cha": 50, "int": 25, "dex": 25, "luck": 25, "statmult": 1.15, "xpmult": 1.2, "cpmult": 1.5}],
-    "The King of Mages": [{"parts": 9, "att": -9000, "cha": 0, "int": 0, "dex": 0, "luck": 100, "statmult": 2, "xpmult": 0.5, "cpmult": 1}]
+    "The King of Mages": [{"parts": 9, "att": -9000, "cha": 0, "int": 0, "dex": 0, "luck": 100, "statmult": 1.7, "xpmult": 0.5, "cpmult": 1}]
 }
