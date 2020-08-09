@@ -810,6 +810,26 @@ class Character(Item):
         final.sort(key=lambda i: ORDER.index(i[0][1].slot[0]) if len(i[0][1].slot) == 1 else ORDER.index("two handed"))
         return final
 
+    async def looted(self, how_many: int = 1) -> List[Tuple[str, int]]:
+        items = [i for n, i in self.backpack.items() if i.rarity not in ["forged"]]
+        looted_so_far = 0
+        looted = []
+        while how_many > looted_so_far:
+            if looted_so_far >= how_many:
+                break
+            item = random.choice(items)
+            if not bool(random.getrandbits(1)):
+                continue
+            loot_number = random.randint(1, min(item.owned, how_many - looted_so_far))
+            looted_so_far += loot_number
+            looted.append((str(item), loot_number))
+            item.owned -= loot_number
+            if item.owned <= 0:
+                del self.backpack[item.name]
+            else:
+                self.backpack[item.name] = item
+        return looted
+
     async def get_backpack(
         self,
         forging: bool = False,
@@ -888,8 +908,8 @@ class Character(Item):
                     f"{luck_space}{luck:<{rjuststat}} )"
                 )
 
-                slot_string += f"\n{str(item[1]):<{rjust}} - " f"{stats}" f" | Lvl {level:<5}" f"{owned}{settext}"
-            if clean and slot_string:
+                slot_string += f"\n{str(item[1]):<{rjust}} - {stats} | Lvl {level:<5}{owned}{settext}"
+            if slot_string:
                 form_string += f"\n\n {slot_name.title()} slot\n{slot_string}"
 
         return form_string + "\n"

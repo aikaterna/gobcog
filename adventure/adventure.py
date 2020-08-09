@@ -3540,6 +3540,7 @@ class Adventure(commands.Cog):
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 lock.release()
+                ctx.command.reset_cooldown(ctx)
                 return
             roll = random.randint(max(1, min_roll * 2), 50)
             versus = random.randint(10, 60)
@@ -3553,19 +3554,27 @@ class Adventure(commands.Cog):
             xp_won = int(xp_won * (character.gear_set_bonus.get("xpmult", 1) + daymult))
             if roll < 10:
                 loss = round(bal // 3)
+                looted = ""
                 try:
                     await bank.withdraw_credits(ctx.author, loss)
-                    loss = humanize_number(loss)
+                    loss_string = humanize_number(loss)
                 except ValueError:
                     await bank.set_balance(ctx.author, 0)
-                    loss = _("all of their")
+                    loss_string = _("all of their")
+                if character.bal < loss:
+                    items = await character.looted(how_many=max(int(10 - roll) // 2, 1))
+                    item_string = "\n".join([f"{v} {i}" for v, i in items])
+                    looted = box(f"{item_string}", lang="css")
+                await self.config.user(ctx.author).set(await character.to_json(self.config))
                 loss_msg = _(
-                    ", losing {loss} {currency_name} as **{negachar}** rifled through their belongings"
-                ).format(loss=loss, currency_name=currency_name, negachar=negachar)
+                    ", losing {loss} {currency_name} as **{negachar}** rifled through their belongings."
+                ).format(loss=loss_string, currency_name=currency_name, negachar=negachar)
+                if looted:
+                    loss_msg += _(" **{negachar}** also stole the following items\n\n{items}").format(
+                        items=looted, negachar=negachar
+                    )
                 await nega_msg.edit(
-                    content=_(
-                        "{content}\n**{author}** fumbled and died to **{negachar}'s** savagery{loss_msg}."
-                    ).format(
+                    content=_("{content}\n**{author}** fumbled and died to **{negachar}'s** savagery{loss_msg}").format(
                         content=nega_msg.content,
                         author=self.escape(ctx.author.display_name),
                         negachar=negachar,
@@ -3630,19 +3639,28 @@ class Adventure(commands.Cog):
                 )
             else:
                 loss = round(bal / (random.randint(10, 25)))
+                looted = ""
                 try:
                     await bank.withdraw_credits(ctx.author, loss)
+                    loss_string = humanize_number(loss)
                 except ValueError:
                     await bank.set_balance(ctx.author, 0)
-                    loss = _("all of their")
-                loss_msg = _(", losing {loss} {currency_name} as **{negachar}** looted their backpack").format(
-                    loss=humanize_number(loss) if not isinstance(loss, str) else loss,
-                    currency_name=currency_name,
-                    negachar=negachar,
+                    loss_string = _("all of their")
+                if character.bal < loss:
+                    items = await character.looted(how_many=max(int(10 - roll) // 2, 1))
+                    item_string = "\n".join([f"{i}  - {v}" for v, i in items])
+                    looted = box(f"{item_string}", lang="css")
+
+                loss_msg = _(", losing {loss} {currency_name} as **{negachar}** looted their backpack.").format(
+                    loss=loss_string, currency_name=currency_name, negachar=negachar,
                 )
+                if looted:
+                    loss_msg += _(" **{negachar}** also stole the following items\n\n{items}").format(
+                        items=looted, negachar=negachar
+                    )
                 await nega_msg.edit(
                     content=_(
-                        "**{author}** {dice}({roll}) was killed by **{negachar}** {dice}({versus}){loss_msg}."
+                        "**{author}** {dice}({roll}) was killed by **{negachar}** {dice}({versus}){loss_msg}"
                     ).format(
                         dice=self.emojis.dice,
                         author=self.escape(ctx.author.display_name),
@@ -4248,10 +4266,10 @@ class Adventure(commands.Cog):
                 xpmult=xpmult,
                 cpmult=cpmult,
             )
-        stats_msg = _("{set_name}\n{part_val} Part Bonus\n\n").format(set_name=title_cased_set_name, part_val=parts)
-        stats_msg += breakdown
-        stats_msg += "Multiple complete set bonuses stack."
-        msg_list.append(box(stats_msg, lang="ini"))
+            stats_msg = _("{set_name}\n{part_val} Part Bonus\n\n").format(set_name=title_cased_set_name, part_val=parts)
+            stats_msg += breakdown
+            stats_msg += "Multiple complete set bonuses stack."
+            msg_list.append(box(stats_msg, lang="ini"))
         set_items = {key: value for key, value in self.TR_GEAR_SET.items() if value["set"] == title_cased_set_name}
 
         d = {}
@@ -7305,7 +7323,7 @@ class Adventure(commands.Cog):
 
         await smart_embed(
             ctx,
-            _("{author.mention} I've given {amount} to the following adventurers:\n\n{players").format(
+            _("{author.mention} I've given {amount} to the following adventurers:\n\n{players}").format(
                 author=ctx.author, amount=humanize_number(amount), players=players_string
             ),
         )

@@ -1,5 +1,9 @@
 {
-    "The Supreme One" : [{"parts": 11, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 0, "statmult": 2.5, "xpmult": 1.0, "cpmult": 2.0}],
+    "The Supreme One" : [
+        {"parts": 3, "att": 20, "cha": 20, "int": 40, "dex": 20, "luck": 35, "statmult": 1.1, "xpmult": 1.0, "cpmult": 1.1},
+        {"parts": 7, "att": 30, "cha": 30, "int": 60, "dex": 30, "luck": 50, "statmult": 1.2, "xpmult": 1.0, "cpmult": 1.5},
+        {"parts": 11, "att": 50, "cha": 50, "int": 100, "dex": 50, "luck": 80, "statmult": 2.0, "xpmult": 1.0, "cpmult": 2.0}
+    ],
     "Ainz Ooal Gown" : [{"parts": 10, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 0, "statmult": 1.8, "xpmult": 0, "cpmult": 1.5}],
     "Skrrtis": [{"parts": 2, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 2, "statmult": 1, "xpmult": 1.4, "cpmult": 1}],
     "Heavenswheel": [{"parts": 5, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 5, "statmult": 1, "xpmult": 1, "cpmult": 2.0}],
