@@ -4,8 +4,9 @@
     "Linen": 0,
     "Silk": 0,
     "Fur": 1,
-    "Dwarven": 1,
-    "Hide": 1
+    "Dwarven": 2,
+    "Hide": 1,
+    "Steel": 1
   },
   "rare": {
     "Bronze": 2,
@@ -14,15 +15,18 @@
     "Gold": 3,
     "Silver": 2,
     "Elven": 3,
-    "Quicksilver": 4
+    "Quicksilver": 4,
+    "Platinum": 2
   },
   "epic": {
+    "Ruby": 4,
     "Duranium": 5,
     "Mithril": 4,
     "Obsidian": 5,
     "Titanium": 4,
     "Adamantite": 6,
-    "Ebony": 7
+    "Ebony": 7,
+    "Diamond-Studded": 5
   },
   "legendary": {
     "Dragonscale": 12,
@@ -36,5 +40,41 @@
     "Obsidium": 11,
     "Nanite": 15,
     "Unknown": 20
+  },
+  "ascended": {
+    "Cloth": 5,
+    "Linen": 5,
+    "Silk": 5,
+    "Fur": 6,
+    "Dwarven": 7,
+    "Hide": 6,
+    "Steel": 6,
+    "Bronze": 7,
+    "Iron": 8,
+    "Bone": 7,
+    "Gold": 8,
+    "Silver": 7,
+    "Elven": 8,
+    "Quicksilver": 9,
+    "Platinum": 7,
+    "Ruby": 9,
+    "Duranium": 10,
+    "Mithril": 9,
+    "Obsidian": 10,
+    "Titanium": 9,
+    "Adamantite": 11,
+    "Ebony": 12,
+    "Diamond-Studded": 10,
+    "Dragonscale": 17,
+    "Dalekanium": 16,
+    "Tritanium": 16,
+    "Runite": 15,
+    "Vibranium": 17,
+    "Draconium": 19,
+    "Dragonplate": 18,
+    "Cobalt": 17,
+    "Obsidium": 16,
+    "Nanite": 20,
+    "Unknown": 30
   }
 }

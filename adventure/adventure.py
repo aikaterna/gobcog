@@ -698,13 +698,12 @@ class Adventure(commands.Cog):
         RARE_INDEX = RARITIES.index("rare")
         EPIC_INDEX = RARITIES.index("epic")
         PREFIX_CHANCE = {"rare": 0.5, "epic": 0.75, "legendary": 0.9, "ascended": 1.0, "set": 0}
-        SUFFIX_CHANCE = {"epic": 0.5, "legendary": 0.75, "ascended": 0.85}
+        SUFFIX_CHANCE = {"epic": 0.5, "legendary": 0.75, "ascended": 0}
 
         if rarity not in RARITIES:
             rarity = "normal"
         if slot is None:
             slot = random.choice(ORDER)
-            #  slot = random.choice(["right", "chest"])
         name = ""
         stats = {"att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 0}
 
