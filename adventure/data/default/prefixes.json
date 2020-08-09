@@ -79,5 +79,48 @@
     "dex": 1,
     "int": 8,
     "luck": 12
+  },
+  "Godly": {
+    "att": 8,
+    "cha": 8,
+    "dex": 8,
+    "int": 8,
+    "luck": 8
+  },
+  "Ultimate": {
+    "att": 12,
+    "cha": 12,
+    "dex": 12,
+    "int": 12,
+    "luck": 12
+  },
+  "Fancy": {
+    "cha": 15
+  },
+  "Comfortable": {
+    "dex": 15
+  },
+  "Barbaric": {
+    "att": 15
+  },
+  "Strange": {
+    "int": 15
+  },
+  "Lucky": {
+    "luck": 15
+  },
+  "Celestial": {
+    "att": 5,
+    "cha": 10,
+    "dex": 2,
+    "int": 16,
+    "luck": 20
+  },
+  "Demonic": {
+    "att": 18,
+    "cha": 10,
+    "dex": 2,
+    "int": 5,
+    "luck": 10
   }
 }
