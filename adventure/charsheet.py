@@ -814,6 +814,8 @@ class Character(Item):
         items = [i for n, i in self.backpack.items() if i.rarity not in ["normal", "rare", "epic", "forged"]]
         looted_so_far = 0
         looted = []
+        if not items:
+            return looted
         while how_many > looted_so_far:
             if looted_so_far >= how_many:
                 break
