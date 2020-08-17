@@ -5085,17 +5085,19 @@ class Adventure(commands.Cog):
                     "SET",
                 ]
             item_name = str(item)
-            if item_name in items_names:
+            slots = len(item.slot)
+            slot_name = item.slot[0] if slots == 1 else "two handed"
+            if (item_name, slots, slot_name) in items_names:
                 continue
-            items_names.add(item_name)
+            items_names.add((item_name, slots, slot_name))
             data = (
                 item_name,
-                item.slot[0] if len(item.slot) == 1 else "two handed",
-                item.att * (1 if len(item.slot) == 1 else 2),
-                item.cha * (1 if len(item.slot) == 1 else 2),
-                item.int * (1 if len(item.slot) == 1 else 2),
-                item.dex * (1 if len(item.slot) == 1 else 2),
-                item.luck * (1 if len(item.slot) == 1 else 2),
+                slot_name,
+                item.att * (1 if slots == 1 else 2),
+                item.cha * (1 if slots == 1 else 2),
+                item.int * (1 if slots == 1 else 2),
+                item.dex * (1 if slots == 1 else 2),
+                item.luck * (1 if slots == 1 else 2),
                 f"[{r}]" if (r := equip_level(c, item)) is not None and r > c.lvl else f"{r}",
                 item.owned,
                 f"[{item.degrade}]"
@@ -5153,17 +5155,19 @@ class Adventure(commands.Cog):
                 continue
             item = Item.from_json(data)
             item_name = str(item)
-            if item_name in items_names:
+            slots = len(item.slot)
+            slot_name = item.slot[0] if slots == 1 else "two handed"
+            if (item_name, slots, slot_name) in items_names:
                 continue
-            items_names.add(item_name)
+            items_names.add((item_name, slots, slot_name))
             data = (
                 item_name,
-                item.slot[0] if len(item.slot) == 1 else "two handed",
-                item.att * (1 if len(item.slot) == 1 else 2),
-                item.cha * (1 if len(item.slot) == 1 else 2),
-                item.int * (1 if len(item.slot) == 1 else 2),
-                item.dex * (1 if len(item.slot) == 1 else 2),
-                item.luck * (1 if len(item.slot) == 1 else 2),
+                slot_name,
+                item.att * (1 if slots == 1 else 2),
+                item.cha * (1 if slots == 1 else 2),
+                item.int * (1 if slots == 1 else 2),
+                item.dex * (1 if slots == 1 else 2),
+                item.luck * (1 if slots == 1 else 2),
                 equip_level(None, item, rebirths),
                 item.set or "N/A",
             )
