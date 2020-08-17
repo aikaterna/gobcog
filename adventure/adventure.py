@@ -5048,6 +5048,7 @@ class Adventure(commands.Cog):
         items = c.get_current_equipment(return_place_holder=True)
         msg = _("{}'s Character Sheet\n\n").format(self.escape(ctx.author.display_name))
         msg_len = len(msg)
+        items_names = set()
         table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
         table.set_style(BeautifulTable.STYLE_RST)
         msgs = []
@@ -5083,8 +5084,12 @@ class Adventure(commands.Cog):
                     "DEG",
                     "SET",
                 ]
+            item_name = str(item)
+            if item_name in items_names:
+                continue
+            items_names.add(item_name)
             data = (
-                str(item),
+                item_name,
                 item.slot[0] if len(item.slot) == 1 else "two handed",
                 item.att * (1 if len(item.slot) == 1 else 2),
                 item.cha * (1 if len(item.slot) == 1 else 2),
@@ -5137,6 +5142,7 @@ class Adventure(commands.Cog):
             return ORDER.index(slot)
 
         data_sorted = sorted(userdata["items"].items(), key=get_slot_index)
+        items_names = set()
         for (slot, data) in data_sorted:
             if slot == "backpack":
                 continue
@@ -5146,8 +5152,12 @@ class Adventure(commands.Cog):
             if not data:
                 continue
             item = Item.from_json(data)
+            item_name = str(item)
+            if item_name in items_names:
+                continue
+            items_names.add(item_name)
             data = (
-                str(item),
+                item_name,
                 item.slot[0] if len(item.slot) == 1 else "two handed",
                 item.att * (1 if len(item.slot) == 1 else 2),
                 item.cha * (1 if len(item.slot) == 1 else 2),
