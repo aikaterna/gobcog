@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, List, Optional, Union
 
 import discord
 from redbot.core import Config, bank, commands, errors
-from redbot.core.bank import Account, BankPruneError as BankPruneError
+from redbot.core.bank import Account
+from redbot.core.bank import BankPruneError as BankPruneError
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import humanize_number
