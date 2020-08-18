@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta
 from math import ceil
 from operator import itemgetter
 from types import SimpleNamespace
-from typing import List, MutableMapping, Optional, Union
+from typing import List, Literal, MutableMapping, Optional, Union
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
@@ -233,6 +233,14 @@ class AdventureResults:
 @cog_i18n(_)
 class Adventure(commands.Cog):
     """Adventure, derived from the Goblins Adventure cog by locastan."""
+
+    async def red_delete_data_for_user(
+        self, *, requester: Literal["discord", "owner", "user", "user_strict"], user_id: int,
+    ):
+        await self.config.user_from_id(user_id).clear()
+        await bank._config.user_from_id(
+            user_id
+        ).clear()  # This will only ever touch the separate currency, leaving bot economy to be handled by core.
 
     __version__ = "3.4.0"
 

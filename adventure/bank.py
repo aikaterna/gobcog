@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 
 import discord
 from redbot.core import Config, bank, commands, errors
-from redbot.core.bank import Account
+from redbot.core.bank import Account, BankPruneError as BankPruneError
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import humanize_number
@@ -46,6 +46,7 @@ __all__ = [
     "bank_prune",
     "get_next_payday",
     "set_next_payday",
+    "BankPruneError",
 ]
 
 _MAX_BALANCE = 2 ** 63 - 1
