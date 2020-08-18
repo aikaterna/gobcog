@@ -4555,20 +4555,14 @@ class Adventure(commands.Cog):
                         if roll >= 0.4:
                             msg += _("You are struggling to find anything in your current adventure.")
                     else:
-                        pdef = session.monsters[session.challenge]["pdef"]
-                        mdef = session.monsters[session.challenge]["mdef"]
-                        cdef = session.monsters[session.challenge].get("cdef", 1.0)
+                        pdef = session.monster_modified_stats["pdef"]
+                        mdef = session.monster_modified_stats["mdef"]
+                        cdef = session.monster_modified_stats.get("cdef", 1.0)
+                        hp = session.monster_modified_stats["hp"]
+                        diplo = session.monster_modified_stats["dipl"]
                         if roll == 1:
-                            hp = int(
-                                session.monsters[session.challenge]["hp"]
-                                * self.ATTRIBS[session.attribute][0]
-                                * session.monster_stats
-                            )
-                            dipl = int(
-                                session.monsters[session.challenge]["dipl"]
-                                * self.ATTRIBS[session.attribute][1]
-                                * session.monster_stats
-                            )
+                            hp = int(hp * self.ATTRIBS[session.attribute][0] * session.monster_stats)
+                            dipl = int(diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats)
                             msg += _(
                                 "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}){trans}.\n"
                             ).format(
@@ -4584,16 +4578,8 @@ class Adventure(commands.Cog):
                             )
                             self._sessions[ctx.guild.id].exposed = True
                         elif roll >= 0.95:
-                            hp = (
-                                session.monsters[session.challenge]["hp"]
-                                * self.ATTRIBS[session.attribute][0]
-                                * session.monster_stats
-                            )
-                            dipl = (
-                                session.monsters[session.challenge]["dipl"]
-                                * self.ATTRIBS[session.attribute][1]
-                                * session.monster_stats
-                            )
+                            hp = hp * self.ATTRIBS[session.attribute][0] * session.monster_stats
+                            dipl = diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats
                             msg += _(
                                 "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}).\n"
                             ).format(
@@ -4606,11 +4592,7 @@ class Adventure(commands.Cog):
                             )
                             self._sessions[ctx.guild.id].exposed = True
                         elif roll >= 0.90:
-                            hp = (
-                                session.monsters[session.challenge]["hp"]
-                                * self.ATTRIBS[session.attribute][0]
-                                * session.monster_stats
-                            )
+                            hp = hp * self.ATTRIBS[session.attribute][0] * session.monster_stats
                             msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
                                 challenge=session.challenge,
                                 attr=session.attribute,
