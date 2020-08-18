@@ -824,7 +824,7 @@ class Character(Item):
     def get_rarity_index(rarity):
         if rarity not in RARITIES:
             return float("inf")
-        reverse_rarities = reversed(RARITIES)
+        reverse_rarities = list(reversed(RARITIES))
         return reverse_rarities.index(rarity)
 
     async def get_sorted_backpack(self, backpack: dict, slot=None, rarity=None):
