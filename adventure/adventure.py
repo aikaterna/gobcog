@@ -4255,9 +4255,7 @@ class Adventure(commands.Cog):
                 if c.heroclass["name"] != "Ranger":
                     return await ctx.send(
                         box(
-                            _("{}, you need to be a Ranger to do this.").format(
-                                self.escape(ctx.author.display_name)
-                            ),
+                            _("{}, you need to be a Ranger to do this.").format(self.escape(ctx.author.display_name)),
                             lang="css",
                         )
                     )
