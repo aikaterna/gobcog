@@ -815,38 +815,23 @@ class Character(Item):
         return min(maxlevel, 10000)
 
     @staticmethod
-    def get_item_rarity(item):
-        item_obj = item[1]
-        if item_obj.rarity == "event":
-            return 0
-        elif item_obj.rarity == "forged":
-            return 1
-        elif item_obj.rarity == "set":
-            return 2
-        elif item_obj.rarity == "ascended":
-            return 3
-        elif item_obj.rarity == "legendary":
-            return 4
-        elif item_obj.rarity == "epic":
-            return 5
-        elif item_obj.rarity == "rare":
-            return 6
-        elif item_obj.rarity == "normal":
-            return 7
-        else:
-            return 7  # common / normal
-
-    @staticmethod
     def get_slot_index(slot):
         if slot not in ORDER:
             return float("inf")
         return ORDER.index(slot)
 
+    @staticmethod
+    def get_rarity_index(rarity):
+        if rarity not in RARITIES:
+            return float("inf")
+        reverse_rarities = reversed(RARITIES)
+        return reverse_rarities.index(rarity)
+
     async def get_sorted_backpack(self, backpack: dict, slot=None, rarity=None):
         tmp = {}
 
         def _sort(item):
-            return self.get_item_rarity(item), item[1].lvl, item[1].total_stats
+            return self.get_rarity_index(item[1].rarity), item[1].lvl, item[1].total_stats
 
         async for item in AsyncIter(backpack, steps=100):
             slots = backpack[item].slot
@@ -1026,7 +1011,7 @@ class Character(Item):
         tmp = {}
 
         def _sort(item):
-            return self.get_item_rarity(item), item[1].lvl, item[1].total_stats
+            return self.get_rarity_index(item), item[1].lvl, item[1].total_stats
 
         async for item_name in AsyncIter(backpack, steps=100):
             item = backpack[item_name]
