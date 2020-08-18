@@ -4666,7 +4666,7 @@ class Adventure(commands.Cog):
                 return await smart_embed(
                     ctx,
                     _(
-                        "Your hero is currently recovering from the last time they used this skill. Try again in {}"
+                        "Your hero is currently recovering from the last time they used this skill. Try again in {}."
                     ).format(humanize_timedelta(seconds=int(cooldown_time))),
                 )
 
