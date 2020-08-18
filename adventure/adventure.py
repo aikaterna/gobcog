@@ -5832,12 +5832,13 @@ class Adventure(commands.Cog):
         await self.bot.wait_until_ready()
         if user.bot:
             return
-        try:
-            guild = user.guild
-        except AttributeError:
-            return
         emojis = ReactionPredicate.NUMBER_EMOJIS + self._adventure_actions
         if str(reaction.emoji) not in emojis:
+            return
+        if (guild := getattr(user, "guild", None)) is not None:
+            if await self.bot.cog_disabled_in_guild(self, guild):
+                return
+        else:
             return
         if not await self.has_perm(user):
             return
@@ -7247,7 +7248,10 @@ class Adventure(commands.Cog):
     @commands.Cog.listener()
     async def on_message_without_command(self, message):
         await self._ready_event.wait()
-        if not message.guild:
+        if message.guild is not None:
+            if await self.bot.cog_disabled_in_guild(self, message.guild):
+                return
+        else:
             return
         channels = await self.config.guild(message.guild).cart_channels()
         if not channels:
