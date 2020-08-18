@@ -4255,7 +4255,7 @@ class Adventure(commands.Cog):
                 if c.heroclass["name"] != "Ranger":
                     return await ctx.send(
                         box(
-                            _("**{}**, you need to be a Ranger to do this.").format(
+                            _("{}, you need to be a Ranger to do this.").format(
                                 self.escape(ctx.author.display_name)
                             ),
                             lang="css",
@@ -6678,7 +6678,7 @@ class Adventure(commands.Cog):
                     crit_bonus = (random.randint(5, 20) + 2) * rebirths
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
                 if c.heroclass["ability"]:
-                    base_bonus = (random.randint(15, 50) + 5) * rebirths
+                    base_bonus = (random.randint(15, 50) + 5) * (rebirths // 2)
                 base_str = f"{self.emojis.crit}️ {humanize_number(base_bonus)}"
                 attack += int((roll + base_bonus + crit_bonus + att_value) / pdef)
                 bonus = base_str + crit_str
@@ -6695,7 +6695,7 @@ class Adventure(commands.Cog):
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.attack}{str(humanize_number(att_value))}\n"
                 )
-            if session.insight[0] == 1 and user.id != session.insight[1].id:
+            if session.insight[0] == 1 and user.id != session.insight[1].user.id:
                 attack += int(session.insight[1].total_att * 0.2)
         for user in magic_list:
             try:
@@ -6754,7 +6754,7 @@ class Adventure(commands.Cog):
                     crit_bonus = (random.randint(5, 20) + 2) * rebirths
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
                 if c.heroclass["ability"]:
-                    base_bonus = (random.randint(15, 50) + 5) * rebirths
+                    base_bonus = (random.randint(15, 50) + 5) * (rebirths // 2)
                     base_str = f"{self.emojis.magic_crit}️ {humanize_number(base_bonus)}"
                 magic += int((roll + base_bonus + crit_bonus + int_value) / mdef)
                 bonus = base_str + crit_str
@@ -6771,18 +6771,18 @@ class Adventure(commands.Cog):
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.magic}{humanize_number(int_value)}\n"
                 )
-            if session.insight[0] == 1 and user.id != session.insight[1].id:
+            if session.insight[0] == 1 and user.id != session.insight[1].user.id:
                 attack += int(session.insight[1].total_int * 0.2)
         if fumble_count == len(attack_list):
             report += _("No one!")
         msg += report + "\n"
         for user in fumblelist:
             if user in session.fight:
-                if session.insight[0] == 1 and user.id != session.insight[1].id:
+                if session.insight[0] == 1 and user.id != session.insight[1].user.id:
                     attack -= int(session.insight[1].total_att * 0.2)
                 session.fight.remove(user)
-            elif user in session.magic and user.id != session.insight[1].id:
-                if session.insight[0] == 1 and user.id != session.insight[1].id:
+            elif user in session.magic and user.id != session.insight[1].user.id:
+                if session.insight[0] == 1 and user.id != session.insight[1].user.id:
                     attack -= int(session.insight[1].total_int * 0.2)
                 session.magic.remove(user)
         return (fumblelist, critlist, attack, magic, msg)
@@ -6997,7 +6997,7 @@ class Adventure(commands.Cog):
                     crit_str = f"{self.emojis.crit} {crit_bonus}"
 
                 if c.heroclass["ability"]:
-                    base_bonus = (random.randint(15, 50) + 5) * rebirths
+                    base_bonus = (random.randint(15, 50) + 5) * (rebirths // 2)
                 base_str = f"🎵 {humanize_number(base_bonus)}"
                 diplomacy += int((roll + base_bonus + crit_bonus + dipl_value) / cdef)
                 bonus = base_str + crit_str
@@ -7014,14 +7014,14 @@ class Adventure(commands.Cog):
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.talk}{humanize_number(dipl_value)}\n"
                 )
-            if session.insight[0] == 1 and user.id != session.insight[1].id:
+            if session.insight[0] == 1 and user.id != session.insight[1].user.id:
                 diplomacy += int(session.insight[1].total_cha * 0.2)
         if fumble_count == len(talk_list):
             report += _("No one!")
         msg = msg + report + "\n"
         for user in fumblelist:
             if user in talk_list:
-                if session.insight[0] == 1 and user.id != session.insight[1].id:
+                if session.insight[0] == 1 and user.id != session.insight[1].user.id:
                     diplomacy -= int(session.insight[1].total_cha * 0.2)
                 session.talk.remove(user)
         return (fumblelist, critlist, diplomacy, msg)

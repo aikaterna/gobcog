@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import argparse
 import asyncio
 import logging
@@ -419,7 +421,7 @@ class GameSession:
     run: List[discord.Member] = []
     message: discord.Message = None
     transcended: bool = False
-    insight: Tuple[float, discord.Member] = (0, None)
+    insight: Tuple[float, Character] = (0, None)
     start_time: datetime = datetime.now()
     easy_mode: bool = False
     insight = (0, None)
