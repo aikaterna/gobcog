@@ -6991,7 +6991,7 @@ class Adventure(commands.Cog):
                 if roll_perc > 0.95:
                     msg += _("**{}** made a compelling argument.\n").format(self.escape(user.display_name))
                     critlist.append(user)
-                    crit_bonus = (random.randint(5, 20)) + (rebirth * 2)
+                    crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {crit_bonus}"
 
                 if c.heroclass["ability"]:
