@@ -6673,10 +6673,10 @@ class Adventure(commands.Cog):
                 if roll_perc > 0.95:
                     msg += _("**{}** landed a critical hit.\n").format(self.escape(user.display_name))
                     critlist.append(user)
-                    crit_bonus = (random.randint(5, 20) + 2) * rebirths
+                    crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
                 if c.heroclass["ability"]:
-                    base_bonus = (random.randint(15, 50) + 5) * (rebirths // 2)
+                    base_bonus = (random.randint(1, 10) + 5) * (rebirths // 2)
                 base_str = f"{self.emojis.crit}️ {humanize_number(base_bonus)}"
                 attack += int((roll + base_bonus + crit_bonus + att_value) / pdef)
                 bonus = base_str + crit_str
@@ -6749,10 +6749,10 @@ class Adventure(commands.Cog):
                 if roll_perc > 0.95:
                     msg += _("**{}** had a surge of energy.\n").format(self.escape(user.display_name))
                     critlist.append(user)
-                    crit_bonus = (random.randint(5, 20) + 2) * rebirths
+                    crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
                 if c.heroclass["ability"]:
-                    base_bonus = (random.randint(15, 50) + 5) * (rebirths // 2)
+                    base_bonus = (random.randint(1, 10) + 5) * (rebirths // 2)
                     base_str = f"{self.emojis.magic_crit}️ {humanize_number(base_bonus)}"
                 magic += int((roll + base_bonus + crit_bonus + int_value) / mdef)
                 bonus = base_str + crit_str
@@ -6991,11 +6991,11 @@ class Adventure(commands.Cog):
                 if roll_perc > 0.95:
                     msg += _("**{}** made a compelling argument.\n").format(self.escape(user.display_name))
                     critlist.append(user)
-                    crit_bonus = (random.randint(5, 20) + 2) * rebirths
+                    crit_bonus = (random.randint(5, 20)) + (rebirth * 2)
                     crit_str = f"{self.emojis.crit} {crit_bonus}"
 
                 if c.heroclass["ability"]:
-                    base_bonus = (random.randint(15, 50) + 5) * (rebirths // 2)
+                    base_bonus = (random.randint(1, 10) + 5) * (rebirths // 2)
                 base_str = f"🎵 {humanize_number(base_bonus)}"
                 diplomacy += int((roll + base_bonus + crit_bonus + dipl_value) / cdef)
                 bonus = base_str + crit_str
