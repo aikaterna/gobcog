@@ -744,7 +744,7 @@ class LeaderboardMenu(BaseMenu, inherit_buttons=False):
         await self.show_page(self._source.get_max_pages() - 1)
 
 
-class BackpackMenu(menus.MenuPages, inherit_buttons=False):
+class BackpackMenu(BaseMenu, inherit_buttons=False):
     def __init__(
         self,
         source: menus.PageSource,
