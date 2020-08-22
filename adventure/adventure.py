@@ -3121,11 +3121,12 @@ class Adventure(commands.Cog):
                             )
                             await smart_embed(ctx, wrong_item)
                         elif not can_equip(c, item):
-                            item = None
                             wrong_item = _("**{c}**, this item is too high level for you to reforge it.").format(
                                 c=self.escape(ctx.author.display_name)
                             )
                             await smart_embed(ctx, wrong_item)
+                            item = None
+                            continue
                         else:
                             break
                     consumed.append(item)
@@ -3167,7 +3168,7 @@ class Adventure(commands.Cog):
                                 "**{c}**, you only own 1 copy of this item and you've already selected it."
                             ).format(c=self.escape(ctx.author.display_name))
                             await smart_embed(ctx, wrong_item)
-                            item = None
+
                             continue
                         if not item:
                             wrong_item = _("**{c}**, I could not find that item - check your spelling.").format(
@@ -3175,11 +3176,12 @@ class Adventure(commands.Cog):
                             )
                             await smart_embed(ctx, wrong_item)
                         elif not can_equip(c, item):
-                            item = None
                             wrong_item = _("**{c}**, this item is too high level for you to reforge it.").format(
                                 c=self.escape(ctx.author.display_name)
                             )
                             await smart_embed(ctx, wrong_item)
+                            item = None
+                            continue
                         else:
                             break
                     consumed.append(item)
