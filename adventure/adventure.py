@@ -2800,9 +2800,10 @@ class Adventure(commands.Cog):
             if is_owner:
                 economy_string += _("\n# Tax Settings\n")
                 taxes = global_data["tax_brackets"]
-                for cur, tax in sorted(taxes.items(), key=lambda x:x[1]):
-                    economy_string += _("[{tax:06.2%}]:                               {currency}\n").format(tax=tax, currency=humanize_number(int(cur)))
-
+                for cur, tax in sorted(taxes.items(), key=lambda x: x[1]):
+                    economy_string += _("[{tax:06.2%}]:                               {currency}\n").format(
+                        tax=tax, currency=humanize_number(int(cur))
+                    )
 
         daily_bonus = global_data["daily_bonus"]
         daily_bonus_string = "\n# Daily Bonuses\n"
