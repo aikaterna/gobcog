@@ -2375,7 +2375,7 @@ class Adventure(commands.Cog):
         await self.config.guild(ctx.guild).embed.set(not toggle)
         await smart_embed(ctx, _("Embeds: {}").format(not toggle))
 
-    @adventureset.command(aliases=["chests"])
+    @adventureset.command(aliases=["chests"], enabled=False, hidden=True)
     @commands.is_owner()
     async def cartchests(self, ctx: commands.Context):
         """[Admin] Set whether or not to sell chests in the cart."""
@@ -2734,7 +2734,7 @@ class Adventure(commands.Cog):
         """Display current settings."""
         global_data = await self.config.all()
         guild_data = await self.config.guild(ctx.guild).all()
-
+        is_owner = await self.bot.is_owner(ctx.author)
         theme = global_data["theme"]
         god_name = global_data["god_name"] if not guild_data["god_name"] else guild_data["god_name"]
         cart_trader_name = global_data["cart_name"] if not guild_data["cart_name"] else guild_data["cart_name"]
@@ -2753,7 +2753,7 @@ class Adventure(commands.Cog):
             cart_channel_lock_override = _("No channel lock present.")
 
         cart_timeout = parse_timedelta(f"{guild_data['cart_timeout']} seconds")
-        lootbox_in_carts = _("Allowed") if global_data["enable_chests"] else _("Not allowed")
+        # lootbox_in_carts = _("Allowed") if global_data["enable_chests"] else _("Not allowed")
 
         if not await bank.is_global():
             rebirth_cost = guild_data["rebirth_cost"]
@@ -2797,6 +2797,12 @@ class Adventure(commands.Cog):
             economy_string += _(
                 "[Adventure to bank conversion rate]:    {ratio} {adventure_name} will be worth 1 {main_name}\n"
             ).format(main_name=main_currency_name, ratio=from_conversion_rate, adventure_name=adv_currency_name,)
+            if is_owner:
+                economy_string += _("\n# Tax Settings\n")
+                taxes = global_data["tax_brackets"]
+                for cur, tax in sorted(taxes.items(), key=lambda x:x[1]):
+                    economy_string += _("[{tax:06.2%}]:                               {currency}\n").format(tax=tax, currency=humanize_number(int(cur)))
+
 
         daily_bonus = global_data["daily_bonus"]
         daily_bonus_string = "\n# Daily Bonuses\n"
@@ -2835,13 +2841,16 @@ class Adventure(commands.Cog):
             cart_channel_lock_override=cart_channel_lock_override
         )
         msg += _("[Cart timeout (hh:mm:ss)]:              {cart_timeout}\n").format(cart_timeout=cart_timeout)
-        msg += _("[Lootboxes in carts]:                   {lootbox_in_carts}\n").format(
-            lootbox_in_carts=lootbox_in_carts
-        )
+        # msg += _("[Lootboxes in carts]:                   {lootbox_in_carts}\n").format(
+        #     lootbox_in_carts=lootbox_in_carts
+        # )
         msg += economy_string
         msg += daily_bonus_string
-
-        await ctx.send(box(msg, lang="ini"))
+        if is_owner:
+            with contextlib.suppress(discord.HTTPException):
+                await ctx.author.send(box(msg, lang="ini"))
+        else:
+            await ctx.send(box(msg, lang="ini"))
 
     @commands.command()
     @commands.cooldown(rate=1, per=4, type=commands.BucketType.guild)
