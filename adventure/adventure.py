@@ -58,6 +58,7 @@ from .charsheet import (
     parse_timedelta,
 )
 from .menus import (
+    BackpackMenu,
     BaseMenu,
     LeaderboardMenu,
     LeaderboardSource,
@@ -916,25 +917,13 @@ class Adventure(commands.Cog):
             return
         backpack_pages = await c.get_argparse_backpack(query)
         if backpack_pages:
-            controls = DEFAULT_CONTROLS.copy()
-
-            async def _backpack_info(
-                ctx: commands.Context,
-                pages: list,
-                controls: MutableMapping,
-                message: discord.Message,
-                page: int,
-                timeout: float,
-                emoji: str,
-            ):
-                if message:
-                    await ctx.send_help(self.commands_cbackpack)
-                    with contextlib.suppress(discord.HTTPException):
-                        await message.delete()
-                    return None
-
-            controls["\N{INFORMATION SOURCE}\N{VARIATION SELECTOR-16}"] = _backpack_info
-            return await menu(ctx, backpack_pages, controls)
+            await BackpackMenu(
+                source=SimpleSource(backpack_pages),
+                help_command=self.commands_cbackpack,
+                delete_message_after=True,
+                clear_reactions_after=True,
+                timeout=60,
+            ).start(ctx=ctx)
         else:
             return await smart_embed(ctx, _("You have no items that match this query."),)
 
@@ -1150,25 +1139,13 @@ class Adventure(commands.Cog):
             msgs = await c.get_backpack(rarity=rarity, slot=slot, show_delta=show_diff)
             if not msgs:
                 return await smart_embed(ctx, _("You have no items in your backpack."),)
-            controls = DEFAULT_CONTROLS.copy()
-
-            async def _backpack_info(
-                ctx: commands.Context,
-                pages: list,
-                controls: MutableMapping,
-                message: discord.Message,
-                page: int,
-                timeout: float,
-                emoji: str,
-            ):
-                if message:
-                    await ctx.send_help(self._backpack)
-                    with contextlib.suppress(discord.HTTPException):
-                        await message.delete()
-                    return None
-
-            controls["\N{INFORMATION SOURCE}\N{VARIATION SELECTOR-16}"] = _backpack_info
-            return await menu(ctx, msgs, controls)
+            await BackpackMenu(
+                source=SimpleSource(msgs),
+                help_command=self.commands_cbackpack,
+                delete_message_after=True,
+                clear_reactions_after=True,
+                timeout=60,
+            ).start(ctx=ctx)
 
     @_backpack.command(name="equip")
     async def backpack_equip(self, ctx: commands.Context, *, equip_item: EquipableItemConverter):
