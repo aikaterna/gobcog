@@ -3121,6 +3121,7 @@ class Adventure(commands.Cog):
                             )
                             await smart_embed(ctx, wrong_item)
                         elif not can_equip(c, item):
+                            item = None
                             wrong_item = _("**{c}**, this item is too high level for you to reforge it.").format(
                                 c=self.escape(ctx.author.display_name)
                             )
@@ -3174,6 +3175,7 @@ class Adventure(commands.Cog):
                             )
                             await smart_embed(ctx, wrong_item)
                         elif not can_equip(c, item):
+                            item = None
                             wrong_item = _("**{c}**, this item is too high level for you to reforge it.").format(
                                 c=self.escape(ctx.author.display_name)
                             )
