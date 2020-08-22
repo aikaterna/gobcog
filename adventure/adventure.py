@@ -5588,9 +5588,10 @@ class Adventure(commands.Cog):
 
         try:
             c = await Character.from_json(self.config, user, self._daily_bonus)
+            failed = False
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
-            return ({**self.MONSTERS, **self.AS_MONSTERS}, 1)
+            failed = True
 
         transcended_chance = random.randint(0, 10)
         theme = await self.config.theme()
@@ -5599,11 +5600,17 @@ class Adventure(commands.Cog):
         monster_stats = 1
         monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
         transcended = False
-        if transcended_chance == 5:
-            monster_stats = 2 + max((c.rebirths // 10) - 1, 0)
-            transcended = True
-        elif c.rebirths >= 10:
-            monster_stats = 1 + max((c.rebirths // 10) - 1, 0) / 2
+        if not failed:
+            if transcended_chance == 5:
+                monster_stats = 2 + max((c.rebirths // 10) - 1, 0)
+                transcended = True
+            elif c.rebirths >= 10:
+                monster_stats = 1 + max((c.rebirths // 10) - 1, 0) / 2
+        else:
+            if transcended_chance == 5:
+                monster_stats = 2
+            else:
+                monster_stats = 1
         return monsters, monster_stats, transcended
 
     async def _simple(self, ctx: commands.Context, adventure_msg, challenge: str = None, attribute: str = None):
