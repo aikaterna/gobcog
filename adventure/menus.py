@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import discord
 from redbot.core.commands import commands
@@ -274,6 +274,14 @@ class NVScoreboardSource(WeeklyScoreboardSource):
             header, "\n".join(players), f"Page {menu.current_page + 1}/{self.get_max_pages()}"
         )
         return msg
+
+
+class SimpleSource(menus.ListPageSource):
+    def __init__(self, entries: List[str, discord.Embed]):
+        super().__init__(entries, per_page=1)
+
+    async def format_page(self, menu: menus.MenuPages, page: Union[str, discord.Embed]):
+        return page
 
 
 class EconomySource(menus.ListPageSource):
