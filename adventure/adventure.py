@@ -4387,11 +4387,11 @@ class Adventure(commands.Cog):
                         bonus = _("But they stepped on a twig and scared it away.")
                     elif roll in [50, 25]:
                         bonus = _("They happen to have its favorite food.")
-                    if force_catch is (dipl_value > pet_list[pet]["cha"] and roll > 1 and can_catch):
+                    if force_catch or (dipl_value > pet_list[pet]["cha"] and roll > 1 and can_catch):
                         if force_catch:
                             roll = 0
                         else:
-                            roll = random.randint(0, 2 if roll in [50, 25] else 5)
+                            roll = random.randint(0, (2 if roll in [50, 25] else 5))
                         if roll == 0:
                             if force_catch and any(x in c.sets for x in ["The Supreme One", "Ainz Ooal Gown"]):
                                 msg = random.choice(
