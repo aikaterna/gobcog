@@ -5463,7 +5463,8 @@ class Adventure(commands.Cog):
             c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
-            return
+            choice = random.choice(list(monsters.keys()) * 3)
+            return choice
         possible_monsters = []
         stat_range = self._adv_results.get_stat_range(ctx)
         async for (e, (m, stats)) in AsyncIter(monsters.items(), steps=100).enumerate(start=1):
@@ -7601,8 +7602,6 @@ class Adventure(commands.Cog):
         return (out, finish, remaining)
 
     async def _reward(self, ctx: commands.Context, userlist, amount, modif, special):
-        if modif == 0:
-            modif = 0.5
         daymult = self._daily_bonus.get(str(datetime.today().isoweekday()), 0)
         xp = max(1, round(amount))
         cp = max(1, round(amount))
@@ -7620,11 +7619,8 @@ class Adventure(commands.Cog):
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 continue
-            userxp = int(xp + (xp * 0.5 * c.rebirths) + max((xp * 0.1 * min(250, c.total_int / 10)), 0))
-            # This got exponentially out of control before checking 1 skill
-            # To the point where you can spec into only INT and
-            # Reach level 1000 in a matter of days
-            usercp = int(cp + max(cp * c.luck, 0) // 2)
+            userxp = int(xp + (xp * 0.5 * c.rebirths) + max((xp * 0.1 * min(250, c._int / 10)), 0))
+            usercp = int(cp + max((cp * 0.1 * min(1000, (c._luck + c._att) / 10)), 0))
             userxp = int(userxp * (c.gear_set_bonus.get("xpmult", 1) + daymult))
             usercp = int(usercp * (c.gear_set_bonus.get("cpmult", 1) + daymult))
             newxp += userxp
