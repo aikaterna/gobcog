@@ -19,6 +19,9 @@ class LeaderboardSource(menus.ListPageSource):
     def __init__(self, entries: List[Tuple[int, Dict]]):
         super().__init__(entries, per_page=10)
 
+    def is_paginating(self):
+        return True
+
     async def format_page(self, menu: menus.MenuPages, entries: List[Tuple[int, Dict]]):
         ctx = menu.ctx
         rebirth_len = len(humanize_number(entries[0][1]["rebirths"]))
@@ -88,6 +91,9 @@ class WeeklyScoreboardSource(menus.ListPageSource):
         super().__init__(entries, per_page=10)
         self._stat = stat or "wins"
 
+    def is_paginating(self):
+        return True
+
     async def format_page(self, menu: menus.MenuPages, entries: List[Tuple[int, Dict]]):
         ctx = menu.ctx
         stats_len = len(humanize_number(entries[0][1][self._stat])) + 3
@@ -145,6 +151,9 @@ class ScoreboardSource(WeeklyScoreboardSource):
         super().__init__(entries)
         self._stat = stat or "wins"
         self._legend = None
+
+    def is_paginating(self):
+        return True
 
     async def format_page(self, menu: menus.MenuPages, entries: List[Tuple[int, Dict]]):
         ctx = menu.ctx
@@ -213,6 +222,9 @@ class ScoreboardSource(WeeklyScoreboardSource):
 class NVScoreboardSource(WeeklyScoreboardSource):
     def __init__(self, entries: List[Tuple[int, Dict]], stat: Optional[str] = None):
         super().__init__(entries)
+
+    def is_paginating(self):
+        return True
 
     async def format_page(self, menu: menus.MenuPages, entries: List[Tuple[int, Dict]]):
         ctx = menu.ctx
@@ -290,6 +302,9 @@ class EconomySource(menus.ListPageSource):
         self._total_balance_unified = None
         self._total_balance_sep = None
         self.author_position = None
+
+    def is_paginating(self):
+        return True
 
     async def format_page(self, menu: menus.MenuPages, entries: List[Tuple[str, Dict[str, Any]]]) -> discord.Embed:
         guild = menu.ctx.guild
