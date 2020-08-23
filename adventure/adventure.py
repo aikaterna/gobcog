@@ -6802,7 +6802,7 @@ class Adventure(commands.Cog):
                 if session.insight[0] == 1 and user.id != session.insight[1].user.id:
                     attack -= int(session.insight[1].total_att * 0.2)
                 session.fight.remove(user)
-            elif user in session.magic and user.id != session.insight[1].user.id:
+            elif user in session.magic:
                 if session.insight[0] == 1 and user.id != session.insight[1].user.id:
                     attack -= int(session.insight[1].total_int * 0.2)
                 session.magic.remove(user)
