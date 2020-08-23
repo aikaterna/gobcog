@@ -3292,10 +3292,10 @@ class Adventure(commands.Cog):
         base_int = character._int
         base_luck = character._luck
         base_att = character._att
-        modifier_bonus_luck = modifier * 0.01 * base_luck // 10
-        modifier_bonus_int = modifier * 0.01 * base_int // 20
-        modifier_penalty_str = modifier * -0.01 * base_att // 20
-        modifier_penalty_cha = modifier * -0.01 * base_cha // 10
+        modifier_bonus_luck = 0.01 * base_luck // 10
+        modifier_bonus_int = 0.01 * base_int // 20
+        modifier_penalty_str = -0.01 * base_att // 20
+        modifier_penalty_cha = -0.01 * base_cha // 10
         modifier = sum([modifier_bonus_int, modifier_bonus_luck, modifier_penalty_cha, modifier_penalty_str, modifier])
         modifier = max(0.001, modifier)
         newatt = round((int(item1.att) + int(item2.att)) * modifier)
