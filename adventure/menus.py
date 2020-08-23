@@ -292,6 +292,9 @@ class SimpleSource(menus.ListPageSource):
     def __init__(self, entries: List[str, discord.Embed]):
         super().__init__(entries, per_page=1)
 
+    def is_paginating(self):
+        return True
+
     async def format_page(self, menu: menus.MenuPages, page: Union[str, discord.Embed]):
         return page
 
