@@ -3288,10 +3288,10 @@ class Adventure(commands.Cog):
         else:
             modifier = 1
 
-        base_cha = character._cha
+        base_cha = max(character._cha, 1)
         base_int = character._int
         base_luck = character._luck
-        base_att = character._att
+        base_att = max(character._att, 1)
         modifier_bonus_luck = 0.01 * base_luck // 10
         modifier_bonus_int = 0.01 * base_int // 20
         modifier_penalty_str = -0.01 * base_att // 20
