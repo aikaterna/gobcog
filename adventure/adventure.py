@@ -1141,7 +1141,7 @@ class Adventure(commands.Cog):
                 return await smart_embed(ctx, _("You have no items in your backpack."),)
             await BackpackMenu(
                 source=SimpleSource(msgs),
-                help_command=self.commands_cbackpack,
+                help_command=self._backpack,
                 delete_message_after=True,
                 clear_reactions_after=True,
                 timeout=60,
