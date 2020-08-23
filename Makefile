@@ -2,11 +2,11 @@ PYTHON ?= python3.8
 
 # Python Code Style
 reformat:
-	$(PYTHON) -m isort --atomic --line-length 120 .
-	$(PYTHON) -m black -l 120 .
+	$(PYTHON) -m isort .
+	$(PYTHON) -m black .
 stylecheck:
-	$(PYTHON) -m isort --atomic --check --line-length 120 .
-	$(PYTHON) -m black --check -l 120 .
+	$(PYTHON) -m isort --check .
+	$(PYTHON) -m black --check .
 stylediff:
-	$(PYTHON) -m isort --atomic --check --diff --line-length 120 .
-	$(PYTHON) -m black --check --diff -l 120 .
+	$(PYTHON) -m isort --check --diff .
+	$(PYTHON) -m black --check --diff .

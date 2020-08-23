@@ -8,18 +8,18 @@ setlocal ENABLEDELAYEDEXPANSION
 goto %1
 
 :reformat
-isort --atomic --line-length 120 --use-parentheses .
-black -l 120 .
+isort --use-parentheses .
+black .
 exit /B %ERRORLEVEL%
 
 :stylecheck
-isort --atomic --check --line-length 120 --use-parentheses .
-black --check -l 120 .
+isort --check --use-parentheses .
+black --check .
 exit /B %ERRORLEVEL%
 
 :stylediff
-isort --atomic --check --diff --line-length 120 --use-parentheses .
-black --check --diff -l 120 .
+isort --check --diff --use-parentheses .
+black --check --diff .
 exit /B %ERRORLEVEL%
 
 :help
@@ -29,3 +29,4 @@ echo.
 echo Commands:
 echo   reformat                   Reformat all .py files being tracked by git.
 echo   stylecheck                 Check which tracked .py files need reformatting.
+echo   stylediff                  Check which tracked .py files need reformatting and show the diff.
