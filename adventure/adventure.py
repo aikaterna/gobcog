@@ -3267,27 +3267,7 @@ class Adventure(commands.Cog):
         item2 = consumed[1]
 
         roll = random.randint(1, 20)
-        if roll == 1:
-            modifier = 0.4
-        elif 1 < roll <= 6:
-            modifier = 0.5
-        elif 6 < roll <= 8:
-            modifier = 0.6
-        elif 8 < roll <= 10:
-            modifier = 0.7
-        elif 10 < roll <= 13:
-            modifier = 0.8
-        elif 13 < roll <= 16:
-            modifier = 0.9
-        elif 16 < roll <= 17:
-            modifier = 1.0
-        elif 17 < roll <= 19:
-            modifier = 1.1
-        elif roll == 20:
-            modifier = 1.2
-        else:
-            modifier = 1
-
+        modifier = (roll / 20) + 0.3
         base_cha = max(character._cha, 1)
         base_int = character._int
         base_luck = character._luck
