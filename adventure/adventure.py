@@ -3266,16 +3266,7 @@ class Adventure(commands.Cog):
         item1 = consumed[0]
         item2 = consumed[1]
 
-        roll = max(
-            (
-                random.randint(1, 20)
-                + int(
-                    (character.total_int + character.luck)
-                    / (character.total_stats - (character.total_int + character.luck))
-                )
-            ),
-            0,
-        )
+        roll = random.randint(1, 20)
         if roll == 1:
             modifier = 0.4
         elif 1 < roll <= 6:
@@ -3294,12 +3285,19 @@ class Adventure(commands.Cog):
             modifier = 1.1
         elif roll == 20:
             modifier = 1.2
-        elif 21 <= roll <= 30:
-            modifier = 1.5
-        elif roll > 30:
-            modifier = 2.0
         else:
             modifier = 1
+
+        base_cha = character._cha
+        base_int = character._int
+        base_luck = character._luck
+        base_att = character._att
+        modifier_bonus_luck = modifier * 0.01 * base_luck // 10
+        modifier_bonus_int = modifier * 0.01 * base_int // 20
+        modifier_penalty_str = modifier * -0.01 * base_att // 20
+        modifier_penalty_cha = modifier * -0.01 * base_cha // 10
+        modifier = sum([modifier_bonus_int, modifier_bonus_luck, modifier_penalty_cha, modifier_penalty_str, modifier])
+        modifier = max(0.001, modifier)
         newatt = round((int(item1.att) + int(item2.att)) * modifier)
         newdip = round((int(item1.cha) + int(item2.cha)) * modifier)
         newint = round((int(item1.int) + int(item2.int)) * modifier)
