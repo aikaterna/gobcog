@@ -294,7 +294,7 @@ async def deposit_credits(member: discord.Member, amount: int, _forced: bool = F
 
 
 async def transfer_credits(
-    from_: Union[discord.Member, discord.User], to: Union[discord.Member, discord.User], amount: int, tax: float = 0.0
+    from_: Union[discord.Member, discord.User], to: Union[discord.Member, discord.User], amount: int, tax: float = 0.0,
 ):
     """Transfer a given amount of credits from one account to another with a 50% tax.
     Parameters
