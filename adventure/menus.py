@@ -274,11 +274,11 @@ class NVScoreboardSource(WeeklyScoreboardSource):
             gold__losses = humanize_number(account_data["gold__losses"])
 
             data = (
-                f"{f'{pos_str}.':{pos_len}}"
-                f"{wins:{win_len}}"
-                f"{loses:{loses_len}}"
-                f"{xp__earnings:{xp__len}}"
-                f"{gold__losses:{gold__len}}"
+                f"{f'{pos_str}.':{pos_len}} "
+                f"{wins:{win_len}} "
+                f"{loses:{loses_len}} "
+                f"{xp__earnings:{xp__len}} "
+                f"{gold__losses:{gold__len}} "
                 f"{username}"
             )
             players.append(data)
