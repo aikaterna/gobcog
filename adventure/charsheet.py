@@ -427,6 +427,7 @@ class GameSession:
     insight = (0, None)
     no_monster: bool = False
     exposed: bool = False
+    finished: bool = False
 
     def __init__(self, **kwargs):
         self.challenge: str = kwargs.pop("challenge")
