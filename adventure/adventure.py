@@ -2415,7 +2415,7 @@ class Adventure(commands.Cog):
 
     @adventureset.command(name="clear")
     @commands.is_owner()
-    async def clear_user(self, ctx: commands.Context, *, users: commands.Greedy[discord.User]):
+    async def clear_user(self, ctx: commands.Context, users: commands.Greedy[discord.User]):
         """[Owner] Lets you clear multiple users character sheets."""
         for user in users:
             await self.config.user(user).clear()
