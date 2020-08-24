@@ -2063,7 +2063,10 @@ class Adventure(commands.Cog):
                 )
                 msg_list.append(box(msg, lang="css"))
                 count += 1
-            await menu(ctx, msg_list, DEFAULT_CONTROLS, page=index)
+            if msg_list:
+                await BaseMenu(
+                    source=SimpleSource(msg_list), delete_message_after=True, clear_reactions_after=True, timeout=60,
+                ).start(ctx=ctx, page=index)
 
     @loadout.command(name="equip", aliases=["load"], cooldown_after_parsing=True)
     @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)

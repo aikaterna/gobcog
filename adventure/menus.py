@@ -407,6 +407,7 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
             message=message,
             **kwargs,
         )
+        self.__tasks = self._Menu__tasks
 
     async def update(self, payload):
         """|coro|
@@ -431,6 +432,81 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
                 await button(self, payload)
         except Exception as exc:
             log.debug("Ignored exception on reaction event", exc_info=exc)
+
+    async def start(self, ctx, *, channel=None, wait=False, page: int = 0):
+        """
+        Starts the interactive menu session.
+
+        Parameters
+        -----------
+        ctx: :class:`Context`
+            The invocation context to use.
+        channel: :class:`discord.abc.Messageable`
+            The messageable to send the message to. If not given
+            then it defaults to the channel in the context.
+        wait: :class:`bool`
+            Whether to wait until the menu is completed before
+            returning back to the caller.
+
+        Raises
+        -------
+        MenuError
+            An error happened when verifying permissions.
+        discord.HTTPException
+            Adding a reaction failed.
+        """
+
+        # Clear the buttons cache and re-compute if possible.
+        try:
+            del self.buttons
+        except AttributeError:
+            pass
+
+        self.bot = bot = ctx.bot
+        self.ctx = ctx
+        self._author_id = ctx.author.id
+        channel = channel or ctx.channel
+        is_guild = isinstance(channel, discord.abc.GuildChannel)
+        me = ctx.guild.me if is_guild else ctx.bot.user
+        permissions = channel.permissions_for(me)
+        self.__me = discord.Object(id=me.id)
+        self._verify_permissions(ctx, channel, permissions)
+        self._event.clear()
+        msg = self.message
+        if msg is None:
+            self.message = msg = await self.send_initial_message(ctx, channel, page=page)
+        if self.should_add_reactions():
+            # Start the task first so we can listen to reactions before doing anything
+            for task in self.__tasks:
+                task.cancel()
+            self.__tasks.clear()
+
+            self._running = True
+            self.__tasks.append(bot.loop.create_task(self._internal_loop()))
+
+            if self.should_add_reactions():
+
+                async def add_reactions_task():
+                    for emoji in self.buttons:
+                        await msg.add_reaction(emoji)
+
+                self.__tasks.append(bot.loop.create_task(add_reactions_task()))
+
+            if wait:
+                await self._event.wait()
+
+    async def send_initial_message(self, ctx: commands.Context, channel: discord.abc.Messageable, page: int = 0):
+        """
+
+        The default implementation of :meth:`Menu.send_initial_message`
+        for the interactive pagination session.
+
+        This implementation shows the first page of the source.
+        """
+        self.current_page = page
+        page = await self._source.get_page(page)
+        kwargs = await self._get_kwargs_from_page(page)
+        return await channel.send(**kwargs)
 
     async def show_checked_page(self, page_number: int) -> None:
         max_pages = self._source.get_max_pages()
