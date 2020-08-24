@@ -866,13 +866,13 @@ class Adventure(commands.Cog):
 
             backpack_pages = await c.get_backpack(rarity=rarity, slot=slot, show_delta=show_diff, equippable=True)
             if backpack_pages:
-                await BaseMenu(
+                await BackpackMenu(
                     source=SimpleSource(backpack_pages),
+                    help_command=self.commands_equipable_backpack,
                     delete_message_after=True,
                     clear_reactions_after=True,
                     timeout=60,
                 ).start(ctx=ctx)
-                return
             else:
                 return await smart_embed(ctx, _("You have no equippable items that match this query."),)
 
