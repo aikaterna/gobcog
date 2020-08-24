@@ -1872,11 +1872,11 @@ class Adventure(commands.Cog):
 
                 await open_msg.edit(
                     content=box(
-                            _("{c}, congratulations on your rebirth.\nYou paid {bal}.").format(
-                                c=self.escape(ctx.author.display_name), bal=humanize_number(withdraw),
-                            ),
-                            lang="css",
+                        _("{c}, congratulations on your rebirth.\nYou paid {bal}.").format(
+                            c=self.escape(ctx.author.display_name), bal=humanize_number(withdraw),
                         ),
+                        lang="css",
+                    ),
                     embed=None,
                 )
                 await self.config.user(ctx.author).set(await c.rebirth())
