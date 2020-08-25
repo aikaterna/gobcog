@@ -2285,7 +2285,6 @@ class BackpackFilterParser(commands.Converter):
         response.update(process_argparse_stat(vals, "dexterity"))
         response.update(process_argparse_stat(vals, "level"))
         response.update(process_argparse_stat(vals, "degrade"))
-        print(response)
         return response
 
 
