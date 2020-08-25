@@ -885,15 +885,14 @@ class Adventure(commands.Cog):
         """Complex backpack management tools.
 
         **--slot** - Accepts multiple slots (use quotes if there are spaces in a slot name).
-        **--rarity** - Accepts multiple rarities (use quotes if there are spaces in a rarity name).
+        **--rarity** - Accepts multiple rarities.
         **--set** - Accepts multiple sets (use quotes if there are spaces in the set name).
         **--equip** - If used will only show equippable items.
         **--diff** - If used will show the stat delta compared to what you currently have equipped.
         **--except** - If used will show everything that does not match the specified query.
         **--match** - Accepts a string, no quotes are needed. Will attempt to match items to this string.
-        ​ ​ ​  ​**--icase** - If `--match` and `--icase` are used, matches will not be case sensitive.
-        **--no-match** - Accepts a string, no quotes are needed. Will not match items to this string.
-        ​ ​ ​  ​**--icase** - If `--no-match` and `--icase` are used, matches will not be case sensitive.
+        **--no-match** - Opposite of `--no-match`
+        **--icase** - If `--match` or `--no-match` and `--icase` are used, matches will not be case sensitive.
         For the following arguments:
         ​ ​ These arguments accept 1 or 2 numbers. If 1 is passed it is treated as an equal match, if 2 then it is a range.
         ​ ​ ​ ​ **--str**
@@ -903,8 +902,6 @@ class Adventure(commands.Cog):
         ​ ​ ​ ​ **--dex**
         ​ ​ ​ ​ **--lvl**
         ​ ​ ​ ​ **--deg** (Only works on `[p]cbackpack show`)
-
-        Subcommands: These take the same arguments listed above.
         """
 
     @commands_cbackpack.command(name="show")
