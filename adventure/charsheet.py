@@ -1000,6 +1000,7 @@ class Character(Item):
         rarities: List[str],
         sets: List[str],
         equippable: bool,
+        _except: bool,
         strength: MutableMapping[str, Any],
         intelligence: MutableMapping[str, Any],
         charisma: MutableMapping[str, Any],
@@ -1009,6 +1010,7 @@ class Character(Item):
         degrade: MutableMapping[str, Any],
         ignore_case: bool,
         match: Optional[str],
+        no_match: Optional[str],
         rarity_exclude: List[str] = None,
     ):
         tmp = {}
@@ -1016,81 +1018,169 @@ class Character(Item):
         def _sort(item):
             return self.get_rarity_index(item), item[1].lvl, item[1].total_stats
 
-        async for item_name in AsyncIter(backpack, steps=100):
-            item = backpack[item_name]
-            item_slots = item.slot
-            slot_name = item_slots[0]
-            if rarity_exclude is not None and item.rarity in rarity_exclude:
-                continue
-
-            if len(item_slots) > 1:
-                slot_name = "two handed"
-            if match:
-                actual_item_name = str(item)
-                if ignore_case:
-                    if match.lower() not in actual_item_name.lower():
-                        continue
-                elif match not in actual_item_name:
-                    continue
-            if slots and slot_name not in slots:
-                continue
-            if sets and item.rarity != "set":
-                continue
-            elif rarities and item.rarity not in rarities:
-                continue
-            if sets and item.set not in sets:
-                continue
-            e_level = equip_level(self, item)
-            if equippable and self.lvl < e_level:
-                continue
-            if degrade and item.rarity in ["legendary", "ascended", "event"]:
-                if (d := degrade.get("equal")) is not None:
-                    if item.degrade != d:
-                        continue
-                elif not degrade["min"] < item.degrade < degrade["max"]:
-                    continue
-            if level:
-                if (d := level.get("equal")) is not None:
-                    if e_level != d:
-                        continue
-                elif not level["min"] < e_level < level["max"]:
-                    continue
-            if dexterity:
-                if (d := dexterity.get("equal")) is not None:
-                    if item.dex != d:
-                        continue
-                elif not dexterity["min"] < item.dex < dexterity["max"]:
-                    continue
-            if luck:
-                if (d := luck.get("equal")) is not None:
-                    if item.luck != d:
-                        continue
-                elif not luck["min"] < item.luck < luck["max"]:
-                    continue
-            if charisma:
-                if (d := charisma.get("equal")) is not None:
-                    if item.cha != d:
-                        continue
-                elif not charisma["min"] < item.cha < charisma["max"]:
-                    continue
-            if intelligence:
-                if (d := intelligence.get("equal")) is not None:
-                    if item.int != d:
-                        continue
-                elif not intelligence["min"] < item.int < intelligence["max"]:
-                    continue
-            if strength:
-                if (d := strength.get("equal")) is not None:
-                    if item.att != d:
-                        continue
-                elif not strength["min"] < item.att <= strength["max"]:
+        if not _except:
+            async for item_name in AsyncIter(backpack, steps=100):
+                item = backpack[item_name]
+                item_slots = item.slot
+                slot_name = item_slots[0]
+                if rarity_exclude is not None and item.rarity in rarity_exclude:
                     continue
 
-            if slot_name not in tmp:
-                tmp[slot_name] = []
-            tmp[slot_name].append((item_name, item))
+                if len(item_slots) > 1:
+                    slot_name = "two handed"
+                if no_match:
+                    actual_item_name = str(item)
+                    if ignore_case:
+                        if no_match.lower() in actual_item_name.lower():
+                            continue
+                    elif no_match in actual_item_name:
+                        continue
+                if match:
+                    actual_item_name = str(item)
+                    if ignore_case:
+                        if match.lower() not in actual_item_name.lower():
+                            continue
+                    elif match not in actual_item_name:
+                        continue
+                if slots and slot_name not in slots:
+                    continue
+                if sets and item.rarity != "set":
+                    continue
+                elif rarities and item.rarity not in rarities:
+                    continue
+                if sets and item.set not in sets:
+                    continue
+                e_level = equip_level(self, item)
+                if equippable and self.lvl < e_level:
+                    continue
+                if degrade and item.rarity in ["legendary", "ascended", "event"]:
+                    if (d := degrade.get("equal")) is not None:
+                        if item.degrade != d:
+                            continue
+                    elif not degrade["min"] < item.degrade < degrade["max"]:
+                        continue
+                if level:
+                    if (d := level.get("equal")) is not None:
+                        if e_level != d:
+                            continue
+                    elif not level["min"] < e_level < level["max"]:
+                        continue
+                if dexterity:
+                    if (d := dexterity.get("equal")) is not None:
+                        if item.dex != d:
+                            continue
+                    elif not dexterity["min"] < item.dex < dexterity["max"]:
+                        continue
+                if luck:
+                    if (d := luck.get("equal")) is not None:
+                        if item.luck != d:
+                            continue
+                    elif not luck["min"] < item.luck < luck["max"]:
+                        continue
+                if charisma:
+                    if (d := charisma.get("equal")) is not None:
+                        if item.cha != d:
+                            continue
+                    elif not charisma["min"] < item.cha < charisma["max"]:
+                        continue
+                if intelligence:
+                    if (d := intelligence.get("equal")) is not None:
+                        if item.int != d:
+                            continue
+                    elif not intelligence["min"] < item.int < intelligence["max"]:
+                        continue
+                if strength:
+                    if (d := strength.get("equal")) is not None:
+                        if item.att != d:
+                            continue
+                    elif not strength["min"] < item.att <= strength["max"]:
+                        continue
+
+                if slot_name not in tmp:
+                    tmp[slot_name] = []
+                tmp[slot_name].append((item_name, item))
+        else:
+            rarities = [] if rarities == RARITIES else rarities
+            slots = [] if slots == ORDER else slots
+            async for item_name in AsyncIter(backpack, steps=100):
+                item = backpack[item_name]
+                item_slots = item.slot
+                slot_name = item_slots[0]
+                if rarity_exclude is not None and item.rarity in rarity_exclude:
+                    continue
+
+                if len(item_slots) > 1:
+                    slot_name = "two handed"
+                if no_match:
+                    actual_item_name = str(item)
+                    if ignore_case:
+                        if no_match.lower() not in actual_item_name.lower():
+                            continue
+                    elif no_match not in actual_item_name:
+                        continue
+                if match:
+                    actual_item_name = str(item)
+                    if ignore_case:
+                        if match.lower() in actual_item_name.lower():
+                            continue
+                    elif match in actual_item_name:
+                        continue
+                if slots and slot_name in slots:
+                    continue
+                elif rarities and item.rarity in rarities:
+                    continue
+                if sets and item.set in sets:
+                    continue
+                e_level = equip_level(self, item)
+                if equippable and self.lvl >= e_level:
+                    continue
+                if degrade and item.rarity in ["legendary", "ascended", "event"]:
+                    if (d := degrade.get("equal")) is not None:
+                        if item.degrade == d:
+                            continue
+                    elif degrade["min"] < item.degrade < degrade["max"]:
+                        continue
+                if level:
+                    if (d := level.get("equal")) is not None:
+                        if e_level == d:
+                            continue
+                    elif level["min"] < e_level < level["max"]:
+                        continue
+                if dexterity:
+                    if (d := dexterity.get("equal")) is not None:
+                        if item.dex == d:
+                            continue
+                    elif dexterity["min"] < item.dex < dexterity["max"]:
+                        continue
+                if luck:
+                    if (d := luck.get("equal")) is not None:
+                        if item.luck == d:
+                            continue
+                    elif luck["min"] < item.luck < luck["max"]:
+                        continue
+                if charisma:
+                    if (d := charisma.get("equal")) is not None:
+                        if item.cha == d:
+                            continue
+                    elif charisma["min"] < item.cha < charisma["max"]:
+                        continue
+                if intelligence:
+                    if (d := intelligence.get("equal")) is not None:
+                        if item.int == d:
+                            continue
+                    elif intelligence["min"] < item.int < intelligence["max"]:
+                        continue
+                if strength:
+                    if (d := strength.get("equal")) is not None:
+                        if item.att == d:
+                            continue
+                    elif strength["min"] < item.att <= strength["max"]:
+                        continue
+                if slot_name not in tmp:
+                    tmp[slot_name] = []
+                tmp[slot_name].append((item_name, item))
+
         slots = sorted(list(tmp.keys()), key=self.get_slot_index)
-
         final = []
         async for (idx, slot_name) in AsyncIter(slots, steps=100).enumerate():
             if tmp[slot_name]:
@@ -1112,6 +1202,8 @@ class Character(Item):
         degrade = query.pop("degrade", {})
         ignore_case = query.pop("icase", False)
         match = query.pop("match", None)
+        no_match = query.pop("no_match", None)
+        _except = query.pop("except", False)
 
         bkpk = await self.get_sorted_backpack_arg_parse(
             self.backpack,
@@ -1127,7 +1219,9 @@ class Character(Item):
             level=level,
             degrade=degrade,
             match=match,
+            no_match=no_match,
             ignore_case=ignore_case,
+            _except=_except,
         )
 
         msg = _("{author}'s backpack\n\n").format(author=escape(self.user.display_name, formatting=True))
@@ -1204,7 +1298,6 @@ class Character(Item):
     async def get_argparse_backpack_items(
         self, query: MutableMapping[str, Any], rarity_exclude: List[str] = None
     ) -> List[Item]:
-        delta = query.pop("delta", False)
         equippable = query.pop("equippable", False)
         sets = query.pop("set", [])
         rarities = query.pop("rarity", [])
@@ -1218,6 +1311,8 @@ class Character(Item):
         degrade = query.pop("degrade", {})
         ignore_case = query.pop("icase", False)
         match = query.pop("match", None)
+        no_match = query.pop("no_match", None)
+        _except = query.pop("except", False)
 
         bkpk = await self.get_sorted_backpack_arg_parse(
             self.backpack,
@@ -1233,8 +1328,9 @@ class Character(Item):
             level=level,
             degrade=degrade,
             match=match,
+            no_match=no_match,
             ignore_case=ignore_case,
-            rarity_exclude=rarity_exclude,
+            _except=_except,
         )
         return bkpk
 
@@ -2152,8 +2248,10 @@ class BackpackFilterParser(commands.Converter):
         parser.add_argument("--delta", dest="delta", action="store_true", default=False)
         parser.add_argument("--diff", dest="delta", action="store_true", default=False)
         parser.add_argument("--icase", dest="icase", action="store_true", default=False)
+        parser.add_argument("--except", dest="except", action="store_true", default=False)
 
         parser.add_argument("--match", nargs="*", dest="match", default=[])
+        parser.add_argument("--no-match", nargs="*", dest="no_match", default=[])
 
         if not command:
             parser.add_argument("command", nargs="*")
@@ -2162,6 +2260,8 @@ class BackpackFilterParser(commands.Converter):
             vals = vars(parser.parse_args(arg))
         except argparse.ArgumentError as exc:
             raise ArgParserFailure(exc.argument_name, exc.message)
+        except ValueError:
+            raise BadArgument()
         response["delta"] = vals["delta"]
         response["equippable"] = vals["equippable"]
         response["set"] = vals["set"]
@@ -2170,8 +2270,13 @@ class BackpackFilterParser(commands.Converter):
         if vals["slot"]:
             response["slot"] = vals["slot"]
         response["icase"] = vals["icase"]
+        response["except"] = vals["except"]
+
         if vals["match"]:
             response["match"] = " ".join(vals["match"]).strip()
+
+        if vals["no_match"]:
+            response["no_match"] = " ".join(vals["no_match"]).strip()
 
         response.update(process_argparse_stat(vals, "strength"))
         response.update(process_argparse_stat(vals, "intelligence"))
@@ -2180,6 +2285,7 @@ class BackpackFilterParser(commands.Converter):
         response.update(process_argparse_stat(vals, "dexterity"))
         response.update(process_argparse_stat(vals, "level"))
         response.update(process_argparse_stat(vals, "degrade"))
+        print(response)
         return response
 
 
