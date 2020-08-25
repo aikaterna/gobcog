@@ -355,7 +355,6 @@ class Adventure(commands.Cog):
             "loadouts": {},
             "class": {"name": _("Hero"), "ability": False, "desc": _("Your basic adventuring hero."), "cooldown": 0,},
             "skill": {"pool": 0, "att": 0, "cha": 0, "int": 0},
-            "patron": {"last_reward": 0, "has_patron": None, "first_patron": None},
             "adventures": {
                 "wins": 0,
                 "loses": 0,
