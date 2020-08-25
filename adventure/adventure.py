@@ -3280,11 +3280,17 @@ class Adventure(commands.Cog):
         modifier_penalty_cha = -0.01 * base_cha // 10
         modifier = sum([modifier_bonus_int, modifier_bonus_luck, modifier_penalty_cha, modifier_penalty_str, modifier])
         modifier = max(0.001, modifier)
-        newatt = round((int(item1.att) + int(item2.att)) * modifier)
-        newdip = round((int(item1.cha) + int(item2.cha)) * modifier)
-        newint = round((int(item1.int) + int(item2.int)) * modifier)
-        newdex = round((int(item1.dex) + int(item2.dex)) * modifier)
-        newluck = round((int(item1.luck) + int(item2.luck)) * modifier)
+
+        base_int = (int(item1.int) + int(item2.int))
+        base_cha = (int(item1.cha) + int(item2.cha))
+        base_att = (int(item1.att) + int(item2.att))
+        base_dex = (int(item1.dex) + int(item2.dex))
+        base_luck = (int(item1.luck) + int(item2.luck))
+        newatt = int((base_att * modifier) + base_att)
+        newdip = int((base_cha * modifier) + base_cha)
+        newint = int((base_int * modifier) + base_int)
+        newdex = int((base_dex * modifier) + base_dex)
+        newluck = int((base_luck * modifier) + base_luck)
         newslot = random.choice(ORDER)
         if newslot == "two handed":
             newslot = ["right", "left"]
