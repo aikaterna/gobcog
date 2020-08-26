@@ -17,6 +17,7 @@ import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
 from discord.ext.commands import CheckFailure
 from discord.ext.commands.errors import BadArgument
+from redbot import VersionInfo, version_info
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.commands import check, get_dict_converter
@@ -26,7 +27,7 @@ from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import box, escape, humanize_list, humanize_number, humanize_timedelta, pagify
 from redbot.core.utils.common_filters import filter_various_mentions
-from redbot.core.utils.menus import DEFAULT_CONTROLS, menu, start_adding_reactions
+from redbot.core.utils.menus import menu, start_adding_reactions
 from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 
 import adventure.charsheet
@@ -275,6 +276,7 @@ class Adventure(commands.Cog):
         self.emojis.skills.bard = "\N{EIGHTH NOTE}\N{BEAMED EIGHTH NOTES}\N{BEAMED SIXTEENTH NOTES}"
         self.emojis.hp = "\N{HEAVY BLACK HEART}\N{VARIATION SELECTOR-16}"
         self.emojis.dipl = self.emojis.talk
+        self.red_340_or_newer = version_info >= VersionInfo.from_str("3.4.0")
 
         self._adventure_actions = [
             self.emojis.attack,
@@ -5860,11 +5862,12 @@ class Adventure(commands.Cog):
         emojis = ReactionPredicate.NUMBER_EMOJIS + self._adventure_actions
         if str(reaction.emoji) not in emojis:
             return
-        if (guild := getattr(user, "guild", None)) is not None:
-            if await self.bot.cog_disabled_in_guild(self, guild):
+        if self.red_340_or_newer:
+            if (guild := getattr(user, "guild", None)) is not None:
+                if await self.bot.cog_disabled_in_guild(self, guild):
+                    return
+            else:
                 return
-        else:
-            return
         if not await self.has_perm(user):
             return
         if guild.id in self._sessions:
@@ -7260,11 +7263,12 @@ class Adventure(commands.Cog):
     @commands.Cog.listener()
     async def on_message_without_command(self, message):
         await self._ready_event.wait()
-        if message.guild is not None:
-            if await self.bot.cog_disabled_in_guild(self, message.guild):
+        if self.red_340_or_newer:
+            if message.guild is not None:
+                if await self.bot.cog_disabled_in_guild(self, message.guild):
+                    return
+            else:
                 return
-        else:
-            return
         channels = await self.config.guild(message.guild).cart_channels()
         if not channels:
             return
