@@ -884,31 +884,17 @@ class Adventure(commands.Cog):
     ):
         """Complex backpack management tools.
 
-        **--slot** - Accepts multiple slots (use quotes if there are spaces in a slot name).
-        **--rarity** - Accepts multiple rarities.
-        **--set** - Accepts multiple sets (use quotes if there are spaces in the set name).
-        **--equip** - If used will only show equippable items.
-        **--diff** - If used will show the stat delta compared to what you currently have equipped.
-        **--except** - If used will show everything that does not match the specified query.
-        **--match** - Accepts a string, no quotes are needed. Will attempt to match items to this string.
-        **--no-match** - Opposite of `--no-match`
-        **--icase** - If `--match` or `--no-match` and `--icase` are used, matches will not be case sensitive.
-        For the following arguments:
-        ​ ​ These arguments accept 1 or 2 numbers. If 1 is passed it is treated as an equal match, if 2 then it is a range.
-        ​ ​ ​ ​ **--str**
-        ​ ​ ​ ​ **--int**
-        ​ ​ ​ ​ **--cha**
-        ​ ​ ​ ​ **--luc**
-        ​ ​ ​ ​ **--dex**
-        ​ ​ ​ ​ **--lvl**
-        ​ ​ ​ ​ **--deg** (Only works on `[p]cbackpack show`)
+        Please read the usage instructions [here](https://github.com/aikaterna/gobcog/blob/master/docs/cbackpack.md)
         """
 
     @commands_cbackpack.command(name="show")
     async def commands_cbackpack_show(
         self, ctx: commands.Context, *, query: BackpackFilterParser,
     ):
-        """This shows the contents of your backpack."""
+        """This shows the contents of your backpack.
+
+        Please read the usage instructions [here](https://github.com/aikaterna/gobcog/blob/master/docs/cbackpack.md)
+        """
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
         try:
@@ -935,6 +921,8 @@ class Adventure(commands.Cog):
 
         This will provide a chance for a chest,
         or the item might break while you are handling it...
+
+        Please read the usage instructions [here](https://github.com/aikaterna/gobcog/blob/master/docs/cbackpack.md)
         """
         if self.in_adventure(ctx):
             return await smart_embed(
@@ -1019,7 +1007,9 @@ class Adventure(commands.Cog):
     async def commands_cbackpack_sell(self, ctx: commands.Context, *, query: BackpackFilterParser):
         """Sell items from your backpack.
 
-        Forged, Set and Event items cannot be sold using this command.
+        Forged cannot be sold using this command.
+
+        Please read the usage instructions [here](https://github.com/aikaterna/gobcog/blob/master/docs/cbackpack.md)
         """
 
         if self.in_adventure(ctx):
