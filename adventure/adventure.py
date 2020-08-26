@@ -1007,7 +1007,7 @@ class Adventure(commands.Cog):
     async def commands_cbackpack_sell(self, ctx: commands.Context, *, query: BackpackFilterParser):
         """Sell items from your backpack.
 
-        Forged cannot be sold using this command.
+        Forged items cannot be sold using this command.
 
         Please read the usage instructions [here](https://github.com/aikaterna/gobcog/blob/master/docs/cbackpack.md)
         """
