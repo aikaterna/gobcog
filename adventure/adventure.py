@@ -6127,7 +6127,7 @@ class Adventure(commands.Cog):
                 ctx.guild.id, attack, diplomacy, magic, shame=True
             )
             if run_msg:
-                run_msg = _("It's a shame for the following adventurers\n{run_msg}\n").format(run_msg=run_msg)
+                run_msg = _("It's a shame for the following adventurers...\n{run_msg}\n").format(run_msg=run_msg)
 
             output = _(
                 "All adventures prepared for an epic adventure, but they soon realise all this treasure was unprotected!\n{run_msg}{text}"
