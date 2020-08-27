@@ -6189,57 +6189,106 @@ class Adventure(commands.Cog):
         text = ""
         success = False
         treasure = [0, 0, 0, 0, 0, 0]
-        if (slain or persuaded) and not failed:
-            success = True
-            roll = random.randint(1, 10)
-            monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
-            if session.transcended:
-                if session.boss and "Trancended" in session.challenge:
-                    avaliable_loot = [
-                        [0, 0, 1, 5, 2, 1],
-                        [0, 0, 0, 0, 1, 2],
-                    ]
-                else:
-                    avaliable_loot = [
-                        [0, 0, 1, 5, 1, 1],
-                        [0, 0, 1, 3, 0, 1],
-                        [0, 0, 1, 1, 1, 1],
-                        [0, 0, 0, 0, 0, 1],
-                    ]
-                treasure = random.choice(avaliable_loot)
-            elif session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
-                avaliable_loot = [[0, 0, 3, 1, 0, 0], [0, 0, 1, 2, 1, 0], [0, 0, 0, 3, 2, 0]]
-                treasure = random.choice(avaliable_loot)
-            elif session.miniboss:  # rewards 50:50 rare:normal chest for killing something like the basilisk
-                treasure = random.choice(
-                    [[1, 1, 1, 0, 0, 0], [0, 0, 1, 1, 1, 0], [0, 0, 2, 2, 0, 0], [0, 1, 0, 2, 1, 0]]
-                )
-            elif monster_amount >= 700:  # super hard stuff
-                if roll <= 7:
-                    treasure = random.choice([[0, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 1, 0]])
-            elif monster_amount >= 500:  # rewards 50:50 rare:epic chest for killing hard stuff.
-                if roll <= 5:
-                    treasure = random.choice([[0, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 1, 1, 0, 0, 0]])
-            elif monster_amount >= 300:  # rewards 50:50 rare:normal chest for killing hardish stuff
-                if roll <= 2:
-                    treasure = random.choice([[1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0]])
-            elif monster_amount >= 80:  # small chance of a normal chest on killing stuff that's not terribly weak
-                if roll == 1:
-                    treasure = [1, 0, 0, 0, 0, 0]
+        if session.easy_mode:
+            if (slain or persuaded) and not failed:
+                success = True
+                roll = random.randint(1, 10)
+                monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
+                if session.transcended:
+                    if session.boss and "Trancended" in session.challenge:
+                        avaliable_loot = [
+                            [0, 0, 1, 5, 2, 1],
+                            [0, 0, 0, 0, 1, 1],
+                        ]
+                    else:
+                        avaliable_loot = [
+                            [0, 0, 1, 5, 1, 1],
+                            [0, 0, 1, 3, 0, 1],
+                            [0, 0, 1, 1, 1, 1],
+                            [0, 0, 0, 0, 0, 1],
+                        ]
+                    treasure = random.choice(avaliable_loot)
+                elif session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
+                    avaliable_loot = [[0, 0, 3, 1, 0, 0], [0, 0, 1, 2, 1, 0], [0, 0, 0, 3, 2, 0]]
+                    treasure = random.choice(avaliable_loot)
+                elif session.miniboss:  # rewards 50:50 rare:normal chest for killing something like the basilisk
+                    treasure = random.choice(
+                        [[1, 1, 1, 0, 0, 0], [0, 0, 1, 1, 1, 0], [0, 0, 2, 2, 0, 0], [0, 1, 0, 2, 1, 0]]
+                    )
+                elif monster_amount >= 700:  # super hard stuff
+                    if roll <= 7:
+                        treasure = random.choice([[0, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 1, 0]])
+                elif monster_amount >= 500:  # rewards 50:50 rare:epic chest for killing hard stuff.
+                    if roll <= 5:
+                        treasure = random.choice([[0, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 1, 1, 0, 0, 0]])
+                elif monster_amount >= 300:  # rewards 50:50 rare:normal chest for killing hardish stuff
+                    if roll <= 2:
+                        treasure = random.choice([[1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0]])
+                elif monster_amount >= 80:  # small chance of a normal chest on killing stuff that's not terribly weak
+                    if roll == 1:
+                        treasure = [1, 0, 0, 0, 0, 0]
 
-            if session.boss:  # always rewards at least an epic chest.
-                # roll for legendary chest
-                roll = random.randint(1, 100)
-                if roll <= 10:
-                    treasure[4] += 1
-                elif roll <= 20:
-                    treasure[3] += 1
-                else:
-                    treasure[2] += 1
-            if len(critlist) != 0:
-                treasure[0] += 1
-            if treasure == [0, 0, 0, 0, 0, 0]:
-                treasure = False
+                if session.boss:  # always rewards at least an epic chest.
+                    # roll for legendary chest
+                    roll = random.randint(1, 100)
+                    if roll <= 10:
+                        treasure[4] += 1
+                    elif roll <= 20:
+                        treasure[3] += 1
+                    else:
+                        treasure[2] += 1
+                if len(critlist) != 0:
+                    treasure[0] += 1
+                if treasure == [0, 0, 0, 0, 0, 0]:
+                    treasure = False
+        else:
+            if (slain or persuaded) and not failed:
+                success = True
+                roll = random.randint(1, 10)
+                monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
+                if session.transcended:
+                    if session.boss and "Trancended" in session.challenge:
+                        avaliable_loot = [
+                            [0, 0, 1, 5, 4, 2],
+                            [0, 0, 3, 4, 5, 2],
+                        ]
+                    else:
+                        avaliable_loot = [
+                            [0, 0, 1, 4, 2, 1],
+                            [0, 0, 1, 1, 2, 1],
+                        ]
+                    treasure = random.choice(avaliable_loot)
+                elif session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
+                    avaliable_loot = [[0, 0, 1, 2, 1, 0], [0, 0, 0, 3, 2, 0]]
+                    treasure = random.choice(avaliable_loot)
+                elif session.miniboss:  # rewards 50:50 rare:normal chest for killing something like the basilisk
+                    treasure = random.choice([[0, 0, 2, 2, 3, 0], [0, 1, 0, 2, 2, 0]])
+                elif monster_amount >= 700:  # super hard stuff
+                    if roll <= 7:
+                        treasure = random.choice([[0, 0, 0, 2, 2, 0], [0, 1, 2, 1, 0, 0]])
+                elif monster_amount >= 500:  # rewards 50:50 rare:epic chest for killing hard stuff.
+                    if roll <= 5:
+                        treasure = random.choice([[0, 0, 2, 0, 0, 0], [0, 1, 2, 1, 0, 0]])
+                elif monster_amount >= 300:  # rewards 50:50 rare:normal chest for killing hardish stuff
+                    if roll <= 2:
+                        treasure = random.choice([[0, 2, 0, 0, 0, 0], [1, 2, 1, 0, 0, 0]])
+                elif monster_amount >= 80:  # small chance of a normal chest on killing stuff that's not terribly weak
+                    if roll == 1:
+                        treasure = [3, 0, 0, 0, 0, 0]
+
+                if session.boss:  # always rewards at least an epic chest.
+                    # roll for legendary chest
+                    roll = random.randint(1, 100)
+                    if roll <= 30:
+                        treasure[4] += 1
+                    elif roll <= 50:
+                        treasure[3] += 1
+                    else:
+                        treasure[2] += 1
+                if len(critlist) != 0:
+                    treasure[1] += 1
+                if treasure == [0, 0, 0, 0, 0, 0]:
+                    treasure = False
         if session.miniboss and failed:
             session.participants = set(fight_list + talk_list + pray_list + magic_list + fumblelist)
             currency_name = await bank.get_currency_name(ctx.guild,)
@@ -6250,7 +6299,7 @@ class Adventure(commands.Cog):
                     log.exception("Error with the new character sheet", exc_info=exc)
                     continue
                 if c.bal > 0:
-                    multiplier = 1 / 3 if c.rebirths >= 5 else 0.01
+                    multiplier = 1 / 3 if c.rebirths >= 10 else 0.01
                     if c._dex < 0:
                         dex = min(1 / abs(c._dex), 1)
                     else:
@@ -6294,7 +6343,7 @@ class Adventure(commands.Cog):
                     log.exception("Error with the new character sheet", exc_info=exc)
                     continue
                 if c.bal > 0:
-                    multiplier = 1 / 3 if c.rebirths >= 5 else 0.01
+                    multiplier = 1 / 3 if c.rebirths >= 10 else 0.01
                     if c._dex < 0:
                         dex = min(1 / abs(c._dex), 1)
                     else:
@@ -6368,7 +6417,7 @@ class Adventure(commands.Cog):
                         log.exception("Error with the new character sheet", exc_info=exc)
                         continue
                     if c.bal > 0:
-                        multiplier = 1 / 3 if c.rebirths >= 5 else 0.01
+                        multiplier = 1 / 3 if c.rebirths >= 10 else 0.01
                         if c._dex < 0:
                             dex = min(1 / abs(c._dex), 1)
                         else:
@@ -6553,7 +6602,7 @@ class Adventure(commands.Cog):
                         log.exception("Error with the new character sheet", exc_info=exc)
                         continue
                     if c.bal > 0:
-                        multiplier = 1 / 3 if c.rebirths >= 5 else 0.01
+                        multiplier = 1 / 3 if c.rebirths >= 10 else 0.01
                         if c._dex < 0:
                             dex = min(1 / abs(c._dex), 1)
                         else:
@@ -7596,6 +7645,11 @@ class Adventure(commands.Cog):
         reward_message = ""
         currency_name = await bank.get_currency_name(ctx.guild,)
         can_embed = not ctx.guild or (await _config.guild(ctx.guild).embed() and await ctx.embed_requested())
+        session = self._sessions.get(ctx.guild.id)
+        if session:
+            session_bonus = 1 if session.easy_mode else 2
+        else:
+            session_bonus = 1
         async for user in AsyncIter(userlist, steps=100):
             self._rewards[user.id] = {}
             try:
@@ -7605,7 +7659,7 @@ class Adventure(commands.Cog):
                 continue
             userxp = int(xp + (xp * 0.5 * c.rebirths) + max((xp * 0.1 * min(250, c._int / 10)), 0))
             usercp = int(cp + max((cp * 0.1 * min(1000, (c._luck + c._att) / 10)), 0))
-            userxp = int(userxp * (c.gear_set_bonus.get("xpmult", 1) + daymult))
+            userxp = int(userxp * (c.gear_set_bonus.get("xpmult", 1) + daymult) * session_bonus)
             usercp = int(usercp * (c.gear_set_bonus.get("cpmult", 1) + daymult))
             newxp += userxp
             newcp += usercp
@@ -7613,7 +7667,7 @@ class Adventure(commands.Cog):
             if c.heroclass.get("pet", {}).get("bonuses", {}).get("always", False):
                 roll = 5
             if roll == 5 and c.heroclass["name"] == "Ranger" and c.heroclass["pet"]:
-                petxp = int(userxp * c.heroclass["pet"]["bonus"])
+                petxp = int(userxp * c.heroclass["pet"]["bonus"] * session_bonus)
                 newxp += petxp
                 userxp += petxp
                 self._rewards[user.id]["xp"] = userxp
