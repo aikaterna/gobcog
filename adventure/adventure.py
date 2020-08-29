@@ -7660,7 +7660,7 @@ class Adventure(commands.Cog):
             if c.heroclass.get("pet", {}).get("bonuses", {}).get("always", False):
                 roll = 5
             if roll == 5 and c.heroclass["name"] == "Ranger" and c.heroclass["pet"]:
-                petxp = int(userxp * c.heroclass["pet"]["bonus"] * session_bonus)
+                petxp = int(userxp * c.heroclass["pet"]["bonus"])
                 newxp += petxp
                 userxp += petxp
                 self._rewards[user.id]["xp"] = userxp
