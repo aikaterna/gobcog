@@ -7640,9 +7640,9 @@ class Adventure(commands.Cog):
         can_embed = not ctx.guild or (await _config.guild(ctx.guild).embed() and await ctx.embed_requested())
         session = self._sessions.get(ctx.guild.id)
         if session:
-            session_bonus = 1 if session.easy_mode else 2
+            session_bonus = 0 if session.easy_mode else 1
         else:
-            session_bonus = 1
+            session_bonus = 0
         async for user in AsyncIter(userlist, steps=100):
             self._rewards[user.id] = {}
             try:
@@ -7652,7 +7652,7 @@ class Adventure(commands.Cog):
                 continue
             userxp = int(xp + (xp * 0.5 * c.rebirths) + max((xp * 0.1 * min(250, c._int / 10)), 0))
             usercp = int(cp + max((cp * 0.1 * min(1000, (c._luck + c._att) / 10)), 0))
-            userxp = int(userxp * (c.gear_set_bonus.get("xpmult", 1) + daymult) * session_bonus)
+            userxp = int(userxp * (c.gear_set_bonus.get("xpmult", 1) + daymult + session_bonus))
             usercp = int(usercp * (c.gear_set_bonus.get("cpmult", 1) + daymult))
             newxp += userxp
             newcp += usercp
