@@ -192,8 +192,8 @@ class Item:
             self.total_stats *= 2
         self.max_main_stat = max(self.att, self.int, self.cha, 1)
         self.lvl: int = (
-            kwargs.get("lvl") or self.get_equip_level()
-        ) if self.rarity == "event" else self.get_equip_level()
+            (kwargs.get("lvl") or self.get_equip_level()) if self.rarity == "event" else self.get_equip_level()
+        )
         self.degrade = kwargs.get("degrade", 5)
 
     def __str__(self):
@@ -677,7 +677,11 @@ class Character(Item):
                 elif self.heroclass["pet"]:
                     if any(x in self.sets for x in ["The Supreme One", "Ainz Ooal Gown"]) and self.heroclass["pet"][
                         "name"
-                    ] in ["Albedo", "Rubedo", "Guardians of Nazarick",]:
+                    ] in [
+                        "Albedo",
+                        "Rubedo",
+                        "Guardians of Nazarick",
+                    ]:
                         class_desc += _("\n\n- Current servant: [{}]").format(self.heroclass["pet"]["name"])
                     else:
                         class_desc += _("\n\n- Current pet: [{}]").format(self.heroclass["pet"]["name"])
@@ -1288,7 +1292,9 @@ class Character(Item):
                         else "N/A"
                     )
                 if "SET" in headers:
-                    data.append(item.set or "N/A",)
+                    data.append(
+                        item.set or "N/A",
+                    )
                 table.rows.append(data)
                 remainder = True
         if remainder:
@@ -1406,7 +1412,8 @@ class Character(Item):
             else:
                 if item.get("rarity", "common") == "event":
                     equiplevel = item.get(
-                        "lvl", max((item.get("lvl", 1) - min(max(self.rebirths // 2 - 1, 0), 50)), 1),
+                        "lvl",
+                        max((item.get("lvl", 1) - min(max(self.rebirths // 2 - 1, 0), 50)), 1),
                     )
                 else:
                     equiplevel = max((item.get("lvl", 1) - min(max(self.rebirths // 2 - 1, 0), 50)), 1)
@@ -1725,7 +1732,9 @@ class ItemsConverter(Converter):
     async def convert(self, ctx, argument) -> Tuple[str, List[Item]]:
         try:
             c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config, ctx.author, ctx.bot.get_cog("Adventure")._daily_bonus,
+                ctx.bot.get_cog("Adventure").config,
+                ctx.author,
+                ctx.bot.get_cog("Adventure")._daily_bonus,
             )
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
@@ -1796,7 +1805,9 @@ class ItemConverter(Converter):
     async def convert(self, ctx, argument) -> Item:
         try:
             c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config, ctx.author, ctx.bot.get_cog("Adventure")._daily_bonus,
+                ctx.bot.get_cog("Adventure").config,
+                ctx.author,
+                ctx.bot.get_cog("Adventure")._daily_bonus,
             )
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
@@ -1851,7 +1862,9 @@ class EquipableItemConverter(Converter):
     async def convert(self, ctx, argument) -> Item:
         try:
             c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config, ctx.author, ctx.bot.get_cog("Adventure")._daily_bonus,
+                ctx.bot.get_cog("Adventure").config,
+                ctx.author,
+                ctx.bot.get_cog("Adventure")._daily_bonus,
             )
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
@@ -1917,7 +1930,9 @@ class EquipmentConverter(Converter):
     async def convert(self, ctx, argument) -> Union[Item, List[Item]]:
         try:
             c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config, ctx.author, ctx.bot.get_cog("Adventure")._daily_bonus,
+                ctx.bot.get_cog("Adventure").config,
+                ctx.author,
+                ctx.bot.get_cog("Adventure")._daily_bonus,
             )
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
@@ -2186,7 +2201,9 @@ async def no_dev_prompt(ctx: commands.Context) -> bool:
     )
     try:
         message = await ctx.bot.wait_for(
-            "message", check=lambda m: m.channel.id == ctx.channel.id and m.author.id == ctx.author.id, timeout=60,
+            "message",
+            check=lambda m: m.channel.id == ctx.channel.id and m.author.id == ctx.author.id,
+            timeout=60,
         )
     except asyncio.TimeoutError:
         await ctx.send(_("Did not get confirmation, cancelling."))

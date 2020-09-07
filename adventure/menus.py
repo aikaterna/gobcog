@@ -80,7 +80,10 @@ class LeaderboardSource(menus.ListPageSource):
         embed = discord.Embed(
             title="Adventure Leaderboard",
             color=await menu.ctx.embed_color(),
-            description="```md\n{}``` ```md\n{}```".format(header, "\n".join(players),),
+            description="```md\n{}``` ```md\n{}```".format(
+                header,
+                "\n".join(players),
+            ),
         )
         embed.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
         return embed
@@ -140,7 +143,10 @@ class WeeklyScoreboardSource(menus.ListPageSource):
         embed = discord.Embed(
             title=f"Adventure Weekly Scoreboard",
             color=await menu.ctx.embed_color(),
-            description="```md\n{}``` ```md\n{}```".format(header, "\n".join(players),),
+            description="```md\n{}``` ```md\n{}```".format(
+                header,
+                "\n".join(players),
+            ),
         )
         embed.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
         return embed
@@ -213,7 +219,10 @@ class ScoreboardSource(WeeklyScoreboardSource):
         embed = discord.Embed(
             title=f"Adventure {self._stat.title()} Scoreboard",
             color=await menu.ctx.embed_color(),
-            description="```md\n{}``` ```md\n{}```".format(header, "\n".join(players),),
+            description="```md\n{}``` ```md\n{}```".format(
+                header,
+                "\n".join(players),
+            ),
         )
         embed.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
         return {"embed": embed, "content": self._legend}
@@ -319,7 +328,11 @@ class EconomySource(menus.ListPageSource):
         if self.author_position is None:
             self.author_position = await bank.get_leaderboard_position(menu.ctx.author)
         header_primary = "{pound:{pound_len}}{score:{bal_len}}{name:2}\n".format(
-            pound="#", name=_("Name"), score=_("Score"), bal_len=bal_len + 6, pound_len=pound_len + 3,
+            pound="#",
+            name=_("Name"),
+            score=_("Score"),
+            bal_len=bal_len + 6,
+            pound_len=pound_len + 3,
         )
         header = ""
         if menu.ctx.cog._separate_economy:
@@ -714,7 +727,8 @@ class ScoreBoardMenu(BaseMenu, inherit_buttons=False):
         await self.show_page(0)
 
     @menus.button(
-        "\N{BLACK LEFT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}", skip_if=_skip_single_arrows,
+        "\N{BLACK LEFT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}",
+        skip_if=_skip_single_arrows,
     )
     async def go_to_previous_page(self, payload):
         """go to the previous page"""
@@ -726,7 +740,8 @@ class ScoreBoardMenu(BaseMenu, inherit_buttons=False):
         self.stop()
 
     @menus.button(
-        "\N{BLACK RIGHT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}", skip_if=_skip_single_arrows,
+        "\N{BLACK RIGHT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}",
+        skip_if=_skip_single_arrows,
     )
     async def go_to_next_page(self, payload):
         """go to the next page"""
@@ -810,7 +825,8 @@ class LeaderboardMenu(BaseMenu, inherit_buttons=False):
         await self.show_page(0)
 
     @menus.button(
-        "\N{BLACK LEFT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}", skip_if=_skip_single_arrows,
+        "\N{BLACK LEFT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}",
+        skip_if=_skip_single_arrows,
     )
     async def go_to_previous_page(self, payload):
         """go to the previous page"""
@@ -822,7 +838,8 @@ class LeaderboardMenu(BaseMenu, inherit_buttons=False):
         self.stop()
 
     @menus.button(
-        "\N{BLACK RIGHT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}", skip_if=_skip_single_arrows,
+        "\N{BLACK RIGHT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}",
+        skip_if=_skip_single_arrows,
     )
     async def go_to_next_page(self, payload):
         """go to the next page"""
