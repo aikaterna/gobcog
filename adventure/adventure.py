@@ -5643,7 +5643,7 @@ class Adventure(commands.Cog):
         if ctx.message.id in self._loss_message:
             extramsg = self._loss_message.pop(ctx.message.id)
             if extramsg:
-                extramsg = _(f"{} to repair their gear.")
+                extramsg = _(f"{extramsg} to repair their gear.")
                 for msg in pagify(extramsg, page_length=1900):
                     await smart_embed(ctx, msg, success=False)
         while ctx.guild.id in self._sessions:
