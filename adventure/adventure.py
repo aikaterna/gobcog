@@ -5849,7 +5849,7 @@ class Adventure(commands.Cog):
         c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
         easy_mode = await self.config.easy_mode()
         if not easy_mode:
-            if c.rebirths >= 25:
+            if c.rebirths >= 30:
                 easy_mode = False
             elif c.rebirths >= 20:
                 easy_mode = bool(random.getrandbits(1))
