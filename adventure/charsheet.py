@@ -192,8 +192,8 @@ class Item:
             self.total_stats *= 2
         self.max_main_stat = max(self.att, self.int, self.cha, 1)
         self.lvl: int = (
-            kwargs.get("lvl") or self.get_equip_level()
-        ) if self.rarity == "event" else self.get_equip_level()
+            (kwargs.get("lvl") or self.get_equip_level()) if self.rarity == "event" else self.get_equip_level()
+        )
         self.degrade = kwargs.get("degrade", 5)
 
     def __str__(self):
@@ -689,13 +689,13 @@ class Character(Item):
         statmult = self.gear_set_bonus.get("statmult") - 1
         xpmult = (self.gear_set_bonus.get("xpmult") + daymult) - 1
         cpmult = (self.gear_set_bonus.get("cpmult") + daymult) - 1
-        next_max_roll_level=self.get_max_roll_next_level()
-        next_max_roll_level_text = "";
+        next_max_roll_level = self.get_max_roll_next_level()
+        next_max_roll_level_text = ""
 
         if next_max_roll_level == 1:
-            next_max_roll_level_text = _("(next level in 1 rebirth)");
+            next_max_roll_level_text = _("(next level in 1 rebirth)")
         elif next_max_roll_level > 1:
-            next_max_roll_level_text = f"(next level in {next_max_roll_level} rebirths)";        
+            next_max_roll_level_text = f"(next level in {next_max_roll_level} rebirths)"
 
         return _(
             "{user}'s Character Sheet\n\n"
@@ -812,22 +812,22 @@ class Character(Item):
         return form_string + "\n"
 
     def get_max_roll(self) -> int:
-        max_roll = 20;
+        max_roll = 20
 
         if self.rebirths >= 30:
-            max_roll = 100;
+            max_roll = 100
         elif self.rebirths >= 15:
-            max_roll = 50;
+            max_roll = 50
 
-        return max_roll;
+        return max_roll
 
     def get_max_roll_next_level(self) -> int:
         if self.rebirths >= 30:
-            return False;
+            return False
         elif self.rebirths >= 15:
-            return 30 - self.rebirths;
+            return 30 - self.rebirths
 
-        return 15 - self.rebirths;
+        return 15 - self.rebirths
 
     def get_max_level(self) -> int:
         rebirths = max(self.rebirths, 0)
