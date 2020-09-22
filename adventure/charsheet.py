@@ -486,6 +486,7 @@ class Character(Item):
         self.gear_set_bonus = {}
         self.get_set_bonus()
         self.maxlevel = self.get_max_level()
+        self.maxroll = self.get_max_roll()
         self.lvl = self.lvl if self.lvl < self.maxlevel else self.maxlevel
         self.set_items = self.get_set_item_count()
         self.att, self._att = self.get_stat_value("att")
@@ -688,9 +689,17 @@ class Character(Item):
         statmult = self.gear_set_bonus.get("statmult") - 1
         xpmult = (self.gear_set_bonus.get("xpmult") + daymult) - 1
         cpmult = (self.gear_set_bonus.get("cpmult") + daymult) - 1
+        next_max_roll_level=self.get_max_roll_next_level()
+        next_max_roll_level_text = "";
+
+        if next_max_roll_level == 1:
+            next_max_roll_level_text = _("(next level in 1 rebirth)");
+        elif next_max_roll_level > 1:
+            next_max_roll_level_text = f"(next level in {next_max_roll_level} rebirths)";        
+
         return _(
             "{user}'s Character Sheet\n\n"
-            "{{Rebirths: {rebirths}, \n Max Level: {maxlevel}}}\n"
+            "--- \nRebirths: {rebirths}\nMax level: {maxlevel}\nMax roll: {max_roll} {next_max_roll_level_text}\n---\n"
             "{rebirth_text}"
             "A level {lvl} {class_desc} \n\n- "
             "ATTACK: {att} [+{att_skill}] - "
@@ -712,6 +721,9 @@ class Character(Item):
             if self.lvl < self.maxlevel
             else _("You have reached max level. To continue gaining levels and xp, you will have to rebirth.\n\n"),
             maxlevel=self.maxlevel,
+            max_roll=self.maxroll,
+            next_max_roll_level_text=next_max_roll_level_text,
+            next_roll_level_text="",
             class_desc=class_desc,
             att=humanize_number(self.att),
             att_skill=humanize_number(self.skill["att"]),
@@ -798,6 +810,24 @@ class Character(Item):
             )
 
         return form_string + "\n"
+
+    def get_max_roll(self) -> int:
+        max_roll = 20;
+
+        if self.rebirths >= 30:
+            max_roll = 100;
+        elif self.rebirths >= 15:
+            max_roll = 50;
+
+        return max_roll;
+
+    def get_max_roll_next_level(self) -> int:
+        if self.rebirths >= 30:
+            return False;
+        elif self.rebirths >= 15:
+            return 30 - self.rebirths;
+
+        return 15 - self.rebirths;
 
     def get_max_level(self) -> int:
         rebirths = max(self.rebirths, 0)
