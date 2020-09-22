@@ -6660,7 +6660,7 @@ class Adventure(commands.Cog):
                 continue
             crit_mod = max(max(c.dex, c.luck // 2) + (c.total_att // 20), 0)  # Thanks GoaFan77
             mod = 0
-            max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 15 else 20
+            max_roll = c.maxroll
             if crit_mod != 0:
                 mod = round(crit_mod / 10)
             if c.rebirths < 15 < mod:
