@@ -1600,13 +1600,11 @@ class Adventure(commands.Cog):
             price = 0
             old_owned = item.owned
             count = 0
-            for _loop_counter in range(0, item.owned):
+            async for _loop_counter in AsyncIter(range(0, item.owned), steps=50):
                 item.owned -= 1
                 price += price_shown
                 if item.owned <= 0:
                     del character.backpack[item.name]
-                if not count % 10:
-                    await asyncio.sleep(0.1)
                 count += 1
             msg += _("**{author}** sold all their {old_item} for {price} {currency_name}.\n").format(
                 author=self.escape(ctx.author.display_name),
@@ -1629,11 +1627,9 @@ class Adventure(commands.Cog):
             price = 0
             old_owned = item.owned
             count = 0
-            for _loop_counter in range(1, item.owned):
+            async for _loop_counter in AsyncIter(range(1, item.owned), steps=50):
                 item.owned -= 1
                 price += price_shown
-            if not count % 10:
-                await asyncio.sleep(0.1)
             count += 1
             if price != 0:
                 msg += _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
