@@ -5639,7 +5639,7 @@ class Adventure(commands.Cog):
         if ctx.message.id in self._loss_message:
             extramsg = self._loss_message.pop(ctx.message.id)
             if extramsg:
-                extramsg = _("{} to repair their gear.")
+                extramsg = _(f"{extramsg} to repair their gear.")
                 for msg in pagify(extramsg, page_length=1900):
                     await smart_embed(ctx, msg, success=False)
         while ctx.guild.id in self._sessions:
@@ -5845,7 +5845,7 @@ class Adventure(commands.Cog):
         c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
         easy_mode = await self.config.easy_mode()
         if not easy_mode:
-            if c.rebirths >= 25:
+            if c.rebirths >= 30:
                 easy_mode = False
             elif c.rebirths >= 20:
                 easy_mode = bool(random.getrandbits(1))
