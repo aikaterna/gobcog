@@ -244,7 +244,7 @@ class Adventure(commands.Cog):
             user_id
         ).clear()  # This will only ever touch the separate currency, leaving bot economy to be handled by core.
 
-    __version__ = "3.4.3"
+    __version__ = "3.4.3.1"
 
     def __init__(self, bot: Red):
         self.bot = bot
