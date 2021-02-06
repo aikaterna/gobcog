@@ -7601,7 +7601,7 @@ class Adventure(commands.Cog):
             return
         if message.channel.id not in channels:
             return
-        if not message.author.bot:
+        if not message.author.bot and message.guild.id not in self._sessions:
             roll = random.randint(1, 20)
             if roll == 20:
                 try:
