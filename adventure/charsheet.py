@@ -591,6 +591,8 @@ class Character(Item):
                 continue
             if item.name in item_names:
                 continue
+            if not item.set:
+                continue
             if set_name and set_name != item.set:
                 continue
             if item.set and item.set not in set_names:
