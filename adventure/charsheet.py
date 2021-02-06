@@ -1887,6 +1887,16 @@ class EquipableItemConverter(Converter):
         )
         lookup_e = list(i for x, i in c.backpack.items() if argument == str(i) and str(i) not in equipped_items)
 
+        already_lookup = list(
+            i for x, i in c.backpack.items() if
+            no_markdown.lower() in x.lower() and str(i) in equipped_items
+        )
+        already_lookup_m = list(
+            i for x, i in c.backpack.items() if
+            argument.lower() == str(i).lower() and str(i) in equipped_items
+        )
+        already_lookup_e = list(i for x, i in c.backpack.items() if argument == str(i) and str(i) in equipped_items)
+
         _temp_items = set()
         for i in lookup:
             _temp_items.add(str(i))
@@ -1902,6 +1912,8 @@ class EquipableItemConverter(Converter):
         elif len(lookup_m) == 1:
             return lookup_m[0]
         elif len(lookup) == 0 and len(lookup_m) == 0:
+            if any(x for x in [already_lookup, already_lookup_m, already_lookup_e]):
+                raise BadArgument(_("`{}` matches the name of an item already equipped.").format(argument))
             raise BadArgument(_("`{}` doesn't seem to match any items you own.").format(argument))
         else:
             lookup = list(i for x, i in c.backpack.items() if str(i) in _temp_items)
