@@ -179,7 +179,7 @@ class AdventureResults:
             self._last_raids[ctx.guild.id] = []
         SOLO_RAID_SCALE = 0.25
         if len(self._last_raids.get(ctx.guild.id, [])) == 0:
-            return {"stat_type": "hp", "min_stat": 0, "max_stat": 0}
+            return {"stat_type": "hp", "min_stat": 0, "max_stat": 0, "win_percent": 0}
 
         # tally up stats for raids
         num_attack = 0
@@ -5503,13 +5503,29 @@ class Adventure(commands.Cog):
 
         if len(self._sessions) > 0:
             for server_id, adventure in self._sessions.items():
+                stat_range = self._adv_results.get_stat_range(ctx)
+                pdef = adventure.monster_modified_stats["pdef"]
+                mdef = adventure.monster_modified_stats["mdef"]
+                cdef = adventure.monster_modified_stats.get("cdef", 1.0)
+                hp = int(
+                    adventure.monster_modified_stats["hp"]
+                    * self.ATTRIBS[adventure.attribute][0]
+                    * adventure.monster_stats
+                )
+                dipl = int(
+                    adventure.monster_modified_stats["dipl"]
+                    * self.ATTRIBS[adventure.attribute][1]
+                    * adventure.monster_stats
+                )
                 msg += (
                     f"{self.bot.get_guild(server_id).name} - "
                     f"[{adventure.challenge}]({adventure.message.jump_url})\n"
+                    f"[{stat_range['stat_type']}-min:{stat_range['min_stat']}-max:{stat_range['max_stat']}-winratio:{stat_range['win_percent']}] "
+                    f"(hp:{hp}-char:{dipl}-pdef:{pdef}-mdef:{mdef}-cdef:{cdef})\n\n"
                 )
         else:
             msg += "None."
-        for page in pagify(msg, delims=["\n"], page_length=1000):
+        for page in pagify(msg, delims=["\n\n"], page_length=1000):
             embed = discord.Embed(description=page)
             embed_list.append(embed)
         await BaseMenu(
@@ -5706,10 +5722,11 @@ class Adventure(commands.Cog):
         possible_monsters = []
         stat_range = self._adv_results.get_stat_range(ctx)
         async for (e, (m, stats)) in AsyncIter(monsters.items(), steps=100).enumerate(start=1):
-            appropriate_range = max(stats["hp"], stats["dipl"]) <= (max(c.att, c.int, c.cha) * 5)
             if stat_range["max_stat"] > 0:
                 main_stat = stats["hp"] if (stat_range["stat_type"] == "attack") else stats["dipl"]
-                appropriate_range = (stat_range["min_stat"] * 0.75) <= main_stat <= (stat_range["max_stat"] * 1.2)
+                appropriate_range = (stat_range["min_stat"] * 0.5) <= main_stat <= (stat_range["max_stat"] * 1.2)
+            else:
+                appropriate_range = max(stats["hp"], stats["dipl"]) <= (max(c.att, c.int, c.cha) * 5)
             if not appropriate_range:
                 continue
             if not stats["boss"] and not stats["miniboss"]:
