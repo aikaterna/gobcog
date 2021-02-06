@@ -1888,12 +1888,10 @@ class EquipableItemConverter(Converter):
         lookup_e = list(i for x, i in c.backpack.items() if argument == str(i) and str(i) not in equipped_items)
 
         already_lookup = list(
-            i for x, i in c.backpack.items() if
-            no_markdown.lower() in x.lower() and str(i) in equipped_items
+            i for x, i in c.backpack.items() if no_markdown.lower() in x.lower() and str(i) in equipped_items
         )
         already_lookup_m = list(
-            i for x, i in c.backpack.items() if
-            argument.lower() == str(i).lower() and str(i) in equipped_items
+            i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i) in equipped_items
         )
         already_lookup_e = list(i for x, i in c.backpack.items() if argument == str(i) and str(i) in equipped_items)
 

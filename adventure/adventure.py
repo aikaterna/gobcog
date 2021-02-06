@@ -2003,12 +2003,12 @@ class Adventure(commands.Cog):
                 await self.config.user(target).set(character_data)
                 await ctx.send(
                     content=box(
-                            _("{c}, congratulations on your rebirth.\nYou paid {bal}.").format(
-                                c=self.escape(target.display_name), bal=humanize_number(withdraw)
-                            ),
-                            lang="css",
-                        )
+                        _("{c}, congratulations on your rebirth.\nYou paid {bal}.").format(
+                            c=self.escape(target.display_name), bal=humanize_number(withdraw)
+                        ),
+                        lang="css",
                     )
+                )
             await self._add_rewards(ctx, target, int((character_level) ** 3.5) + 1, 0, False)
         await ctx.tick()
 
@@ -5114,7 +5114,9 @@ class Adventure(commands.Cog):
             elif c.skill["pool"] < amount:
                 return await smart_embed(
                     ctx,
-                    _("{}, you only have {} unspent skillpoints.").format(self.escape(ctx.author.display_name), c.skill["pool"]),
+                    _("{}, you only have {} unspent skillpoints.").format(
+                        self.escape(ctx.author.display_name), c.skill["pool"]
+                    ),
                 )
             if spend is None:
                 await smart_embed(
