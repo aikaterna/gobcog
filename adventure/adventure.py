@@ -3747,7 +3747,7 @@ class Adventure(commands.Cog):
                     if c.heroclass["name"] == clz:
                         ctx.command.reset_cooldown(ctx)
                         return await smart_embed(ctx, _("You already are a {}.").format(clz))
-                    if clz == "Psychic" and c.rebirths < 25:
+                    if clz == "Psychic" and c.rebirths < 20:
                         ctx.command.reset_cooldown(ctx)
                         return await smart_embed(ctx, _("You are too inexperienced to become a {}.").format(clz))
                     class_msg = await ctx.send(
