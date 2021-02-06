@@ -1686,6 +1686,8 @@ class Adventure(commands.Cog):
                     buyer=self.escape(buyer.display_name)
                 ),
             )
+        if asking < 0:
+            return await ctx.send(_("You can't *sell* for less than 0..."))
         try:
             c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
         except Exception as exc:
@@ -2000,15 +2002,13 @@ class Adventure(commands.Cog):
                 character_data = await c.rebirth(dev_val=rebirth_level)
                 await self.config.user(target).set(character_data)
                 await ctx.send(
-                    content=(
-                        box(
+                    content=box(
                             _("{c}, congratulations on your rebirth.\nYou paid {bal}.").format(
                                 c=self.escape(target.display_name), bal=humanize_number(withdraw)
                             ),
                             lang="css",
                         )
                     )
-                )
             await self._add_rewards(ctx, target, int((character_level) ** 3.5) + 1, 0, False)
         await ctx.tick()
 
