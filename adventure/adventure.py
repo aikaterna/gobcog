@@ -5680,6 +5680,17 @@ class Adventure(commands.Cog):
                 command=error.cmd,
             )
             await ctx.send(msg)
+        elif isinstance(error, discord.NotFound):
+            handled = True
+            msg = _("An important message has been deleted, please try again.").format(
+                message=error.message,
+                command=error.cmd,
+            )
+            await ctx.send(msg)
+            lock = self.get_lock(ctx.author)  # This is a guess ... but its better than not handled.
+            with contextlib.suppress(Exception):
+                if lock.locked():
+                    lock.release()
 
         await ctx.bot.on_command_error(ctx, error, unhandled_by_cog=not handled)
 
@@ -6433,6 +6444,31 @@ class Adventure(commands.Cog):
         text = ""
         success = False
         treasure = [0, 0, 0, 0, 0, 0]
+        if run_list:
+            users = run_list
+            for user in users:
+                try:
+                    c = await Character.from_json(self.config, user, self._daily_bonus)
+                except Exception as exc:
+                    log.exception("Error with the new character sheet", exc_info=exc)
+                    continue
+                if c.bal > 0:
+                    multiplier = 1 / 3
+                    if c._dex < 0:
+                        dex = min(1 / abs(c._dex), 1)
+                    else:
+                        dex = max(c._dex // 10, 1)
+                    multiplier = multiplier / dex
+                    loss = round(c.bal * multiplier)
+                    if loss > c.bal:
+                        loss = c.bal
+                    if user not in [u for u, t in repair_list]:
+                        repair_list.append([user, loss])
+                        if user not in [u for u, t in repair_list]:
+                            if c.bal > loss:
+                                await bank.withdraw_credits(user, loss)
+                            else:
+                                await bank.set_balance(user, 0)
         if session.easy_mode:
             if (slain or persuaded) and not failed:
                 success = True
@@ -6708,31 +6744,6 @@ class Adventure(commands.Cog):
                 ]
                 text = random.choice(options)
         else:
-            if run_list:
-                users = run_list
-                for user in users:
-                    try:
-                        c = await Character.from_json(self.config, user, self._daily_bonus)
-                    except Exception as exc:
-                        log.exception("Error with the new character sheet", exc_info=exc)
-                        continue
-                    if c.bal > 0:
-                        multiplier = 1 / 3
-                        if c._dex < 0:
-                            dex = min(1 / abs(c._dex), 1)
-                        else:
-                            dex = max(c._dex // 10, 1)
-                        multiplier = multiplier / dex
-                        loss = round(c.bal * multiplier)
-                        if loss > c.bal:
-                            loss = c.bal
-                        if user not in [u for u, t in repair_list]:
-                            repair_list.append([user, loss])
-                            if user not in [u for u, t in repair_list]:
-                                if c.bal > loss:
-                                    await bank.withdraw_credits(user, loss)
-                                else:
-                                    await bank.set_balance(user, 0)
             if slain and persuaded:
                 if len(pray_list) > 0:
                     god = await self.config.god_name()
@@ -6922,7 +6933,6 @@ class Adventure(commands.Cog):
             "run": run_list,
             "fumbles": fumblelist,
         }
-
         parsed_users = []
         for (action_name, action) in participants.items():
             for user in action:
