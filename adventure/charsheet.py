@@ -814,9 +814,9 @@ class Character(Item):
         for _loop_counter in range(rebirths):
             if rebirths >= 20:
                 maxlevel += REBIRTH_STEP
-            elif rebirths >= 10:
+            elif rebirths > 10:
                 maxlevel += 10
-            elif rebirths < 10:
+            elif rebirths <= 10:
                 maxlevel += 5
             rebirths -= 1
         return min(maxlevel, 10000)
