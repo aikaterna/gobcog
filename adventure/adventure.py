@@ -6060,6 +6060,8 @@ class Adventure(commands.Cog):
         self.tasks[adventure_msg.id] = timer
         try:
             await asyncio.wait_for(timer, timeout=timeout + 5)
+        except asyncio.TimeoutError:
+            timer.cancel()
         except Exception as exc:
             timer.cancel()
             log.exception("Error with the countdown timer", exc_info=exc)
