@@ -5264,7 +5264,7 @@ class Adventure(commands.Cog):
 
     @commands.command()
     @commands.bot_has_permissions(add_reactions=True)
-    async def stats(self, ctx: commands.Context, *, user: discord.User = None):
+    async def stats(self, ctx: commands.Context, *, user: discord.Member = None):
         """This draws up a character sheet of you or an optionally specified member."""
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
