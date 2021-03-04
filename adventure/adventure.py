@@ -1970,7 +1970,7 @@ class Adventure(commands.Cog):
         ctx: commands.Context,
         rebirth_level: int = 1,
         character_level: int = 1,
-        users: commands.Greedy[discord.User] = None,
+        users: commands.Greedy[discord.Member] = None,
     ):
         """[Dev] Set multiple users rebirths and level."""
         if not await no_dev_prompt(ctx):
@@ -2015,7 +2015,7 @@ class Adventure(commands.Cog):
     @commands.command()
     @commands.bot_has_permissions(add_reactions=True)
     @commands.is_owner()
-    async def devreset(self, ctx: commands.Context, users: commands.Greedy[discord.User]):
+    async def devreset(self, ctx: commands.Context, users: commands.Greedy[discord.Member]):
         """[Dev] Reset the skill cooldown for multiple users."""
         if not await no_dev_prompt(ctx):
             return
@@ -2516,7 +2516,7 @@ class Adventure(commands.Cog):
 
     @adventureset.command(name="remove")
     @commands.is_owner()
-    async def remove_item(self, ctx: commands.Context, user: discord.User, *, full_item_name: str):
+    async def remove_item(self, ctx: commands.Context, user: discord.Member, *, full_item_name: str):
         """[Owner] Lets you remove an item from a user.
 
         Use the full name of the item including the rarity characters like . or []  or {}.
@@ -3525,7 +3525,7 @@ class Adventure(commands.Cog):
 
     @give.command(name="item")
     @commands.is_owner()
-    async def _give_item(self, ctx: commands.Context, user: discord.User, item_name: str, *, stats: Stats):
+    async def _give_item(self, ctx: commands.Context, user: discord.Member, item_name: str, *, stats: Stats):
         """[Owner] Adds a custom item to a specified member.
 
         Item names containing spaces must be enclosed in double quotes. `[p]give item @locastan
@@ -3569,7 +3569,7 @@ class Adventure(commands.Cog):
     @give.command(name="loot")
     @commands.is_owner()
     async def _give_loot(
-        self, ctx: commands.Context, loot_type: str, users: commands.Greedy[discord.User] = None, number: int = 1
+        self, ctx: commands.Context, loot_type: str, users: commands.Greedy[discord.Member] = None, number: int = 1
     ):
         """[Owner] Give treasure chest(s) to all specified users."""
 
@@ -4097,7 +4097,7 @@ class Adventure(commands.Cog):
     @commands.cooldown(rate=1, per=3600, type=commands.BucketType.user)
     @commands.guild_only()
     async def _negaverse(
-        self, ctx: commands.Context, offering: int = None, roll: Optional[int] = -1, nega: discord.User = None
+        self, ctx: commands.Context, offering: int = None, roll: Optional[int] = -1, nega: discord.Member = None
     ):
         """This will send you to fight a nega-member!"""
         if self.in_adventure(ctx):
@@ -8689,7 +8689,7 @@ class Adventure(commands.Cog):
     @commands_atransfer.command(name="player", cooldown_after_parsing=True)
     @commands.guild_only()
     @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
-    async def commands_atransfer_player(self, ctx: commands.Context, amount: int, *, player: discord.User):
+    async def commands_atransfer_player(self, ctx: commands.Context, amount: int, *, player: discord.Member):
         """Transfer gold to another player."""
         if amount <= 0:
             await smart_embed(
@@ -8738,7 +8738,7 @@ class Adventure(commands.Cog):
 
     @commands_atransfer.command(name="give")
     @commands.is_owner()
-    async def commands_atransfer_give(self, ctx: commands.Context, amount: int, *players: discord.User):
+    async def commands_atransfer_give(self, ctx: commands.Context, amount: int, *players: discord.Member):
         """[Owner] Give gold to adventurers."""
         if amount <= 0:
             await smart_embed(
