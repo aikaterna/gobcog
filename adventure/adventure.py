@@ -1900,7 +1900,7 @@ class Adventure(commands.Cog):
                     f"Rebirthing will:\n\n"
                     f"* cost {int(rebirth_cost)}% of your credits\n"
                     f"* cost all of your current gear\n"
-                    f"{space*4}- Legendary items loose one degradation point per rebirth "
+                    f"{space*4}- Legendary items lose one degradation point per rebirth "
                     f"and are broken down when they have 0 left.\n"
                     f"{space*4}- Set items never disappear\n"
                     f"* set you back to level 1 while keeping your current class\n\n"
