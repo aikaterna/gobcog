@@ -4700,7 +4700,8 @@ class Adventure(commands.Cog):
                         ctx,
                         _(
                             "Your hero is currently recovering from the last time "
-                            "they used this skill. Try again in {}."
+                            "they used this skill or they have just changed their heroclass. "
+                            "Try again in {}."
                         ).format(
                             humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
                         ),
@@ -4877,8 +4878,12 @@ class Adventure(commands.Cog):
                 return await smart_embed(
                     ctx,
                     _(
-                        "Your hero is currently recovering from the last time they used this skill. Try again in {}."
-                    ).format(humanize_timedelta(seconds=int(cooldown_time))),
+                        "Your hero is currently recovering from the last time "
+                        "they used this skill or they have just changed their heroclass. "
+                        "Try again in {}."
+                    ).format(
+                        humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
+                    ),
                 )
 
     @commands.command()
@@ -4925,7 +4930,8 @@ class Adventure(commands.Cog):
                         ctx,
                         _(
                             "Your hero is currently recovering from the last time "
-                            "they used this skill. Try again in {}."
+                            "they used this skill or they have just changed their heroclass. "
+                            "Try again in {}."
                         ).format(
                             humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
                         ),
@@ -5025,8 +5031,11 @@ class Adventure(commands.Cog):
                         ctx,
                         _(
                             "Your hero is currently recovering from the last time "
-                            "they used this skill. Try again in {}."
-                        ).format(humanize_timedelta(seconds=int(cooldown_time))),
+                            "they used this skill or they have just changed their heroclass. "
+                            "Try again in {}."
+                        ).format(
+                            humanize_timedelta(seconds=int(cooldown_time)) if int(cooldown_time) >= 1 else _("1 second")
+                        ),
                     )
 
     @commands.command()
