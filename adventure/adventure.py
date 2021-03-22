@@ -7220,7 +7220,7 @@ class Adventure(commands.Cog):
                     fumblelist.append(user)
                     msg += _(
                         "**{user}'s** sermon offended the mighty {god}. {failed_emoji}"
-                        "(-{len_f_list}{attack}/-{len_t_list}{talk}/-{len_m_list}{magic}) {roll_emoji}({roll})\n"
+                        "({len_f_list}{attack}/{len_t_list}{talk}/{len_m_list}{magic}) {roll_emoji}({roll})\n"
                     ).format(
                         user=self.escape(user.display_name),
                         god=god,
