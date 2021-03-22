@@ -1436,7 +1436,7 @@ class Adventure(commands.Cog):
                     )
                 )
             else:
-                msg = await ctx.send("Are you sure you want to sell all items in your inventory?")
+                msg = await ctx.send("Are you sure you want to sell **ALL ITEMS** in your inventory?")
 
             start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
             pred = ReactionPredicate.yes_or_no(msg, ctx.author)
