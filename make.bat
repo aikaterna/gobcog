@@ -13,12 +13,12 @@ black .
 exit /B %ERRORLEVEL%
 
 :stylecheck
-isort --check --use-parentheses .
+isort --check --profile black .
 black --check .
 exit /B %ERRORLEVEL%
 
 :stylediff
-isort --check --diff --use-parentheses .
+isort --check --diff --profile black .
 black --check --diff .
 exit /B %ERRORLEVEL%
 
