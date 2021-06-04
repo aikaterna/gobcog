@@ -18,7 +18,7 @@ black --check .
 exit /B %ERRORLEVEL%
 
 :stylediff
-isort --check --diff --profile black .
+isort --check --diff .
 black --check --diff .
 exit /B %ERRORLEVEL%
 
