@@ -6,7 +6,7 @@
 **--diff** - If used will show the stat delta compared to what you currently have equipped (Only works on `[p]cbackpack show`).<br />
 **--except** - If used will show everything that does not match the specified query.<br />
 **--match** - Accepts a string, no quotes are needed. Will attempt to match items to this string.<br />
-**--no-match** - Opposite of `--no-match`<br />
+**--no-match** - Opposite of `--match`<br />
 **--icase** - If `--match` or `--no-match` and `--icase` are used, matches will not be case sensitive.<br />
 
 ######For the following arguments: <br />
@@ -27,4 +27,4 @@
 - `[p]cbackpack show --except --str >50`
   - Will show all items that have less than 50 str points
 - `[p]cbackpack show --except --no-match celestial`  
-  - Will Show every item that have "celestial" in the name (Case sensitive as `--icase` was not used)
+  - Will Show every item that has "celestial" in the name (Case sensitive as `--icase` was not used)

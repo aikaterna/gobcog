@@ -248,7 +248,7 @@ class Adventure(commands.Cog):
             user_id
         ).clear()  # This will only ever touch the separate currency, leaving bot economy to be handled by core.
 
-    __version__ = "3.4.3"
+    __version__ = "3.4.3.2"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -2492,8 +2492,7 @@ class Adventure(commands.Cog):
         """
         [Admin] Set the cooldown of the cart.
         Time can be in seconds, minutes, hours, or days.
-        Examples: `1h 30m`, `2 days`, `300`
-        The bot assumes seconds if no units are given.
+        Examples: `1h 30m`, `2 days`, `300 seconds`
         """
         time_delta = parse_timedelta(time)
         if time_delta is None:
@@ -2502,8 +2501,10 @@ class Adventure(commands.Cog):
             cartname = await self.config.guild(ctx.guild).cart_name()
             if not cartname:
                 cartname = await self.config.cart_name()
-            return await smart_embed(ctx, _("{} doesn't have the energy to return that often.").format(cartname))
-        await self.config.guild(ctx.guild).cart_timeout.set(time_delta.total_seconds())
+            return await smart_embed(
+                ctx, _("{} doesn't have the energy to return that often. Try 10 minutes or more.").format(cartname)
+            )
+        await self.config.guild(ctx.guild).cart_timeout.set(int(time_delta.total_seconds()))
         await ctx.tick()
 
     @adventureset.command(name="clear")
