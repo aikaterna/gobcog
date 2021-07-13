@@ -990,8 +990,11 @@ class Adventure(
 
         return await self._result(ctx, adventure_msg)
 
-    async def has_perm(self, user: Union[discord.Member, discord.User]):
-        return await self.local_perms(user) or await self.global_perms(user)
+    async def has_perm(self, user):
+        if hasattr(self.bot, "allowed_by_whitelist_blacklist"):
+            return await self.bot.allowed_by_whitelist_blacklist(user)
+        else:
+            return await self.local_perms(user) or await self.global_perms(user)
 
     async def local_perms(self, user):
         """Check the user is/isn't locally whitelisted/blacklisted.
