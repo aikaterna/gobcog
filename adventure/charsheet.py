@@ -1,170 +1,39 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import argparse
-import asyncio
 import logging
 import random
-import re
-import shlex
-from collections import defaultdict
 from copy import copy
 from datetime import date, datetime, timedelta
-from string import ascii_letters, digits
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, MutableMapping, Optional, Tuple
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
 from discord.ext.commands import check
-from discord.ext.commands.converter import Converter
-from discord.ext.commands.errors import BadArgument
 from redbot.core import Config, commands
-from redbot.core.commands import UserFeedbackCheckFailure
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import box, escape, humanize_number
-from redbot.core.utils.menus import start_adding_reactions
-from redbot.core.utils.predicates import ReactionPredicate
 
-from . import bank
+from .bank import bank
+from .constants import (
+    ASC_OPEN,
+    DEV_LIST,
+    EVENT_OPEN,
+    LEGENDARY_CLOSE,
+    LEGENDARY_OPEN,
+    ORDER,
+    RARITIES,
+    REBIRTH_LVL,
+    REBIRTH_STEP,
+    SET_OPEN,
+    TINKER_CLOSE,
+    TINKER_OPEN,
+)
 
 log = logging.getLogger("red.cogs.adventure")
 
 _ = Translator("Adventure", __file__)
-
-
-DEV_LIST = [208903205982044161, 154497072148643840, 218773382617890828]
-
-ORDER = [
-    "head",
-    "neck",
-    "chest",
-    "gloves",
-    "belt",
-    "legs",
-    "boots",
-    "left",
-    "right",
-    "two handed",
-    "ring",
-    "charm",
-]
-TINKER_OPEN = r"{.:'"
-TINKER_CLOSE = r"':.}"
-LEGENDARY_OPEN = r"{Legendary:'"
-ASC_OPEN = r"{Ascended:'"
-LEGENDARY_CLOSE = r"'}"
-SET_OPEN = r"{Set:'"
-EVENT_OPEN = r"{Event:'"
-
-TIME_RE_STRING = r"\s?".join(
-    [
-        r"((?P<days>\d+?)\s?(d(ays?)?))?",
-        r"((?P<hours>\d+?)\s?(hours?|hrs|hr?))?",
-        r"((?P<minutes>\d+?)\s?(minutes?|mins?|m))?",
-        r"((?P<seconds>\d+?)\s?(seconds?|secs?|s))?",
-    ]
-)
-
-TIME_RE = re.compile(TIME_RE_STRING, re.I)
-REBIRTHSTATMULT = 2
-
-REBIRTH_LVL = 20
-REBIRTH_STEP = 10
-SET_BONUSES = {}
-
-TR_GEAR_SET = {}
-PETS = {}
-
-ATT = re.compile(r"(-?\d*) (att(?:ack)?)")
-CHA = re.compile(r"(-?\d*) (cha(?:risma)?|dip(?:lo?(?:macy)?)?)")
-INT = re.compile(r"(-?\d*) (int(?:elligence)?)")
-LUCK = re.compile(r"(-?\d*) (luck)")
-DEX = re.compile(r"(-?\d*) (dex(?:terity)?)")
-SLOT = re.compile(r"(head|neck|chest|gloves|belt|legs|boots|left|right|ring|charm|twohanded)")
-RARITY = re.compile(r"(normal|rare|epic|legend(?:ary)?|asc(?:ended)?|set|forged|event)")
-RARITIES = ("normal", "rare", "epic", "legendary", "ascended", "set", "event", "forged")
-DEG = re.compile(r"(-?\d*) degrade")
-LEVEL = re.compile(r"(-?\d*) (level|lvl)")
-PERCENTAGE = re.compile(r"^(\d*\.?\d+)(%?)")
-DAY_REGEX = re.compile(
-    r"^(?P<monday>mon(?:day)?|1)$|"
-    r"^(?P<tuesday>tue(?:sday)?|2)$|"
-    r"^(?P<wednesday>wed(?:nesday)?|3)$|"
-    r"^(?P<thursday>th(?:u(?:rs(?:day)?)?)?|4)$|"
-    r"^(?P<friday>fri(?:day)?|5)$|"
-    r"^(?P<saturday>sat(?:urday)?|6)$|"
-    r"^(?P<sunday>sun(?:day)?|7)$",
-    re.IGNORECASE,
-)
-
-_DAY_MAPPING = {
-    "monday": "1",
-    "tuesday": "2",
-    "wednesday": "3",
-    "thursday": "4",
-    "friday": "5",
-    "saturday": "6",
-    "sunday": "7",
-}
-ARG_OP_REGEX = re.compile(r"(?P<op>>|<)?(?P<value>-?\d+)")
-
-
-class ArgParserFailure(UserFeedbackCheckFailure):
-    """Raised when parsing an argument fails."""
-
-    def __init__(self, cmd: str, message: str):
-        self.cmd = cmd
-        super().__init__(message=message)
-
-
-class Stats(Converter):
-    """This will parse a string for specific keywords like attack and dexterity followed by a
-    number to create an item object to be added to a users inventory."""
-
-    async def convert(self, ctx: commands.Context, argument: str) -> Dict[str, int]:
-        result = {
-            "slot": ["left"],
-            "att": 0,
-            "cha": 0,
-            "int": 0,
-            "dex": 0,
-            "luck": 0,
-            "rarity": "normal",
-            "degrade": 0,
-            "lvl": 1,
-        }
-        possible_stats = dict(
-            att=ATT.search(argument),
-            cha=CHA.search(argument),
-            int=INT.search(argument),
-            dex=DEX.search(argument),
-            luck=LUCK.search(argument),
-            degrade=DEG.search(argument),
-            lvl=LEVEL.search(argument),
-        )
-        try:
-            slot = [SLOT.search(argument).group(0)]
-            if slot == ["twohanded"]:
-                slot = ["left", "right"]
-            result["slot"] = slot
-        except AttributeError:
-            raise BadArgument(_("No slot position was provided."))
-        try:
-            result["rarity"] = RARITY.search(argument).group(0)
-        except AttributeError:
-            raise BadArgument(_("No rarity was provided."))
-        for (key, value) in possible_stats.items():
-            try:
-                stat = int(value.group(1))
-                if (
-                    (key not in ["degrade", "lvl"] and stat > 10) or (key == "lvl" and stat < 50)
-                ) and not await ctx.bot.is_owner(ctx.author):
-                    raise BadArgument(_("Don't you think that's a bit overpowered? Not creating item."))
-                result[key] = stat
-            except (AttributeError, ValueError):
-                pass
-        return result
 
 
 class Item:
@@ -326,18 +195,19 @@ class Item:
         slots = data["slot"]
         degrade = data["degrade"] if "degrade" in data else 3
         parts = data["parts"] if "parts" in data else 0
-        db = get_item_db(rarity)
-        if db and rarity == "set":
-            item = db.get(name, {})
-            if item:
-                parts = item.get("parts", parts)
-                _set = item.get("set", _set)
-                att = item.get("att", att)
-                inter = item.get("int", inter)
-                cha = item.get("cha", cha)
-                dex = item.get("dex", dex)
-                luck = item.get("luck", luck)
-                slots = item.get("slot", slots)
+        # This is used to preserve integrity of Set items
+        # db = get_item_db(rarity)
+        # if db and rarity == "set":
+        # item = db.get(name, {})
+        # if item:
+        # parts = item.get("parts", parts)
+        # _set = item.get("set", _set)
+        # att = item.get("att", att)
+        # inter = item.get("int", inter)
+        # cha = item.get("cha", cha)
+        # dex = item.get("dex", dex)
+        # luck = item.get("luck", luck)
+        # slots = item.get("slot", slots)
         if rarity not in ["legendary", "event", "ascended"]:
             degrade = 3
         if rarity not in ["event"]:
@@ -361,17 +231,17 @@ class Item:
         return cls(**item_data)
 
     def to_json(self) -> dict:
-        db = get_item_db(self.rarity)
-        if db and self.rarity == "set":
-            updated_set = db.get(self.name)
-            if updated_set:
-                self.att = updated_set.get("att", self.att)
-                self.int = updated_set.get("int", self.int)
-                self.cha = updated_set.get("cha", self.cha)
-                self.dex = updated_set.get("dex", self.dex)
-                self.luck = updated_set.get("luck", self.luck)
-                self.set = updated_set.get("set", self.set)
-                self.parts = updated_set.get("parts", self.parts)
+        # db = get_item_db(self.rarity)
+        # if db and self.rarity == "set":
+        # updated_set = db.get(self.name)
+        # if updated_set:
+        # self.att = updated_set.get("att", self.att)
+        # self.int = updated_set.get("int", self.int)
+        # self.cha = updated_set.get("cha", self.cha)
+        # self.dex = updated_set.get("dex", self.dex)
+        # self.luck = updated_set.get("luck", self.luck)
+        # self.set = updated_set.get("set", self.set)
+        # self.parts = updated_set.get("parts", self.parts)
         data = {
             self.name: {
                 "slot": self.slot,
@@ -400,65 +270,11 @@ class Item:
         return data
 
 
-class GameSession:
-    """A class to represent and hold current game sessions per server."""
-
-    challenge: str
-    attribute: str
-    timer: int
-    guild: discord.Guild
-    boss: bool
-    miniboss: dict
-    monster: dict
-    message_id: int
-    reacted: bool = False
-    participants: Set[discord.Member] = set()
-    monster_modified_stats: MutableMapping = {}
-    fight: List[discord.Member] = []
-    magic: List[discord.Member] = []
-    talk: List[discord.Member] = []
-    pray: List[discord.Member] = []
-    run: List[discord.Member] = []
-    message: discord.Message = None
-    transcended: bool = False
-    insight: Tuple[float, Character] = (0, None)
-    start_time: datetime = datetime.now()
-    easy_mode: bool = False
-    insight = (0, None)
-    no_monster: bool = False
-    exposed: bool = False
-    finished: bool = False
-
-    def __init__(self, **kwargs):
-        self.challenge: str = kwargs.pop("challenge")
-        self.attribute: dict = kwargs.pop("attribute")
-        self.guild: discord.Guild = kwargs.pop("guild")
-        self.boss: bool = kwargs.pop("boss")
-        self.miniboss: dict = kwargs.pop("miniboss")
-        self.timer: int = kwargs.pop("timer")
-        self.monster: dict = kwargs.pop("monster")
-        self.monsters: Mapping[str, Mapping] = kwargs.pop("monsters", [])
-        self.monster_stats: int = kwargs.pop("monster_stats", 1)
-        self.monster_modified_stats = kwargs.pop("monster_modified_stats", self.monster)
-        self.message = kwargs.pop("message", 1)
-        self.message_id: int = 0
-        self.reacted = False
-        self.participants: Set[discord.Member] = set()
-        self.fight: List[discord.Member] = []
-        self.magic: List[discord.Member] = []
-        self.talk: List[discord.Member] = []
-        self.pray: List[discord.Member] = []
-        self.run: List[discord.Member] = []
-        self.transcended: bool = kwargs.pop("transcended", False)
-        self.start_time = datetime.now()
-        self.easy_mode = kwargs.get("easy_mode", False)
-        self.no_monster = kwargs.get("no_monster", False)
-
-
-class Character(Item):
+class Character:
     """An class to represent the characters stats."""
 
     def __init__(self, **kwargs):
+        self._cog: commands.Cog = kwargs.pop("cog")
         self.exp: int = kwargs.pop("exp")
         self.lvl: int = kwargs.pop("lvl")
         self.treasure: List[int] = kwargs.pop("treasure")
@@ -531,7 +347,7 @@ class Character(Item):
 
     def remove_restrictions(self):
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
-            requirements = PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
+            requirements = self._cog.PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
             if any(x in self.sets for x in ["The Supreme One", "Ainz Ooal Gown"]) and self.heroclass["pet"]["name"] in [
                 "Albedo",
                 "Rubedo",
@@ -546,6 +362,15 @@ class Character(Item):
             if requirements:
                 if requirements.get("set") and requirements.get("set") not in self.sets:
                     self.heroclass["pet"] = {}
+
+    def can_equip(self, item: Item):
+        if self.user.id in DEV_LIST:
+            return True
+        return self.lvl >= self.equip_level(item)
+
+    def equip_level(self, item: Item, rebirths=None):
+        level = getattr(self, "rebirths", rebirths)
+        return item.lvl if item.rarity == "event" else max(item.lvl - min(max(level // 2 - 1, 0), 50), 1)
 
     def get_stat_value(self, stat: str):
         """Calculates the stats dynamically for each slot of equipment."""
@@ -606,10 +431,10 @@ class Character(Item):
                 set_names[item.set] = (parts, count + 1)
         if return_items:
             return returnable_items
-        for set_name in SET_BONUSES:
+        for set_name in self._cog.SET_BONUSES:
             if set_name in set_names:
                 continue
-            set_names[set_name] = (max(bonus["parts"] for bonus in SET_BONUSES[set_name]), 0)
+            set_names[set_name] = (max(bonus["parts"] for bonus in self._cog.SET_BONUSES[set_name]), 0)
         return set_names
 
     def get_set_bonus(self):
@@ -637,7 +462,7 @@ class Character(Item):
                 continue
             if item.set and item.set not in set_names:
                 added.append(item.name)
-                set_names.update({item.set: (item.parts, 1, SET_BONUSES.get(item.set, []))})
+                set_names.update({item.set: (item.parts, 1, self._cog.SET_BONUSES.get(item.set, []))})
             elif item.set and item.set in set_names:
                 added.append(item.name)
                 parts, count, bonus = set_names[item.set]
@@ -646,7 +471,7 @@ class Character(Item):
         partial_sets = [(s, v[1]) for s, v in set_names.items()]
         self.sets = [s for s, _ in full_sets if s]
         for (_set, parts) in partial_sets:
-            set_bonuses = SET_BONUSES.get(_set, [])
+            set_bonuses = self._cog.SET_BONUSES.get(_set, [])
             for bonus in set_bonuses:
                 required_parts = bonus.get("parts", 100)
                 if required_parts > parts:
@@ -1467,7 +1292,9 @@ class Character(Item):
         return self
 
     @classmethod
-    async def from_json(cls, config: Config, user: discord.Member, daily_bonus_mapping: Dict[str, float]):
+    async def from_json(
+        cls, ctx: commands.Context, config: Config, user: discord.Member, daily_bonus_mapping: Dict[str, float]
+    ):
         """Return a Character object from config and user."""
         data = await config.user(user).all()
         balance = await bank.get_balance(user)
@@ -1509,7 +1336,7 @@ class Character(Item):
                 theme = await config.theme()
                 extra_pets = await config.themes.all()
                 extra_pets = extra_pets.get(theme, {}).get("pets", {})
-                pet_list = {**PETS, **extra_pets}
+                pet_list = {**ctx.cog.PETS, **extra_pets}
                 heroclass["pet"] = pet_list.get(heroclass["pet"]["name"], heroclass["pet"])
 
         if "adventures" in data:
@@ -1564,7 +1391,7 @@ class Character(Item):
         hero_data["last_skill_reset"] = data.get("last_skill_reset", 0)
         hero_data["last_known_currency"] = data.get("last_known_currency", 0)
         hero_data["last_currency_check"] = data.get("last_currency_check", 0)
-        return cls(**hero_data, daily_bonus_mapping=daily_bonus_mapping)
+        return cls(**hero_data, cog=ctx.cog, daily_bonus_mapping=daily_bonus_mapping)
 
     def get_set_item_count(self):
         count_set = 0
@@ -1586,7 +1413,7 @@ class Character(Item):
                     count_set += v.owned
         return count_set
 
-    async def to_json(self, config) -> dict:
+    async def to_json(self, ctx: commands.Context, config: Config) -> dict:
         backpack = {}
         for (k, v) in self.backpack.items():
             for (n, i) in v.to_json().items():
@@ -1596,7 +1423,7 @@ class Character(Item):
             theme = await config.theme()
             extra_pets = await config.themes.all()
             extra_pets = extra_pets.get(theme, {}).get("pets", {})
-            pet_list = {**PETS, **extra_pets}
+            pet_list = {**ctx.cog.PETS, **extra_pets}
             self.heroclass["pet"] = pet_list.get(self.heroclass["pet"]["name"], self.heroclass["pet"])
 
         return {
@@ -1730,429 +1557,6 @@ class Character(Item):
         self.pieces_to_keep = items_to_keep
 
 
-class ItemsConverter(Converter):
-    async def convert(self, ctx, argument) -> Tuple[str, List[Item]]:
-        try:
-            c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config,
-                ctx.author,
-                ctx.bot.get_cog("Adventure")._daily_bonus,
-            )
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            raise BadArgument
-        try:
-            rarity = RARITY.match(argument.lower()).group(0)
-        except AttributeError:
-            rarity = None
-
-        if argument.lower() == "all":
-            rarity = True
-
-        if rarity is None:
-            no_markdown = Item.remove_markdowns(argument)
-            lookup = list(i for x, i in c.backpack.items() if no_markdown.lower() in x.lower())
-            lookup_m = list(i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i))
-            lookup_e = list(i for x, i in c.backpack.items() if argument == str(i))
-            _temp_items = set()
-            for i in lookup:
-                _temp_items.add(str(i))
-            for i in lookup_m:
-                _temp_items.add(str(i))
-            for i in lookup_e:
-                _temp_items.add(str(i))
-        elif rarity is True:
-            lookup = list(i for x, i in c.backpack.items())
-            return "all", lookup
-        else:
-            lookup = list(i for x, i in c.backpack.items() if i.rarity == rarity)
-            if lookup:
-                return "all", lookup
-            raise BadArgument(_("You don't own any `{}` items.").format(argument))
-
-        if len(lookup_e) == 1:
-            return "single", [lookup_e[0]]
-        if len(lookup) == 1:
-            return "single", [lookup[0]]
-        elif len(lookup_m) == 1:
-            return "single", [lookup_m[0]]
-        elif len(lookup) == 0 and len(lookup_m) == 0:
-            raise BadArgument(_("`{}` doesn't seem to match any items you own.").format(argument))
-        else:
-            lookup = list(i for x, i in c.backpack.items() if str(i) in _temp_items)
-            if len(lookup) > 10:
-                raise BadArgument(
-                    _("You have too many items matching the name `{}`, please be more specific.").format(argument)
-                )
-            items = ""
-            for (number, item) in enumerate(lookup):
-                items += f"{number}. {str(item)} (owned {item.owned})\n"
-
-            msg = await ctx.send(
-                _("Multiple items share that name, which one would you like?\n{items}").format(
-                    items=box(items, lang="css")
-                )
-            )
-            emojis = ReactionPredicate.NUMBER_EMOJIS[: len(lookup)]
-            start_adding_reactions(msg, emojis)
-            pred = ReactionPredicate.with_emojis(emojis, msg, user=ctx.author)
-            try:
-                await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
-            except asyncio.TimeoutError:
-                raise BadArgument(_("Alright then."))
-            return "single", [lookup[pred.result]]
-
-
-class ItemConverter(Converter):
-    async def convert(self, ctx, argument) -> Item:
-        try:
-            c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config,
-                ctx.author,
-                ctx.bot.get_cog("Adventure")._daily_bonus,
-            )
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            raise BadArgument
-        no_markdown = Item.remove_markdowns(argument)
-        lookup = list(i for x, i in c.backpack.items() if no_markdown.lower() in x.lower())
-        lookup_m = list(i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i))
-        lookup_e = list(i for x, i in c.backpack.items() if argument == str(i))
-
-        _temp_items = set()
-        for i in lookup:
-            _temp_items.add(str(i))
-        for i in lookup_m:
-            _temp_items.add(str(i))
-        for i in lookup_e:
-            _temp_items.add(str(i))
-
-        if len(lookup_e) == 1:
-            return lookup_e[0]
-        if len(lookup) == 1:
-            return lookup[0]
-        elif len(lookup_m) == 1:
-            return lookup_m[0]
-        elif len(lookup) == 0 and len(lookup_m) == 0:
-            raise BadArgument(_("`{}` doesn't seem to match any items you own.").format(argument))
-        else:
-            lookup = list(i for x, i in c.backpack.items() if str(i) in _temp_items)
-            if len(lookup) > 10:
-                raise BadArgument(
-                    _("You have too many items matching the name `{}`, please be more specific.").format(argument)
-                )
-            items = ""
-            for (number, item) in enumerate(lookup):
-                items += f"{number}. {str(item)} (owned {item.owned})\n"
-
-            msg = await ctx.send(
-                _("Multiple items share that name, which one would you like?\n{items}").format(
-                    items=box(items, lang="css")
-                )
-            )
-            emojis = ReactionPredicate.NUMBER_EMOJIS[: len(lookup)]
-            start_adding_reactions(msg, emojis)
-            pred = ReactionPredicate.with_emojis(emojis, msg, user=ctx.author)
-            try:
-                await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
-            except asyncio.TimeoutError:
-                raise BadArgument(_("Alright then."))
-            return lookup[pred.result]
-
-
-class EquipableItemConverter(Converter):
-    async def convert(self, ctx, argument) -> Item:
-        try:
-            c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config,
-                ctx.author,
-                ctx.bot.get_cog("Adventure")._daily_bonus,
-            )
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            raise BadArgument
-        equipped_items = set()
-        for slots in ORDER:
-            if slots == "two handed":
-                continue
-            item = getattr(c, slots, None)
-            if item:
-                equipped_items.add(str(item))
-        no_markdown = Item.remove_markdowns(argument)
-        lookup = list(
-            i for x, i in c.backpack.items() if no_markdown.lower() in x.lower() and str(i) not in equipped_items
-        )
-        lookup_m = list(
-            i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i) not in equipped_items
-        )
-        lookup_e = list(i for x, i in c.backpack.items() if argument == str(i) and str(i) not in equipped_items)
-
-        already_lookup = list(
-            i for x, i in c.backpack.items() if no_markdown.lower() in x.lower() and str(i) in equipped_items
-        )
-        already_lookup_m = list(
-            i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i) in equipped_items
-        )
-        already_lookup_e = list(i for x, i in c.backpack.items() if argument == str(i) and str(i) in equipped_items)
-
-        _temp_items = set()
-        for i in lookup:
-            _temp_items.add(str(i))
-        for i in lookup_m:
-            _temp_items.add(str(i))
-        for i in lookup_e:
-            _temp_items.add(str(i))
-
-        if len(lookup_e) == 1:
-            return lookup_e[0]
-        if len(lookup) == 1:
-            return lookup[0]
-        elif len(lookup_m) == 1:
-            return lookup_m[0]
-        elif len(lookup) == 0 and len(lookup_m) == 0:
-            if any(x for x in [already_lookup, already_lookup_m, already_lookup_e]):
-                raise BadArgument(_("`{}` matches the name of an item already equipped.").format(argument))
-            raise BadArgument(_("`{}` doesn't seem to match any items you own.").format(argument))
-        else:
-            lookup = list(i for x, i in c.backpack.items() if str(i) in _temp_items)
-            if len(lookup) > 10:
-                raise BadArgument(
-                    _("You have too many items matching the name `{}`, please be more specific.").format(argument)
-                )
-            items = ""
-            for (number, item) in enumerate(lookup):
-                items += f"{number}. {str(item)} (owned {item.owned})\n"
-
-            msg = await ctx.send(
-                _("Multiple items share that name, which one would you like?\n{items}").format(
-                    items=box(items, lang="css")
-                )
-            )
-            emojis = ReactionPredicate.NUMBER_EMOJIS[: len(lookup)]
-            start_adding_reactions(msg, emojis)
-            pred = ReactionPredicate.with_emojis(emojis, msg, user=ctx.author)
-            try:
-                await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
-            except asyncio.TimeoutError:
-                raise BadArgument(_("Alright then."))
-            return lookup[pred.result]
-
-
-class EquipmentConverter(Converter):
-    async def convert(self, ctx, argument) -> Union[Item, List[Item]]:
-        try:
-            c = await Character.from_json(
-                ctx.bot.get_cog("Adventure").config,
-                ctx.author,
-                ctx.bot.get_cog("Adventure")._daily_bonus,
-            )
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            raise BadArgument
-        if argument.lower() == "all":
-            items = []
-            for slot in ORDER:
-                if slot == "two handed":
-                    continue
-                equipped_item = getattr(c, slot)
-                if not equipped_item:
-                    continue
-                items.append(equipped_item)
-            return items
-
-        if argument.lower() in ORDER:
-            for slot in ORDER:
-                if slot == "two handed":
-                    continue
-                equipped_item = getattr(c, slot)
-                if not equipped_item:
-                    continue
-                if (equipped_item.slot[0] == argument.lower()) or (
-                    len(equipped_item.slot) > 1 and "two handed" == argument.lower()
-                ):
-                    return equipped_item
-
-        matched = set()
-        lookup = list(
-            i
-            for i in c.get_current_equipment()
-            if argument.lower() in str(i).lower()
-            if len(i.slot) != 2 or (str(i) not in matched and not matched.add(str(i)))
-        )
-        matched = set()
-        lookup_m = list(
-            i
-            for i in c.get_current_equipment()
-            if argument.lower() == str(i).lower()
-            if len(i.slot) != 2 or (str(i) not in matched and not matched.add(str(i)))
-        )
-
-        if len(lookup) == 1:
-            return lookup[0]
-        elif len(lookup_m) == 1:
-            return lookup_m[0]
-        elif len(lookup) == 0 and len(lookup_m) == 0:
-            raise BadArgument(_("`{}` doesn't seem to match any items you have equipped.").format(argument))
-        else:
-            if len(lookup) > 10:
-                raise BadArgument(
-                    _("You have too many items matching the name `{}`, please be more specific").format(argument)
-                )
-            items = ""
-            for (number, item) in enumerate(lookup):
-                items += f"{number}. {str(item)} (owned {item.owned})\n"
-
-            msg = await ctx.send(
-                _("Multiple items share that name, which one would you like?\n{items}").format(
-                    items=box(items, lang="css")
-                )
-            )
-            emojis = ReactionPredicate.NUMBER_EMOJIS[: len(lookup)]
-            start_adding_reactions(msg, emojis)
-            pred = ReactionPredicate.with_emojis(emojis, msg, user=ctx.author)
-            try:
-                await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
-            except asyncio.TimeoutError:
-                raise BadArgument(_("Alright then."))
-            return lookup[pred.result]
-
-
-class ThemeSetMonterConverter(Converter):
-    async def convert(self, ctx, argument) -> MutableMapping:
-        arguments = list(map(str.strip, argument.split("++")))
-        try:
-            theme = arguments[0]
-            name = arguments[1]
-            hp = float(arguments[2])
-            dipl = float(arguments[3])
-            pdef = float(arguments[4])
-            mdef = float(arguments[5])
-            cdef = float(arguments[6])
-            if any([i < 0 for i in [hp, dipl, pdef, mdef]]):
-                raise BadArgument(
-                    "HP, Charisma, Magical defence, Persuasion defence and Physical defence cannot be negative."
-                )
-
-            image = arguments[8]
-            boss = True if arguments[7].lower() == "true" else False
-            if not image:
-                raise Exception
-        except BadArgument:
-            raise
-        except Exception:
-            raise BadArgument("Invalid format, Excepted:\n`theme++name++hp++dipl++pdef++mdef++cdef++boss++image`")
-        if "transcended" in name.lower() or "ascended" in name.lower():
-            raise BadArgument("You are not worthy.")
-        return {
-            "theme": theme,
-            "name": name,
-            "hp": hp,
-            "pdef": pdef,
-            "mdef": mdef,
-            "cdef": cdef,
-            "dipl": dipl,
-            "image": image,
-            "boss": boss,
-            "miniboss": {},
-        }
-
-
-class ThemeSetPetConverter(Converter):
-    async def convert(self, ctx, argument) -> MutableMapping:
-        arguments = list(map(str.strip, argument.split("++")))
-        try:
-            theme = arguments[0]
-            name = arguments[1]
-            bonus = float(arguments[2])
-            cha = int(arguments[3])
-            crit = int(arguments[4])
-            if not (0 <= crit <= 100):
-                raise BadArgument("Critical chance needs to be between 0 and 100")
-            if not arguments[5]:
-                raise Exception
-            always = True if arguments[5].lower() == "true" else False
-        except BadArgument:
-            raise
-        except Exception:
-            raise BadArgument(
-                "Invalid format, Excepted:\n`theme++name++bonus_multiplier++required_cha++crit_chance++always_crit`"
-            )
-        if not ctx.cog.is_dev(ctx.author):
-            if bonus > 2:
-                raise BadArgument("Pet bonus is too high.")
-            if always and cha < 500:
-                raise BadArgument("Charisma is too low for such a strong pet.")
-            if crit > 85 and cha < 500:
-                raise BadArgument("Charisma is too low for such a strong pet.")
-        return {
-            "theme": theme,
-            "name": name,
-            "bonus": bonus,
-            "cha": cha,
-            "bonuses": {"crit": crit, "always": always},
-        }
-
-
-class SlotConverter(Converter):
-    async def convert(self, ctx, argument) -> Optional[str]:
-        if argument:
-            slot = argument.lower()
-            if slot not in ORDER:
-                raise BadArgument
-        return argument
-
-
-class RarityConverter(Converter):
-    async def convert(self, ctx, argument) -> Optional[str]:
-        if argument:
-            rarity = argument.lower()
-            if rarity not in RARITIES:
-                raise BadArgument
-        return argument
-
-
-class DayConverter(Converter):
-    async def convert(self, ctx, argument) -> Tuple[str, str]:
-        matches = DAY_REGEX.match(argument)
-        if not matches:
-            raise BadArgument(_("Day must be one of:\nMon, Tue, Wed, Thurs, Fri, Sat or Sun"))
-        for k, v in matches.groupdict().items():
-            if v is None:
-                continue
-            if (val := _DAY_MAPPING.get(k)) is not None:
-                return (val, k)
-        raise BadArgument(_("Day must be one of:\nMon,Tue,Wed,Thurs,Fri,Sat or Sun"))
-
-
-class PercentageConverter(Converter):
-    async def convert(self, ctx, argument) -> float:
-        arg = argument.lower()
-        if arg in {"nan", "inf", "-inf", "+inf", "infinity", "-infinity", "+infinity"}:
-            raise BadArgument(_("Percentage must be between 0% and 100%"))
-        match = PERCENTAGE.match(argument)
-        if not match:
-            raise BadArgument(_("Percentage must be between 0% and 100%"))
-        value = match.group(1)
-        pencentage = match.group(2)
-        arg = float(value)
-        if pencentage:
-            arg /= 100
-        if arg < 0 or arg > 1:
-            raise BadArgument(_("Percentage must be between 0% and 100%"))
-        return arg
-
-
-def equip_level(char, item, rebirths=None):
-    level = getattr(char, "rebirths", rebirths)
-    return item.lvl if item.rarity == "event" else max(item.lvl - min(max(level // 2 - 1, 0), 50), 1)
-
-
-def can_equip(char: Character, item: Item):
-    if char.user.id in DEV_LIST:
-        return True
-    return char.lvl >= equip_level(char, item)
-
-
 async def calculate_sp(lvl_end: int, c: Character):
     points = c.rebirths * 10
     async for _loop_counter in AsyncIter(range(lvl_end), steps=100):
@@ -2167,11 +1571,6 @@ async def calculate_sp(lvl_end: int, c: Character):
         lvl_end -= 1
 
     return int(points)
-
-
-def get_item_db(rarity):
-    if rarity == "set":
-        return TR_GEAR_SET
 
 
 def has_funds_check(cost):
@@ -2190,164 +1589,6 @@ def has_funds_check(cost):
 
 async def has_funds(user, cost):
     return await bank.can_spend(user, cost)
-
-
-def parse_timedelta(argument: str) -> Optional[timedelta]:
-    matches = TIME_RE.match(argument)
-    if matches:
-        params = {k: int(v) for k, v in matches.groupdict().items() if v is not None}
-        if params:
-            return timedelta(**params)
-    return None
-
-
-async def no_dev_prompt(ctx: commands.Context) -> bool:
-    if ctx.author.id in DEV_LIST:
-        return True
-    confirm_token = "".join(random.choices((*ascii_letters, *digits), k=16))
-    await ctx.send(
-        "**__You should not be running this command.__** "
-        "Any issues that arise from you running this command will not be supported. "
-        "If you wish to continue, enter this token as your next message."
-        f"\n\n{confirm_token}"
-    )
-    try:
-        message = await ctx.bot.wait_for(
-            "message",
-            check=lambda m: m.channel.id == ctx.channel.id and m.author.id == ctx.author.id,
-            timeout=60,
-        )
-    except asyncio.TimeoutError:
-        await ctx.send(_("Did not get confirmation, cancelling."))
-        return False
-    else:
-        if message.content.strip() == confirm_token:
-            return True
-        else:
-            await ctx.send(_("Did not get a matching confirmation, cancelling."))
-            return False
-
-
-class NoExitParser(argparse.ArgumentParser):
-    def error(self, message):
-        raise commands.BadArgument(message=message)
-
-
-class BackpackFilterParser(commands.Converter):
-    async def convert(self, ctx: commands.Context, argument: str) -> Mapping[str, Any]:
-        argument = argument.replace("—", "--")
-        command, *arguments = argument.split(" -- ")
-        if arguments:
-            argument = " -- ".join(arguments)
-        else:
-            command = ""
-        response = {}
-        set_names = set(SET_BONUSES.keys())
-        parser = NoExitParser(description="Backpack Filter Parsing.", add_help=False)
-        parser.add_argument("--str", dest="strength", nargs="+")
-        parser.add_argument("--strength", dest="strength", nargs="+")
-
-        parser.add_argument("--intelligence", dest="intelligence", nargs="+")
-        parser.add_argument("--int", dest="intelligence", nargs="+")
-
-        parser.add_argument("--cha", dest="charisma", nargs="+")
-        parser.add_argument("--charisma", dest="charisma", nargs="+")
-
-        parser.add_argument("--luc", dest="luck", nargs="+")
-        parser.add_argument("--luck", dest="luck", nargs="+")
-
-        parser.add_argument("--dex", dest="dexterity", nargs="+")
-        parser.add_argument("--dexterity", dest="dexterity", nargs="+")
-
-        parser.add_argument("--lvl", dest="level", nargs="+")
-        parser.add_argument("--level", dest="level", nargs="+")
-
-        parser.add_argument("--deg", dest="degrade", nargs="+")
-        parser.add_argument("--degrade", dest="degrade", nargs="+")
-
-        parser.add_argument("--slot", nargs="*", dest="slot", default=ORDER, choices=ORDER)
-
-        parser.add_argument("--rarity", nargs="*", dest="rarity", default=RARITIES, choices=RARITIES)
-
-        parser.add_argument("--set", nargs="*", dest="set", choices=set_names, default=[])
-
-        parser.add_argument("--equip", dest="equippable", action="store_true", default=False)
-        parser.add_argument("--equippable", dest="equippable", action="store_true", default=False)
-
-        parser.add_argument("--delta", dest="delta", action="store_true", default=False)
-        parser.add_argument("--diff", dest="delta", action="store_true", default=False)
-        parser.add_argument("--icase", dest="icase", action="store_true", default=False)
-        parser.add_argument("--except", dest="except", action="store_true", default=False)
-
-        parser.add_argument("--match", nargs="*", dest="match", default=[])
-        parser.add_argument("--no-match", nargs="*", dest="no_match", default=[])
-
-        if not command:
-            parser.add_argument("command", nargs="*")
-        try:
-            arg = shlex.split(argument, posix=True)
-            vals = vars(parser.parse_args(arg))
-        except argparse.ArgumentError as exc:
-            raise ArgParserFailure(exc.argument_name, exc.message)
-        except ValueError:
-            raise BadArgument()
-        response["delta"] = vals["delta"]
-        response["equippable"] = vals["equippable"]
-        response["set"] = vals["set"]
-        if vals["rarity"]:
-            response["rarity"] = vals["rarity"]
-        if vals["slot"]:
-            response["slot"] = vals["slot"]
-        response["icase"] = vals["icase"]
-        response["except"] = vals["except"]
-
-        if vals["match"]:
-            response["match"] = " ".join(vals["match"]).strip()
-
-        if vals["no_match"]:
-            response["no_match"] = " ".join(vals["no_match"]).strip()
-
-        response.update(process_argparse_stat(vals, "strength"))
-        response.update(process_argparse_stat(vals, "intelligence"))
-        response.update(process_argparse_stat(vals, "charisma"))
-        response.update(process_argparse_stat(vals, "luck"))
-        response.update(process_argparse_stat(vals, "dexterity"))
-        response.update(process_argparse_stat(vals, "level"))
-        response.update(process_argparse_stat(vals, "degrade"))
-        return response
-
-
-def process_argparse_stat(data: Mapping, stat: str) -> Mapping:
-    temp = {}
-    temp[stat] = {}
-    if variable := data.get(stat):
-        temp[stat] = {}
-        matches = re.findall(ARG_OP_REGEX, " ".join(variable))
-        if matches:
-            operands = [(o, int(v)) for o, v in matches if o]
-            if not operands:
-                exact = [int(v) for o, v in matches if not o]
-                if len(exact) == 1:
-                    temp[stat]["equal"] = exact[0]
-                else:
-                    temp[stat]["max"] = max(exact)
-                    temp[stat]["min"] = min(exact)
-            else:
-                if len(operands) == 1:
-                    o, v = operands[0]
-                    if o in {">"}:
-                        temp[stat]["max"] = float("inf")
-                        temp[stat]["min"] = v
-                    else:
-                        temp[stat]["min"] = float("-inf")
-                        temp[stat]["max"] = v
-                else:
-                    d = defaultdict(set)
-                    for o, v in operands:
-                        d[o].add(v)
-                    temp[stat]["max"] = min(float("inf"), *d["<"])
-                    temp[stat]["min"] = max(float("-inf"), *d[">"])
-    return temp
 
 
 def get_place_holder(slot_name) -> Item:

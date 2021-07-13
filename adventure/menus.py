@@ -9,7 +9,7 @@ from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import escape, humanize_number
 from redbot.vendored.discord.ext import menus
 
-from . import bank
+from .bank import bank
 
 _ = Translator("Adventure", __file__)
 log = logging.getLogger("red.cogs.adventure.menus")
