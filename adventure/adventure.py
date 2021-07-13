@@ -202,6 +202,10 @@ class Adventure(
             raise CheckFailure(f"There's an active lock for this user ({ctx.author.id})")
         return True
 
+    async def _clear_react(self, msg: discord.Message):
+        with contextlib.suppress(discord.HTTPException):
+            await msg.clear_reactions()
+
     async def initialize(self):
         """This will load all the bundled data into respective variables."""
         await self.bot.wait_until_red_ready()
@@ -2348,8 +2352,9 @@ class Adventure(
         async def adv_countdown():
             secondint = int(seconds)
             adv_end = await _get_epoch(secondint)
+            timestamp_str = f"<t:{int(adv_end)}:R>"
             timer, done, sremain = await _remaining(adv_end)
-            message_adv = await ctx.send(f"⏳ [{title}] {timer}s")
+            message_adv = await ctx.send(f"⏳ [{title}] {timer}s {timestamp_str}")
             deleted = False
             while not done:
                 timer, done, sremain = await _remaining(adv_end)
@@ -2360,7 +2365,7 @@ class Adventure(
                     break
                 elif not deleted and int(sremain) % 5 == 0:
                     try:
-                        await message_adv.edit(content=f"⏳ [{title}] {timer}s")
+                        await message_adv.edit(content=f"⏳ [{title}] {timer}s {timestamp_str}")
                     except discord.NotFound:
                         deleted = True
                 await asyncio.sleep(1)

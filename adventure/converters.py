@@ -149,6 +149,7 @@ class ItemsConverter(Converter):
     async def convert(self, ctx, argument) -> Tuple[str, List[Item]]:
         try:
             c = await Character.from_json(
+                ctx,
                 ctx.bot.get_cog("Adventure").config,
                 ctx.author,
                 ctx.bot.get_cog("Adventure")._daily_bonus,
@@ -222,6 +223,7 @@ class ItemConverter(Converter):
     async def convert(self, ctx, argument) -> Item:
         try:
             c = await Character.from_json(
+                ctx,
                 ctx.bot.get_cog("Adventure").config,
                 ctx.author,
                 ctx.bot.get_cog("Adventure")._daily_bonus,
@@ -279,6 +281,7 @@ class EquipableItemConverter(Converter):
     async def convert(self, ctx, argument) -> Item:
         try:
             c = await Character.from_json(
+                ctx,
                 ctx.bot.get_cog("Adventure").config,
                 ctx.author,
                 ctx.bot.get_cog("Adventure")._daily_bonus,
@@ -357,6 +360,7 @@ class EquipmentConverter(Converter):
     async def convert(self, ctx, argument) -> Union[Item, List[Item]]:
         try:
             c = await Character.from_json(
+                ctx,
                 ctx.bot.get_cog("Adventure").config,
                 ctx.author,
                 ctx.bot.get_cog("Adventure")._daily_bonus,

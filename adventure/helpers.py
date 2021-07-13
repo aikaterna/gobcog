@@ -66,11 +66,6 @@ async def _title_case(phrase: str):
     return " ".join(final_words)
 
 
-async def _clear_react(msg):
-    with contextlib.suppress(discord.HTTPException):
-        await msg.clear_reactions()
-
-
 async def _remaining(epoch):
     remaining = epoch - time.time()
     finish = remaining < 0
