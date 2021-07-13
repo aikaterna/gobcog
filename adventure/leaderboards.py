@@ -10,7 +10,15 @@ from redbot.core.utils import AsyncIter
 
 from .abc import AdventureMixin
 from .helpers import smart_embed
-from .menus import BaseMenu, LeaderboardMenu, LeaderboardSource, NVScoreboardSource, ScoreBoardMenu, ScoreboardSource
+from .menus import (
+    BaseMenu,
+    LeaderboardMenu,
+    LeaderboardSource,
+    NVScoreboardSource,
+    ScoreBoardMenu,
+    ScoreboardSource,
+    WeeklyScoreboardSource,
+)
 
 _ = Translator("Adventure", __file__)
 

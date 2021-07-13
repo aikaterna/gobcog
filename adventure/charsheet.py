@@ -624,7 +624,7 @@ class Character:
                 f"{int_space}{inter:<3} |"
                 f"{dex_space}{dex:<3} |"
                 f"{luck_space}{luck:<3} )"
-                f" | Lvl { equip_level(self, item):<5}"
+                f" | Lvl { self.self.equip_level(item):<5}"
                 f"{owned}{settext}"
             )
 
@@ -768,7 +768,7 @@ class Character:
                         continue
                 if rarity is not None and rarity != item.rarity:
                     continue
-                if equippable and not can_equip(self, item):
+                if equippable and not self.can_equip(item):
                     continue
                 if set_name is not None and set_name != item.set:
                     continue
@@ -812,7 +812,7 @@ class Character:
                         int,
                         dex,
                         luck,
-                        f"[{r}]" if (r := equip_level(self, item)) is not None and r > self.lvl else f"{r}",
+                        f"[{r}]" if (r := self.equip_level(item)) is not None and r > self.lvl else f"{r}",
                         item.owned,
                         f"[{item.degrade}]"
                         if item.rarity in ["legendary", "event", "ascended"] and item.degrade >= 0
@@ -881,7 +881,7 @@ class Character:
                     continue
                 if sets and item.set not in sets:
                     continue
-                e_level = equip_level(self, item)
+                e_level = self.equip_level(item)
                 if equippable and self.lvl < e_level:
                     continue
                 if degrade and item.rarity in ["legendary", "ascended", "event"]:
@@ -962,7 +962,7 @@ class Character:
                     continue
                 if sets and item.set in sets:
                     continue
-                e_level = equip_level(self, item)
+                e_level = self.equip_level(item)
                 if equippable and self.lvl >= e_level:
                     continue
                 if degrade and item.rarity in ["legendary", "ascended", "event"]:
@@ -1109,7 +1109,7 @@ class Character:
                     int,
                     dex,
                     luck,
-                    f"[{r}]" if (r := equip_level(self, item)) is not None and r > self.lvl else f"{r}",
+                    f"[{r}]" if (r := self.equip_level(item)) is not None and r > self.lvl else f"{r}",
                     item.owned,
                 ]
                 if "DEG" in headers:
@@ -1188,7 +1188,7 @@ class Character:
 
     async def equip_item(self, item: Item, from_backpack: bool = True, dev=False):
         """This handles moving an item from backpack to equipment."""
-        equiplevel = equip_level(self, item)
+        equiplevel = self.equip_level(item)
         if equiplevel > self.lvl:
             if not dev:
                 if not from_backpack:
