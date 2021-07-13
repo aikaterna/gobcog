@@ -16,13 +16,40 @@ from .bank import bank
 from .charsheet import Character
 from .constants import ORDER
 from .converters import DayConverter, PercentageConverter, parse_timedelta
-from .helpers import check_global_setting_admin, has_separated_economy, smart_embed
+from .helpers import has_separated_economy, smart_embed
 
 _ = Translator("Adventure", __file__)
 
 log = logging.getLogger("red.cogs.adventure")
 
 TaxesConverter = get_dict_converter(delims=[" ", ",", ";"])
+
+
+def check_global_setting_admin():
+    """
+    Command decorator. If the bank is not global, it checks if the author is
+    either a bot admin or has the manage_guild permission.
+    """
+
+    async def pred(ctx: commands.Context):
+        author = ctx.author
+        if not await bank.is_global():
+            if not isinstance(ctx.channel, discord.abc.GuildChannel):
+                return False
+            if await ctx.bot.is_owner(author):
+                return True
+            if author == ctx.guild.owner:
+                return True
+            if ctx.channel.permissions_for(author).manage_guild:
+                return True
+            admin_role_ids = await ctx.bot.get_admin_role_ids(ctx.guild.id)
+            for role in author.roles:
+                if role.id in admin_role_ids:
+                    return True
+        else:
+            return await ctx.bot.is_owner(author)
+
+    return commands.check(pred)
 
 
 class AdventureSetCommands(AdventureMixin):

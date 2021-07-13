@@ -9,6 +9,7 @@ from redbot.core import Config, commands
 from redbot.core.bot import Red
 
 if TYPE_CHECKING:
+    from .adventureset import TaxesConverter
     from .charsheet import BackpackFilterParser, Character
     from .converters import (
         DayConverter,

@@ -7,6 +7,7 @@ import time
 from math import ceil
 
 import discord
+from discord.ext.commands.errors import BadArgument
 from redbot.core import commands
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number, humanize_timedelta

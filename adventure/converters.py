@@ -7,6 +7,7 @@ import logging
 import re
 import shlex
 from collections import defaultdict
+from datetime import timedelta
 from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Tuple, Union
 
 from discord.ext.commands.converter import Converter
@@ -17,6 +18,9 @@ from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import box
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
+
+from .charsheet import Character, Item
+from .constants import ORDER, RARITIES
 
 log = logging.getLogger("red.cogs.adventure")
 
