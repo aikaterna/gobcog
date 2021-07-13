@@ -17,7 +17,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .helpers import smart_embed
+from .helpers import escape, smart_embed
 
 _ = Translator("Adventure", __file__)
 
@@ -52,7 +52,7 @@ class Negaverse(AdventureMixin):
                 _(
                     "**{author}**, you need to specify how many "
                     "{currency_name} you are willing to offer to the gods for your success."
-                ).format(author=self.escape(ctx.author.display_name), currency_name=currency_name),
+                ).format(author=escape(ctx.author.display_name), currency_name=currency_name),
             )
         if offering <= 500 or bal <= 500:
             ctx.command.reset_cooldown(ctx)
@@ -80,7 +80,7 @@ class Negaverse(AdventureMixin):
                     "**{author}**, this will cost you at least {offer} {currency_name}.\n"
                     "You currently have {bal}. Do you want to proceed?"
                 ).format(
-                    author=self.escape(ctx.author.display_name),
+                    author=escape(ctx.author.display_name),
                     offer=humanize_number(offering),
                     currency_name=currency_name,
                     bal=humanize_number(bal),
@@ -100,7 +100,7 @@ class Negaverse(AdventureMixin):
                     ctx.command.reset_cooldown(ctx)
                     await nv_msg.edit(
                         content=_("**{}** decides against visiting the negaverse... for now.").format(
-                            self.escape(ctx.author.display_name)
+                            escape(ctx.author.display_name)
                         )
                     )
                     lock.release()
@@ -136,14 +136,14 @@ class Negaverse(AdventureMixin):
                 await bank.withdraw_credits(ctx.author, offering)
             if nega_set:
                 nega_member = nega
-                negachar = _("The Almighty Nega-{c}").format(c=self.escape(nega_member.display_name))
+                negachar = _("The Almighty Nega-{c}").format(c=escape(nega_member.display_name))
             else:
                 nega_member = random.choice(ctx.message.guild.members)
-                negachar = _("Nega-{c}").format(c=self.escape(nega_member.display_name))
+                negachar = _("Nega-{c}").format(c=escape(nega_member.display_name))
 
             nega_msg = await ctx.send(
                 _("**{author}** enters the negaverse and meets **{negachar}**.").format(
-                    author=self.escape(ctx.author.display_name), negachar=negachar
+                    author=escape(ctx.author.display_name), negachar=negachar
                 )
             )
 
@@ -188,7 +188,7 @@ class Negaverse(AdventureMixin):
                 await nega_msg.edit(
                     content=_("{content}\n**{author}** fumbled and died to **{negachar}'s** savagery{loss_msg}").format(
                         content=nega_msg.content,
-                        author=self.escape(ctx.author.display_name),
+                        author=escape(ctx.author.display_name),
                         negachar=negachar,
                         loss_msg=loss_msg,
                     )
@@ -223,7 +223,7 @@ class Negaverse(AdventureMixin):
                 await nega_msg.edit(
                     content=_("{content}\n**{author}** fumbled and died to **{negachar}'s** savagery{loss_msg}").format(
                         content=nega_msg.content,
-                        author=self.escape(ctx.author.display_name),
+                        author=escape(ctx.author.display_name),
                         negachar=negachar,
                         loss_msg=loss_msg,
                     )
@@ -237,7 +237,7 @@ class Negaverse(AdventureMixin):
                         "{offering} {currency_name} back from the shadowy corpse."
                     ).format(
                         content=nega_msg.content,
-                        author=self.escape(ctx.author.display_name),
+                        author=escape(ctx.author.display_name),
                         negachar=negachar,
                         xp_gain=humanize_number(xp_won),
                         offering=humanize_number(offering),
@@ -261,7 +261,7 @@ class Negaverse(AdventureMixin):
                     ).format(
                         dice=self.emojis.dice,
                         content=nega_msg.content,
-                        author=self.escape(ctx.author.display_name),
+                        author=escape(ctx.author.display_name),
                         roll=roll,
                         negachar=negachar,
                         versus=versus,
@@ -284,7 +284,7 @@ class Negaverse(AdventureMixin):
                     ).format(
                         dice=self.emojis.dice,
                         content=nega_msg.content,
-                        author=self.escape(ctx.author.display_name),
+                        author=escape(ctx.author.display_name),
                         roll=roll,
                         negachar=negachar,
                         versus=versus,
@@ -323,7 +323,7 @@ class Negaverse(AdventureMixin):
                         "**{author}** {dice}({roll}) was killed by **{negachar}** {dice}({versus}){loss_msg}"
                     ).format(
                         dice=self.emojis.dice,
-                        author=self.escape(ctx.author.display_name),
+                        author=escape(ctx.author.display_name),
                         roll=roll,
                         negachar=negachar,
                         versus=versus,

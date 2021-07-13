@@ -67,6 +67,10 @@ class AdventureMixin(ABC):
     #######################################################################
 
     @abstractmethod
+    async def _clear_react(self, msg: discord.Message):
+        raise NotImplementedError()
+
+    @abstractmethod
     async def red_delete_data_for_user(
         self,
         *,
