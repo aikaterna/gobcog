@@ -12,7 +12,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, has_funds
-from .helpers import smart_embed
+from .helpers import escape, smart_embed
 
 _ = Translator("Adventure", __file__)
 
@@ -98,7 +98,7 @@ class RebirthCommands(AdventureMixin):
                 if not pred.result:
                     await open_msg.edit(
                         content=box(
-                            _("{c} decided not to rebirth.").format(c=self.escape(ctx.author.display_name)),
+                            _("{c} decided not to rebirth.").format(c=escape(ctx.author.display_name)),
                             lang="css",
                         ),
                         embed=None,
@@ -130,11 +130,11 @@ class RebirthCommands(AdventureMixin):
                 await open_msg.edit(
                     content=box(
                         _("{c}, congratulations on your rebirth.\nYou paid {bal}.").format(
-                            c=self.escape(ctx.author.display_name),
+                            c=escape(ctx.author.display_name),
                             bal=humanize_number(withdraw),
                         ),
                         lang="css",
                     ),
                     embed=None,
                 )
-                await self.config.user(ctx.author).set(await c.rebirth(self.TG_GEAR_SET))
+                await self.config.user(ctx.author).set(await c.rebirth())
