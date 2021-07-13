@@ -19,7 +19,7 @@ from .bank import bank
 from .charsheet import Character, Item
 from .constants import ORDER
 from .converters import ItemConverter
-from .helpers import is_dev, smart_embed
+from .helpers import escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -124,7 +124,7 @@ class ClassAbilities(AdventureMixin):
                     "Available classes are: Tinkerer, Berserker, "
                     "Wizard, Cleric, Ranger, Psychic and Bard.\n"
                     "Use `{prefix}heroclass name-of-class` to choose one."
-                ).format(author=self.escape(ctx.author.display_name), prefix=ctx.prefix),
+                ).format(author=escape(ctx.author.display_name), prefix=ctx.prefix),
             )
 
         else:
@@ -161,7 +161,7 @@ class ClassAbilities(AdventureMixin):
                             _("This will cost {spend} {currency_name}. Do you want to continue, {author}?").format(
                                 spend=humanize_number(spend),
                                 currency_name=currency_name,
-                                author=self.escape(ctx.author.display_name),
+                                author=escape(ctx.author.display_name),
                             ),
                             lang="css",
                         )
@@ -185,7 +185,7 @@ class ClassAbilities(AdventureMixin):
                         await class_msg.edit(
                             content=box(
                                 _("{author} decided to continue being a {h_class}.").format(
-                                    author=self.escape(ctx.author.display_name),
+                                    author=escape(ctx.author.display_name),
                                     h_class=c.heroclass["name"],
                                 ),
                                 lang="css",
@@ -205,7 +205,7 @@ class ClassAbilities(AdventureMixin):
                         log.exception("Error with the new character sheet", exc_info=exc)
                         return
                     now_class_msg = _("Congratulations, {author}.\nYou are now a {clz}.").format(
-                        author=self.escape(ctx.author.display_name), clz=classes[clz]["name"]
+                        author=escape(ctx.author.display_name), clz=classes[clz]["name"]
                     )
                     if c.lvl >= 10:
                         if c.heroclass["name"] == "Tinkerer" or c.heroclass["name"] == "Ranger":
@@ -216,7 +216,7 @@ class ClassAbilities(AdventureMixin):
                                         _(
                                             "{}, you will lose your forged "
                                             "device if you change your class.\nShall I proceed?"
-                                        ).format(self.escape(ctx.author.display_name)),
+                                        ).format(escape(ctx.author.display_name)),
                                         lang="css",
                                     )
                                 )
@@ -226,7 +226,7 @@ class ClassAbilities(AdventureMixin):
                                     content=box(
                                         _(
                                             "{}, you will lose your pet if you change your class.\nShall I proceed?"
-                                        ).format(self.escape(ctx.author.display_name)),
+                                        ).format(escape(ctx.author.display_name)),
                                         lang="css",
                                     )
                                 )
@@ -270,7 +270,7 @@ class ClassAbilities(AdventureMixin):
                                     await class_msg.edit(
                                         content=box(
                                             _("{} released their pet into the wild.\n").format(
-                                                self.escape(ctx.author.display_name)
+                                                escape(ctx.author.display_name)
                                             ),
                                             lang="css",
                                         )
@@ -281,7 +281,7 @@ class ClassAbilities(AdventureMixin):
                                 await class_msg.edit(
                                     content=box(
                                         _("{}, you will remain a {}").format(
-                                            self.escape(ctx.author.display_name, c.heroclass["name"])
+                                            escape(ctx.author.display_name, c.heroclass["name"])
                                         ),
                                         lang="css",
                                     )
@@ -328,7 +328,7 @@ class ClassAbilities(AdventureMixin):
                         await smart_embed(
                             ctx,
                             _("**{}**, you need to be at least level 10 to choose a class.").format(
-                                self.escape(ctx.author.display_name)
+                                escape(ctx.author.display_name)
                             ),
                         )
 
@@ -354,14 +354,14 @@ class ClassAbilities(AdventureMixin):
                 if c.heroclass["name"] != "Ranger":
                     return await smart_embed(
                         ctx,
-                        _("**{}**, you need to be a Ranger to do this.").format(self.escape(ctx.author.display_name)),
+                        _("**{}**, you need to be a Ranger to do this.").format(escape(ctx.author.display_name)),
                     )
                 if c.heroclass["pet"]:
                     ctx.command.reset_cooldown(ctx)
                     return await ctx.send(
                         box(
                             _("{author}, you already have a pet. Try foraging ({prefix}pet forage).").format(
-                                author=self.escape(ctx.author.display_name), prefix=ctx.prefix
+                                author=escape(ctx.author.display_name), prefix=ctx.prefix
                             ),
                             lang="css",
                         )
@@ -414,7 +414,7 @@ class ClassAbilities(AdventureMixin):
                             can_catch = False
                             pet_msg4 = _("\nPerhaps you're missing some requirements to tame {pet}.").format(pet=pet)
                     pet_msg = box(
-                        _("{c} is trying to tame a pet.").format(c=self.escape(ctx.author.display_name)),
+                        _("{c} is trying to tame a pet.").format(c=escape(ctx.author.display_name)),
                         lang="css",
                     )
                     user_msg = await ctx.send(pet_msg)
@@ -422,7 +422,7 @@ class ClassAbilities(AdventureMixin):
                     pet_msg2 = box(
                         _("{author} started tracking a wild {pet_name} with a roll of {dice}({roll}).").format(
                             dice=self.emojis.dice,
-                            author=self.escape(ctx.author.display_name),
+                            author=escape(ctx.author.display_name),
                             pet_name=pet,
                             roll=roll,
                         ),
@@ -445,13 +445,13 @@ class ClassAbilities(AdventureMixin):
                                 msg = random.choice(
                                     [
                                         _("{author} commands {pet} into submission.").format(
-                                            pet=pet, author=self.escape(ctx.author.display_name)
+                                            pet=pet, author=escape(ctx.author.display_name)
                                         ),
                                         _("{pet} swears allegiance to the Supreme One.").format(
-                                            pet=pet, author=self.escape(ctx.author.display_name)
+                                            pet=pet, author=escape(ctx.author.display_name)
                                         ),
                                         _("{pet} takes an Oath of Allegiance to the Supreme One.").format(
-                                            pet=pet, author=self.escape(ctx.author.display_name)
+                                            pet=pet, author=escape(ctx.author.display_name)
                                         ),
                                     ]
                                 )
@@ -506,13 +506,11 @@ class ClassAbilities(AdventureMixin):
             if not c.heroclass["pet"]:
                 return await smart_embed(
                     ctx,
-                    _("**{}**, you need to have a pet to do this.").format(self.escape(ctx.author.display_name)),
+                    _("**{}**, you need to have a pet to do this.").format(escape(ctx.author.display_name)),
                 )
             if c.is_backpack_full(is_dev=is_dev(ctx.author)):
                 await ctx.send(
-                    _("**{author}**, Your backpack is currently full.").format(
-                        author=self.escape(ctx.author.display_name)
-                    )
+                    _("**{author}**, Your backpack is currently full.").format(author=escape(ctx.author.display_name))
                 )
                 return
             cooldown_time = max(1800, (7200 - max((c.luck + c.total_int) * 2, 0)))
@@ -545,14 +543,14 @@ class ClassAbilities(AdventureMixin):
             if c.heroclass["name"] != "Ranger":
                 return await smart_embed(
                     ctx,
-                    _("**{}**, you need to be a Ranger to do this.").format(self.escape(ctx.author.display_name)),
+                    _("**{}**, you need to be a Ranger to do this.").format(escape(ctx.author.display_name)),
                 )
             if c.heroclass["pet"]:
                 c.heroclass["pet"] = {}
                 await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 return await smart_embed(
                     ctx,
-                    _("**{}** released their pet into the wild..").format(self.escape(ctx.author.display_name)),
+                    _("**{}** released their pet into the wild..").format(escape(ctx.author.display_name)),
                 )
             else:
                 return await ctx.send(box(_("You don't have a pet."), lang="css"))
@@ -573,13 +571,13 @@ class ClassAbilities(AdventureMixin):
                 ctx.command.reset_cooldown(ctx)
                 return await smart_embed(
                     ctx,
-                    _("**{}**, you need to be a Cleric to do this.").format(self.escape(ctx.author.display_name)),
+                    _("**{}**, you need to be a Cleric to do this.").format(escape(ctx.author.display_name)),
                 )
             else:
                 if c.heroclass["ability"]:
                     return await smart_embed(
                         ctx,
-                        _("**{}**, ability already in use.").format(self.escape(ctx.author.display_name)),
+                        _("**{}**, ability already in use.").format(escape(ctx.author.display_name)),
                     )
                 cooldown_time = max(300, (1200 - max((c.luck + c.total_int) * 2, 0)))
                 if "cooldown" not in c.heroclass:
@@ -592,7 +590,7 @@ class ClassAbilities(AdventureMixin):
                     await smart_embed(
                         ctx,
                         _("{bless} **{c}** is starting an inspiring sermon. {bless}").format(
-                            c=self.escape(ctx.author.display_name), bless=self.emojis.skills.bless
+                            c=escape(ctx.author.display_name), bless=self.emojis.skills.bless
                         ),
                     )
                 else:
@@ -624,7 +622,7 @@ class ClassAbilities(AdventureMixin):
         if c.heroclass["name"] != "Psychic":
             return await smart_embed(
                 ctx,
-                _("**{}**, you need to be a Psychic to do this.").format(self.escape(ctx.author.display_name)),
+                _("**{}**, you need to be a Psychic to do this.").format(escape(ctx.author.display_name)),
             )
         else:
             if ctx.guild.id not in self._sessions:
@@ -640,7 +638,7 @@ class ClassAbilities(AdventureMixin):
             if c.heroclass["ability"]:
                 return await smart_embed(
                     ctx,
-                    _("**{}**, ability already in use.").format(self.escape(ctx.author.display_name)),
+                    _("**{}**, ability already in use.").format(escape(ctx.author.display_name)),
                 )
             cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
             if "cooldown" not in c.heroclass:
@@ -662,7 +660,7 @@ class ClassAbilities(AdventureMixin):
                         await smart_embed(
                             ctx,
                             _("{skill} **{c}** is focusing on the monster ahead...{skill}").format(
-                                c=self.escape(ctx.author.display_name),
+                                c=escape(ctx.author.display_name),
                                 skill=self.emojis.skills.psychic,
                             ),
                         )
@@ -803,13 +801,13 @@ class ClassAbilities(AdventureMixin):
                 ctx.command.reset_cooldown(ctx)
                 return await smart_embed(
                     ctx,
-                    _("**{}**, you need to be a Berserker to do this.").format(self.escape(ctx.author.display_name)),
+                    _("**{}**, you need to be a Berserker to do this.").format(escape(ctx.author.display_name)),
                 )
             else:
                 if c.heroclass["ability"] is True:
                     return await smart_embed(
                         ctx,
-                        _("**{}**, ability already in use.").format(self.escape(ctx.author.display_name)),
+                        _("**{}**, ability already in use.").format(escape(ctx.author.display_name)),
                     )
                 cooldown_time = max(300, (1200 - max((c.luck + c.total_att) * 2, 0)))
                 if "cooldown" not in c.heroclass:
@@ -821,7 +819,7 @@ class ClassAbilities(AdventureMixin):
                     await smart_embed(
                         ctx,
                         _("{skill} **{c}** is starting to froth at the mouth... {skill}").format(
-                            c=self.escape(ctx.author.display_name),
+                            c=escape(ctx.author.display_name),
                             skill=self.emojis.skills.berserker,
                         ),
                     )
@@ -854,13 +852,13 @@ class ClassAbilities(AdventureMixin):
                 ctx.command.reset_cooldown(ctx)
                 return await smart_embed(
                     ctx,
-                    _("**{}**, you need to be a Wizard to do this.").format(self.escape(ctx.author.display_name)),
+                    _("**{}**, you need to be a Wizard to do this.").format(escape(ctx.author.display_name)),
                 )
             else:
                 if c.heroclass["ability"] is True:
                     return await smart_embed(
                         ctx,
-                        _("**{}**, ability already in use.").format(self.escape(ctx.author.display_name)),
+                        _("**{}**, ability already in use.").format(escape(ctx.author.display_name)),
                     )
                 cooldown_time = max(300, (1200 - max((c.luck + c.total_int) * 2, 0)))
                 if "cooldown" not in c.heroclass:
@@ -873,7 +871,7 @@ class ClassAbilities(AdventureMixin):
                     await smart_embed(
                         ctx,
                         _("{skill} **{c}** is focusing all of their energy... {skill}").format(
-                            c=self.escape(ctx.author.display_name),
+                            c=escape(ctx.author.display_name),
                             skill=self.emojis.skills.wizzard,
                         ),
                     )
@@ -905,13 +903,13 @@ class ClassAbilities(AdventureMixin):
                 ctx.command.reset_cooldown(ctx)
                 return await smart_embed(
                     ctx,
-                    _("**{}**, you need to be a Bard to do this.").format(self.escape(ctx.author.display_name)),
+                    _("**{}**, you need to be a Bard to do this.").format(escape(ctx.author.display_name)),
                 )
             else:
                 if c.heroclass["ability"]:
                     return await smart_embed(
                         ctx,
-                        _("**{}**, ability already in use.").format(self.escape(ctx.author.display_name)),
+                        _("**{}**, ability already in use.").format(escape(ctx.author.display_name)),
                     )
                 cooldown_time = max(300, (1200 - max((c.luck + c.total_cha) * 2, 0)))
                 if "cooldown" not in c.heroclass:
@@ -923,7 +921,7 @@ class ClassAbilities(AdventureMixin):
                     await smart_embed(
                         ctx,
                         _("{skill} **{c}** is whipping up a performance... {skill}").format(
-                            c=self.escape(ctx.author.display_name), skill=self.emojis.skills.bard
+                            c=escape(ctx.author.display_name), skill=self.emojis.skills.bard
                         ),
                     )
                 else:
@@ -960,7 +958,7 @@ class ClassAbilities(AdventureMixin):
             if c.heroclass["name"] != "Tinkerer":
                 return await smart_embed(
                     ctx,
-                    _("**{}**, you need to be a Tinkerer to do this.").format(self.escape(ctx.author.display_name)),
+                    _("**{}**, you need to be a Tinkerer to do this.").format(escape(ctx.author.display_name)),
                 )
             else:
                 cooldown_time = max(1800, (7200 - max((c.luck + c.total_int) * 2, 0)))
@@ -985,7 +983,7 @@ class ClassAbilities(AdventureMixin):
                     return await smart_embed(
                         ctx,
                         _("**{}**, you need at least two forgeable items in your backpack to forge.{}").format(
-                            self.escape(ctx.author.display_name), ascended_forge_msg
+                            escape(ctx.author.display_name), ascended_forge_msg
                         ),
                     )
                 pages = await c.get_backpack(forging=True, clean=True)
@@ -993,7 +991,7 @@ class ClassAbilities(AdventureMixin):
                     return await smart_embed(
                         ctx,
                         _("**{}**, you need at least two forgeable items in your backpack to forge.").format(
-                            self.escape(ctx.author.display_name)
+                            escape(ctx.author.display_name)
                         ),
                     )
                 await BaseMenu(
@@ -1028,12 +1026,12 @@ class ClassAbilities(AdventureMixin):
 
                         if not item:
                             wrong_item = _("**{c}**, I could not find that item - check your spelling.").format(
-                                c=self.escape(ctx.author.display_name)
+                                c=escape(ctx.author.display_name)
                             )
                             await smart_embed(ctx, wrong_item)
                         elif not c.can_equip(item):
                             wrong_item = _("**{c}**, this item is too high level for you to reforge it.").format(
-                                c=self.escape(ctx.author.display_name)
+                                c=escape(ctx.author.display_name)
                             )
                             await smart_embed(ctx, wrong_item)
                             item = None
@@ -1042,15 +1040,13 @@ class ClassAbilities(AdventureMixin):
                             break
                     consumed.append(item)
                 except asyncio.TimeoutError:
-                    timeout_msg = _("I don't have all day you know, **{}**.").format(
-                        self.escape(ctx.author.display_name)
-                    )
+                    timeout_msg = _("I don't have all day you know, **{}**.").format(escape(ctx.author.display_name))
                     return await smart_embed(ctx, timeout_msg)
                 if item.rarity in ["forged", "set"]:
                     return await smart_embed(
                         ctx,
                         _("**{c}**, {item.rarity} items cannot be reforged.").format(
-                            c=self.escape(ctx.author.display_name), item=item
+                            c=escape(ctx.author.display_name), item=item
                         ),
                     )
                 await smart_embed(
@@ -1079,18 +1075,18 @@ class ClassAbilities(AdventureMixin):
                         if item and consumed[0].owned <= 1 and str(consumed[0]) == str(item):
                             wrong_item = _(
                                 "**{c}**, you only own 1 copy of this item and you've already selected it."
-                            ).format(c=self.escape(ctx.author.display_name))
+                            ).format(c=escape(ctx.author.display_name))
                             await smart_embed(ctx, wrong_item)
 
                             continue
                         if not item:
                             wrong_item = _("**{c}**, I could not find that item - check your spelling.").format(
-                                c=self.escape(ctx.author.display_name)
+                                c=escape(ctx.author.display_name)
                             )
                             await smart_embed(ctx, wrong_item)
                         elif not c.can_equip(item):
                             wrong_item = _("**{c}**, this item is too high level for you to reforge it.").format(
-                                c=self.escape(ctx.author.display_name)
+                                c=escape(ctx.author.display_name)
                             )
                             await smart_embed(ctx, wrong_item)
                             item = None
@@ -1099,15 +1095,13 @@ class ClassAbilities(AdventureMixin):
                             break
                     consumed.append(item)
                 except asyncio.TimeoutError:
-                    timeout_msg = _("I don't have all day you know, **{}**.").format(
-                        self.escape(ctx.author.display_name)
-                    )
+                    timeout_msg = _("I don't have all day you know, **{}**.").format(escape(ctx.author.display_name))
                     return await smart_embed(ctx, timeout_msg)
                 if item.rarity in ["forged", "set"]:
                     return await smart_embed(
                         ctx,
                         _("**{c}**, {item.rarity} items cannot be reforged.").format(
-                            c=self.escape(ctx.author.display_name), item=item
+                            c=escape(ctx.author.display_name), item=item
                         ),
                     )
                 newitem = await self._to_forge(ctx, consumed, c)
@@ -1124,7 +1118,7 @@ class ClassAbilities(AdventureMixin):
                 if len(lookup) > 0:
                     forge_str = box(
                         _("{author}, you already have a device. Do you want to replace {replace}?").format(
-                            author=self.escape(ctx.author.display_name),
+                            author=escape(ctx.author.display_name),
                             replace=", ".join([str(x) for x in lookup]),
                         ),
                         lang="css",
@@ -1143,7 +1137,7 @@ class ClassAbilities(AdventureMixin):
                         c.heroclass["cooldown"] = time.time() + cooldown_time
                         created_item = box(
                             _("{author}, your new {newitem} consumed {lk} and is now lurking in your backpack.").format(
-                                author=self.escape(ctx.author.display_name),
+                                author=escape(ctx.author.display_name),
                                 newitem=newitem,
                                 lk=", ".join([str(x) for x in lookup]),
                             ),
@@ -1159,7 +1153,7 @@ class ClassAbilities(AdventureMixin):
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         mad_forge = box(
                             _("{author}, {newitem} got mad at your rejection and blew itself up.").format(
-                                author=self.escape(ctx.author.display_name), newitem=newitem
+                                author=escape(ctx.author.display_name), newitem=newitem
                             ),
                             lang="css",
                         )
@@ -1170,7 +1164,7 @@ class ClassAbilities(AdventureMixin):
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     forged_item = box(
                         _("{author}, your new {newitem} is lurking in your backpack.").format(
-                            author=self.escape(ctx.author.display_name), newitem=newitem
+                            author=escape(ctx.author.display_name), newitem=newitem
                         ),
                         lang="css",
                     )
@@ -1227,7 +1221,7 @@ class ClassAbilities(AdventureMixin):
                     "LUCK {new_luck})"
                     " and be {hand}."
                 ).format(
-                    author=self.escape(ctx.author.display_name),
+                    author=escape(ctx.author.display_name),
                     roll=roll,
                     dice=self.emojis.dice,
                     new_att=(newatt * 2),
@@ -1252,7 +1246,7 @@ class ClassAbilities(AdventureMixin):
                     "LUCK {new_luck})"
                     " and be {hand}."
                 ).format(
-                    author=self.escape(ctx.author.display_name),
+                    author=escape(ctx.author.display_name),
                     roll=roll,
                     dice=self.emojis.dice,
                     new_att=newatt,
@@ -1269,7 +1263,7 @@ class ClassAbilities(AdventureMixin):
             "**{}**, please respond with "
             "a name for your creation within 30s.\n"
             "(You will not be able to change it afterwards. 40 characters maximum.)"
-        ).format(self.escape(ctx.author.display_name))
+        ).format(escape(ctx.author.display_name))
         await smart_embed(ctx, get_name)
         reply = None
         name = _("Unnamed Artifact")
