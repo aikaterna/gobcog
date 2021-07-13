@@ -18,7 +18,7 @@ from .bank import bank
 from .charsheet import Character, Item
 from .constants import ORDER
 from .converters import ItemConverter
-from .helpers import smart_embed
+from .helpers import is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -144,7 +144,7 @@ class ClassAbilities(AdventureMixin):
                         currency_name = "credits"
                     spend = round(bal * 0.2)
                     try:
-                        c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+                        c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
                     except Exception as exc:
                         log.exception("Error with the new character sheet", exc_info=exc)
                         ctx.command.reset_cooldown(ctx)
@@ -199,7 +199,7 @@ class ClassAbilities(AdventureMixin):
                     if not await bank.can_spend(ctx.author, spend):
                         return await class_msg.edit(content=broke)
                     try:
-                        c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+                        c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
                     except Exception as exc:
                         log.exception("Error with the new character sheet", exc_info=exc)
                         return
@@ -346,7 +346,7 @@ class ClassAbilities(AdventureMixin):
                 return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
             async with self.get_lock(ctx.author):
                 try:
-                    c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+                    c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
                 except Exception as exc:
                     log.exception("Error with the new character sheet", exc_info=exc)
                     return
@@ -496,7 +496,7 @@ class ClassAbilities(AdventureMixin):
             return await smart_embed(ctx, _("You're too distracted with the monster you are facing."))
         async with self.get_lock(ctx.author):
             try:
-                c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
@@ -507,7 +507,7 @@ class ClassAbilities(AdventureMixin):
                     ctx,
                     _("**{}**, you need to have a pet to do this.").format(self.escape(ctx.author.display_name)),
                 )
-            if c.is_backpack_full(is_dev=self.is_dev(ctx.author)):
+            if c.is_backpack_full(is_dev=is_dev(ctx.author)):
                 await ctx.send(
                     _("**{author}**, Your backpack is currently full.").format(
                         author=self.escape(ctx.author.display_name)
@@ -537,7 +537,7 @@ class ClassAbilities(AdventureMixin):
             return await smart_embed(ctx, _("You're too distracted with the monster you are facing."))
         async with self.get_lock(ctx.author):
             try:
-                c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
@@ -564,7 +564,7 @@ class ClassAbilities(AdventureMixin):
         """
         async with self.get_lock(ctx.author):
             try:
-                c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
@@ -615,7 +615,7 @@ class ClassAbilities(AdventureMixin):
         This allows a Psychic to expose the current enemy's weakeness to the party.
         """
         try:
-            c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+            c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
         except Exception:
             log.exception("Error with the new character sheet")
             ctx.command.reset_cooldown(ctx)
@@ -794,7 +794,7 @@ class ClassAbilities(AdventureMixin):
         """
         async with self.get_lock(ctx.author):
             try:
-                c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
@@ -845,7 +845,7 @@ class ClassAbilities(AdventureMixin):
         """
         async with self.get_lock(ctx.author):
             try:
-                c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
@@ -896,7 +896,7 @@ class ClassAbilities(AdventureMixin):
         """
         async with self.get_lock(ctx.author):
             try:
-                c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
@@ -952,7 +952,7 @@ class ClassAbilities(AdventureMixin):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
         async with self.get_lock(ctx.author):
             try:
-                c = await Character.from_json(self.config, ctx.author, self._daily_bonus)
+                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return

@@ -1,6 +1,9 @@
+import logging
 from typing import List, Literal, MutableMapping, Optional, Union
 
 from redbot.core import commands
+
+log = logging.getLogger("red.cogs.adventure")
 
 
 class AdventureResults:

@@ -27,7 +27,7 @@ from .converters import (
     RarityConverter,
     SlotConverter,
 )
-from .helpers import smart_embed
+from .helpers import escape, is_dev, smart_embed
 from .menus import BackpackMenu, BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -115,7 +115,7 @@ class BackPackCommands(AdventureMixin):
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
             equiplevel = c.equip_level(equip_item)
-            if self.is_dev(ctx.author):  # FIXME:
+            if is_dev(ctx.author):  # FIXME:
                 equiplevel = 0
 
             if not c.can_equip(equip_item):
@@ -132,14 +132,14 @@ class BackPackCommands(AdventureMixin):
                 if not getattr(c, equip.slot[0]):
                     equip_msg = box(
                         _("{author} equipped {item} ({slot} slot).").format(
-                            author=self.escape(ctx.author.display_name), item=str(equip), slot=slot
+                            author=escape(ctx.author.display_name), item=str(equip), slot=slot
                         ),
                         lang="css",
                     )
                 else:
                     equip_msg = box(
                         _("{author} equipped {item} ({slot} slot) and put {put} into their backpack.").format(
-                            author=self.escape(ctx.author.display_name),
+                            author=escape(ctx.author.display_name),
                             item=str(equip),
                             slot=slot,
                             put=getattr(c, equip.slot[0]),
@@ -147,7 +147,7 @@ class BackPackCommands(AdventureMixin):
                         lang="css",
                     )
                 await ctx.send(equip_msg)
-                c = await c.equip_item(equip, True, self.is_dev(ctx.author))  # FIXME:
+                c = await c.equip_item(equip, True, is_dev(ctx.author))  # FIXME:
                 await self.config.user(ctx.author).set(await c.to_json(self.config))
 
     @_backpack.command(name="eset", cooldown_after_parsing=True)
@@ -401,7 +401,7 @@ class BackPackCommands(AdventureMixin):
                 await self.config.user(ctx.author).set(await c.to_json(self.config))
         msg_list = []
         new_msg = _("{author} sold all their{rarity} items for {price}.\n\n{items}").format(
-            author=self.escape(ctx.author.display_name),
+            author=escape(ctx.author.display_name),
             rarity=f" {rarity}" if rarity else "",
             price=humanize_number(total_price),
             items=msg,
@@ -430,7 +430,7 @@ class BackPackCommands(AdventureMixin):
             return await ctx.send(
                 box(
                     _("\n{author}, your {device} is refusing to be sold and bit your finger for trying.").format(
-                        author=self.escape(ctx.author.display_name), device=str(item)
+                        author=escape(ctx.author.display_name), device=str(item)
                     ),
                     lang="css",
                 )
@@ -446,7 +446,7 @@ class BackPackCommands(AdventureMixin):
             price_shown = self._sell(c, item)
             messages = [
                 _("**{author}**, do you want to sell this item for {price} each? {item}").format(
-                    author=self.escape(ctx.author.display_name),
+                    author=escape(ctx.author.display_name),
                     item=box(str(item), lang="css"),
                     price=humanize_number(price_shown),
                 )
@@ -492,7 +492,7 @@ class BackPackCommands(AdventureMixin):
             item.owned -= 1
             price += price_shown
             msg += _("**{author}** sold one {item} for {price} {currency_name}.\n").format(
-                author=self.escape(ctx.author.display_name),
+                author=escape(ctx.author.display_name),
                 item=box(item, lang="css"),
                 price=humanize_number(price),
                 currency_name=currency_name,
@@ -517,7 +517,7 @@ class BackPackCommands(AdventureMixin):
                     del character.backpack[item.name]
                 count += 1
             msg += _("**{author}** sold all their {old_item} for {price} {currency_name}.\n").format(
-                author=self.escape(ctx.author.display_name),
+                author=escape(ctx.author.display_name),
                 old_item=box(str(item) + " - " + str(old_owned), lang="css"),
                 price=humanize_number(price),
                 currency_name=currency_name,
@@ -543,7 +543,7 @@ class BackPackCommands(AdventureMixin):
             count += 1
             if price != 0:
                 msg += _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
-                    author=self.escape(ctx.author.display_name),
+                    author=escape(ctx.author.display_name),
                     old_item=box(str(item) + " - " + str(old_owned - 1), lang="css"),
                     price=humanize_number(price),
                     currency_name=currency_name,
@@ -593,7 +593,7 @@ class BackPackCommands(AdventureMixin):
             return await smart_embed(
                 ctx,
                 _("**{buyer}** is currently in an adventure... you were unable to reach them via pigeon.").format(
-                    buyer=self.escape(buyer.display_name)
+                    buyer=escape(buyer.display_name)
                 ),
             )
         if asking < 0:
@@ -609,17 +609,15 @@ class BackPackCommands(AdventureMixin):
             log.exception("Error with the new character sheet", exc_info=exc)
             return
 
-        if buy_user.is_backpack_full(is_dev=self.is_dev(buyer)):
-            await ctx.send(
-                _("**{author}**'s backpack is currently full.").format(author=self.escape(buyer.display_name))
-            )
+        if buy_user.is_backpack_full(is_dev=is_dev(buyer)):
+            await ctx.send(_("**{author}**'s backpack is currently full.").format(author=escape(buyer.display_name)))
             return
 
         if not any([x for x in c.backpack if item.name.lower() == x.lower()]):
             return await smart_embed(
                 ctx,
                 _("**{author}**, you have to specify an item from your backpack to trade.").format(
-                    author=self.escape(ctx.author.display_name)
+                    author=escape(ctx.author.display_name)
                 ),
             )
         lookup = list(x for n, x in c.backpack.items() if str(item) == str(x))
@@ -630,7 +628,7 @@ class BackPackCommands(AdventureMixin):
                     "**{author}**, I found multiple items ({items}) "
                     "matching that name in your backpack.\nPlease be more specific."
                 ).format(
-                    author=self.escape(ctx.author.display_name),
+                    author=escape(ctx.author.display_name),
                     items=humanize_list([x.name for x in lookup]),
                 ),
             )
@@ -640,7 +638,7 @@ class BackPackCommands(AdventureMixin):
             return await ctx.send(
                 box(
                     _("\n{author}, your {device} does not want to leave you.").format(
-                        author=self.escape(ctx.author.display_name), device=str(device[0])
+                        author=escape(ctx.author.display_name), device=str(device[0])
                     ),
                     lang="css",
                 )
@@ -649,7 +647,7 @@ class BackPackCommands(AdventureMixin):
             return await ctx.send(
                 box(
                     _("\n{character}, you cannot trade Set items as they are bound to your soul.").format(
-                        character=self.escape(ctx.author.display_name)
+                        character=escape(ctx.author.display_name)
                     ),
                     lang="css",
                 )
@@ -673,7 +671,7 @@ class BackPackCommands(AdventureMixin):
                     "[{hand}])\n{buyer}, "
                     "do you want to buy this item for {asking} {currency_name}?"
                 ).format(
-                    author=self.escape(ctx.author.display_name),
+                    author=escape(ctx.author.display_name),
                     item=item,
                     att_item=str(item.att),
                     cha_item=str(item.cha),
@@ -681,7 +679,7 @@ class BackPackCommands(AdventureMixin):
                     dex_item=str(item.dex),
                     luck_item=str(item.luck),
                     hand=hand,
-                    buyer=self.escape(buyer.display_name),
+                    buyer=escape(buyer.display_name),
                     asking=str(asking),
                     currency_name=currency_name,
                 ),
@@ -731,9 +729,9 @@ class BackPackCommands(AdventureMixin):
                                 content=(
                                     box(
                                         _("\n{author} traded {item} to {buyer} for {asking} {currency_name}.").format(
-                                            author=self.escape(ctx.author.display_name),
+                                            author=escape(ctx.author.display_name),
                                             item=item,
-                                            buyer=self.escape(buyer.display_name),
+                                            buyer=escape(buyer.display_name),
                                             asking=asking,
                                             currency_name=currency_name,
                                         ),
@@ -745,7 +743,7 @@ class BackPackCommands(AdventureMixin):
                         else:
                             await trade_msg.edit(
                                 content=_("**{buyer}**, you do not have enough {currency_name}.").format(
-                                    buyer=self.escape(buyer.display_name),
+                                    buyer=escape(buyer.display_name),
                                     currency_name=currency_name,
                                 )
                             )
@@ -1019,7 +1017,7 @@ class BackPackCommands(AdventureMixin):
             if msg:
                 msg_list = []
                 new_msg = _("{author} sold {number} items and their duplicates for {price}.\n\n{items}").format(
-                    author=self.escape(ctx.author.display_name),
+                    author=escape(ctx.author.display_name),
                     number=humanize_number(total_items),
                     price=humanize_number(total_price),
                     items=msg,

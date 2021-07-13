@@ -13,7 +13,7 @@ from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
 from .constants import DEV_LIST, ORDER, RARITIES
-from .helpers import smart_embed
+from .helpers import is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -194,7 +194,7 @@ class DevCommands(AdventureMixin):
         if not await self.no_dev_prompt(ctx):
             return
         targets = users or [ctx.author]
-        if not self.is_dev(ctx.author):
+        if not is_dev(ctx.author):
             if rebirth_level > 100:
                 await ctx.send("Rebirth is too high.")
                 await ctx.send_help()

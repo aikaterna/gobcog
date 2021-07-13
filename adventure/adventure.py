@@ -31,11 +31,12 @@ from .cart import AdventureCart
 from .character import CharacterCommands
 from .charsheet import Character, calculate_sp, has_funds
 from .class_abilities import ClassAbilities
+from .converters import ArgParserFailure
 from .defaults import default_global, default_guild, default_user
 from .dev import DevCommands
 from .economy import EconomyCommands
 from .game_session import GameSession
-from .helpers import _get_epoch, _remaining, escape, smart_embed
+from .helpers import _get_epoch, _remaining, escape, is_dev, smart_embed
 from .leaderboards import LeaderboardCommands
 from .loadouts import LoadoutCommands
 from .loot import LootCommands
@@ -539,7 +540,7 @@ class Adventure(
                 ),
             )
 
-        if challenge and not (self.is_dev(ctx.author) or await ctx.bot.is_owner(ctx.author)):
+        if challenge and not (is_dev(ctx.author) or await ctx.bot.is_owner(ctx.author)):
             # Only let the bot owner specify a specific challenge
             challenge = None
 
@@ -633,7 +634,7 @@ class Adventure(
         handled = False
         if hasattr(ctx.command, "on_error"):
             return
-        if isinstance(error, adventure.charsheet.ArgParserFailure):
+        if isinstance(error, ArgParserFailure):
             handled = True
             msg = _("`{command}` {message}").format(
                 message=error.message,

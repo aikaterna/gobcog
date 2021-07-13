@@ -18,7 +18,7 @@ from .bank import bank
 from .charsheet import Character, Item
 from .constants import ORDER
 from .converters import EquipableItemConverter, EquipmentConverter
-from .helpers import smart_embed
+from .helpers import escape, smart_embed
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -73,7 +73,7 @@ class CharacterCommands(AdventureMixin):
                         "{author}, this will cost you at least {offering} {currency_name}.\n"
                         "You currently have {bal}. Do you want to proceed?"
                     ).format(
-                        author=self.escape(ctx.author.display_name),
+                        author=escape(ctx.author.display_name),
                         offering=humanize_number(offering),
                         currency_name=currency_name,
                         bal=humanize_number(bal),
@@ -97,25 +97,25 @@ class CharacterCommands(AdventureMixin):
                     await bank.withdraw_credits(ctx.author, offering)
                     await smart_embed(
                         ctx,
-                        _("{}, your skill points have been reset.").format(self.escape(ctx.author.display_name)),
+                        _("{}, your skill points have been reset.").format(escape(ctx.author.display_name)),
                     )
                 else:
                     await smart_embed(
                         ctx,
-                        _("Don't play games with me, {}.").format(self.escape(ctx.author.display_name)),
+                        _("Don't play games with me, {}.").format(escape(ctx.author.display_name)),
                     )
                 return
 
             if c.skill["pool"] <= 0:
                 return await smart_embed(
                     ctx,
-                    _("{}, you do not have unspent skillpoints.").format(self.escape(ctx.author.display_name)),
+                    _("{}, you do not have unspent skillpoints.").format(escape(ctx.author.display_name)),
                 )
             elif c.skill["pool"] < amount:
                 return await smart_embed(
                     ctx,
                     _("{}, you only have {} unspent skillpoints.").format(
-                        self.escape(ctx.author.display_name), c.skill["pool"]
+                        escape(ctx.author.display_name), c.skill["pool"]
                     ),
                 )
             if spend is None:
@@ -128,7 +128,7 @@ class CharacterCommands(AdventureMixin):
                         "`{prefix}skill attack`, `{prefix}skill charisma` or "
                         "`{prefix}skill intelligence`"
                     ).format(
-                        author=self.escape(ctx.author.display_name),
+                        author=escape(ctx.author.display_name),
                         skillpoints=str(c.skill["pool"]),
                         prefix=ctx.prefix,
                     ),
@@ -157,7 +157,7 @@ class CharacterCommands(AdventureMixin):
                 await smart_embed(
                     ctx,
                     _("{author}, you permanently raised your {spend} value by {amount}.").format(
-                        author=self.escape(ctx.author.display_name), spend=spend, amount=amount
+                        author=escape(ctx.author.display_name), spend=spend, amount=amount
                     ),
                 )
 
@@ -278,7 +278,7 @@ class CharacterCommands(AdventureMixin):
             log.exception("Error with the new character sheet")
             return
         items = c.get_current_equipment(return_place_holder=True)
-        msg = _("{}'s Character Sheet\n\n").format(self.escape(user.display_name))
+        msg = _("{}'s Character Sheet\n\n").format(escape(user.display_name))
         msg_len = len(msg)
         items_names = set()
         table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
@@ -459,25 +459,25 @@ class CharacterCommands(AdventureMixin):
                 for i in item:
                     await c.unequip_item(i)
                 msg = _("{author} unequipped all their items and put them into their backpack.").format(
-                    author=self.escape(ctx.author.display_name)
+                    author=escape(ctx.author.display_name)
                 )
             elif item in slots:
                 current_item = getattr(c, item, None)
                 if not current_item:
                     msg = _("{author}, you do not have an item equipped in the {item} slot.").format(
-                        author=self.escape(ctx.author.display_name), item=item
+                        author=escape(ctx.author.display_name), item=item
                     )
                     return await ctx.send(box(msg, lang="css"))
                 await c.unequip_item(current_item)
                 msg = _("{author} removed the {current_item} and put it into their backpack.").format(
-                    author=self.escape(ctx.author.display_name), current_item=current_item
+                    author=escape(ctx.author.display_name), current_item=current_item
                 )
             else:
                 for current_item in c.get_current_equipment():
                     if item.name.lower() in current_item.name.lower():
                         await c.unequip_item(current_item)
                         msg = _("{author} removed the {current_item} and put it into their backpack.").format(
-                            author=self.escape(ctx.author.display_name), current_item=current_item
+                            author=escape(ctx.author.display_name), current_item=current_item
                         )
                         # We break if this works because unequip
                         # will autmatically remove multiple items
@@ -489,7 +489,7 @@ class CharacterCommands(AdventureMixin):
                 await smart_embed(
                     ctx,
                     _("{author}, you do not have an item matching {item} equipped.").format(
-                        author=self.escape(ctx.author.display_name), item=item
+                        author=escape(ctx.author.display_name), item=item
                     ),
                 )
 

@@ -6,13 +6,13 @@ from typing import Union
 
 import discord
 from discord.ext.commands import CheckFailure
-
 from redbot.core import commands
 from redbot.core.commands import check
 from redbot.core.utils.chat_formatting import escape as _escape
 from redbot.core.utils.common_filters import filter_various_mentions
 
 from .charsheet import Character, Item
+from .constants import DEV_LIST
 
 
 async def _get_epoch(seconds: int):
@@ -114,7 +114,7 @@ def _sell(c: Character, item: Item, *, amount: int = 1):
 
 
 def is_dev(user: Union[discord.User, discord.Member]):
-    return user.id in (208903205982044161, 154497072148643840, 218773382617890828)
+    return user.id in DEV_LIST
 
 
 def check_global_setting_admin():

@@ -15,7 +15,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .helpers import smart_embed
+from .helpers import is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -34,7 +34,7 @@ class LootCommands(AdventureMixin):
 
         Use the box rarity type with the command: normal, rare, epic, legendary, ascended or set.
         """
-        if (not self.is_dev(ctx.author) and number > 100) or number < 1:
+        if (not is_dev(ctx.author) and number > 100) or number < 1:
             return await smart_embed(ctx, _("Nice try :smirk:."))
         if self.in_adventure(ctx):
             return await smart_embed(
@@ -68,7 +68,7 @@ class LootCommands(AdventureMixin):
                         lang="css",
                     )
                 )
-            if c.is_backpack_full(is_dev=self.is_dev(ctx.author)):
+            if c.is_backpack_full(is_dev=is_dev(ctx.author)):
                 await ctx.send(
                     _("**{author}**, your backpack is currently full.").format(
                         author=self.escape(ctx.author.display_name)
@@ -537,7 +537,7 @@ class LootCommands(AdventureMixin):
             await self.config.user(ctx.author).set(await character.to_json(self.config))
         elif self._treasure_controls[react.emoji] == "equip":
             equiplevel = character.equip_level(item)
-            if self.is_dev(ctx.author):
+            if is_dev(ctx.author):
                 equiplevel = 0
             if not character.can_equip(item):
                 await character.add_to_backpack(item)
@@ -565,7 +565,7 @@ class LootCommands(AdventureMixin):
                     lang="css",
                 )
             await open_msg.edit(content=equip_msg)
-            character = await character.equip_item(item, False, self.is_dev(ctx.author))
+            character = await character.equip_item(item, False, is_dev(ctx.author))
             await self.config.user(ctx.author).set(await character.to_json(self.config))
         else:
             await character.add_to_backpack(item)
