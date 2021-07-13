@@ -15,7 +15,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .helpers import is_dev, smart_embed
+from .helpers import escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -57,7 +57,7 @@ class LootCommands(AdventureMixin):
                             "{author} owns {normal} normal, "
                             "{rare} rare, {epic} epic, {leg} legendary, {asc} ascended and {set} set chests."
                         ).format(
-                            author=self.escape(ctx.author.display_name),
+                            author=escape(ctx.author.display_name),
                             normal=str(c.treasure[0]),
                             rare=str(c.treasure[1]),
                             epic=str(c.treasure[2]),
@@ -70,9 +70,7 @@ class LootCommands(AdventureMixin):
                 )
             if c.is_backpack_full(is_dev=is_dev(ctx.author)):
                 await ctx.send(
-                    _("**{author}**, your backpack is currently full.").format(
-                        author=self.escape(ctx.author.display_name)
-                    )
+                    _("**{author}**, your backpack is currently full.").format(author=escape(ctx.author.display_name))
                 )
                 return
             if box_type == "normal":
@@ -97,7 +95,7 @@ class LootCommands(AdventureMixin):
                 await smart_embed(
                     ctx,
                     _("**{author}**, you do not have enough {box} treasure chests to open.").format(
-                        author=self.escape(ctx.author.display_name), box=box_type
+                        author=escape(ctx.author.display_name), box=box_type
                     ),
                 )
             else:
@@ -108,9 +106,7 @@ class LootCommands(AdventureMixin):
                         c.treasure[redux] -= number
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         items = await self._open_chests(ctx, box_type, number, character=c)
-                        msg = _("{}, you've opened the following items:\n\n").format(
-                            self.escape(ctx.author.display_name)
-                        )
+                        msg = _("{}, you've opened the following items:\n\n").format(escape(ctx.author.display_name))
                         msg_len = len(msg)
                         table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
                         table.set_style(BeautifulTable.STYLE_RST)
@@ -224,20 +220,20 @@ class LootCommands(AdventureMixin):
                 return await smart_embed(
                     ctx,
                     ("**{}**, you need to have {} or more rebirths to convert rare treasure chests.").format(
-                        self.escape(ctx.author.display_name), rebirth_rare
+                        escape(ctx.author.display_name), rebirth_rare
                     ),
                 )
             elif box_rarity.lower() == "epic" and c.rebirths < rebirth_epic:
                 return await smart_embed(
                     ctx,
                     ("**{}**, you need to have {} or more rebirths to convert epic treasure chests.").format(
-                        self.escape(ctx.author.display_name), rebirth_epic
+                        escape(ctx.author.display_name), rebirth_epic
                     ),
                 )
             elif c.rebirths < 2:
                 return await smart_embed(
                     ctx,
-                    _("**{c}**, you need to 3 rebirths to use this.").format(c=self.escape(ctx.author.display_name)),
+                    _("**{c}**, you need to 3 rebirths to use this.").format(c=escape(ctx.author.display_name)),
                 )
 
             if box_rarity.lower() == "normal" and c.rebirths >= rebirth_normal:
@@ -255,7 +251,7 @@ class LootCommands(AdventureMixin):
                                 converted=humanize_number(normalcost * amount),
                                 to=humanize_number(1 * amount),
                                 plur=plural,
-                                author=self.escape(ctx.author.display_name),
+                                author=escape(ctx.author.display_name),
                                 normal=c.treasure[0],
                                 rare=c.treasure[1],
                                 epic=c.treasure[2],
@@ -271,7 +267,7 @@ class LootCommands(AdventureMixin):
                     await smart_embed(
                         ctx,
                         _("**{author}**, you do not have {amount} normal treasure chests to convert.").format(
-                            author=self.escape(ctx.author.display_name),
+                            author=escape(ctx.author.display_name),
                             amount=humanize_number(normalcost * amount),
                         ),
                     )
@@ -290,7 +286,7 @@ class LootCommands(AdventureMixin):
                                 converted=humanize_number(rarecost * amount),
                                 to=humanize_number(1 * amount),
                                 plur=plural,
-                                author=self.escape(ctx.author.display_name),
+                                author=escape(ctx.author.display_name),
                                 normal=c.treasure[0],
                                 rare=c.treasure[1],
                                 epic=c.treasure[2],
@@ -324,7 +320,7 @@ class LootCommands(AdventureMixin):
                                 converted=humanize_number(epiccost * amount),
                                 to=humanize_number(1 * amount),
                                 plur=plural,
-                                author=self.escape(ctx.author.display_name),
+                                author=escape(ctx.author.display_name),
                                 normal=c.treasure[0],
                                 rare=c.treasure[1],
                                 epic=c.treasure[2],
@@ -340,7 +336,7 @@ class LootCommands(AdventureMixin):
                     await smart_embed(
                         ctx,
                         _("**{author}**, you do not have {amount} epic treasure chests to convert.").format(
-                            author=self.escape(ctx.author.display_name),
+                            author=escape(ctx.author.display_name),
                             amount=humanize_number(epiccost * amount),
                         ),
                     )
@@ -348,7 +344,7 @@ class LootCommands(AdventureMixin):
                 await smart_embed(
                     ctx,
                     _("**{}**, please select between normal, rare, or epic treasure chests to convert.").format(
-                        self.escape(ctx.author.display_name)
+                        escape(ctx.author.display_name)
                     ),
                 )
 
@@ -373,12 +369,10 @@ class LootCommands(AdventureMixin):
 
     async def _open_chest(self, ctx: commands.Context, user, chest_type, character):
         if hasattr(user, "display_name"):
-            chest_msg = _("{} is opening a treasure chest. What riches lay inside?").format(
-                self.escape(user.display_name)
-            )
+            chest_msg = _("{} is opening a treasure chest. What riches lay inside?").format(escape(user.display_name))
         else:
             chest_msg = _("{user}'s {f} is foraging for treasure. What will it find?").format(
-                user=self.escape(ctx.author.display_name), f=(user[:1] + user[1:])
+                user=escape(ctx.author.display_name), f=(user[:1] + user[1:])
             )
         open_msg = await ctx.send(box(chest_msg, lang="css"))
         await asyncio.sleep(2)
@@ -439,7 +433,7 @@ class LootCommands(AdventureMixin):
         if hasattr(user, "display_name"):
             chest_msg2 = (
                 _("{user} found {item} [{slot}] | Lvl req {lv}.").format(
-                    user=self.escape(user.display_name),
+                    user=escape(user.display_name),
                     item=str(item),
                     slot=slot,
                     lv=character.equip_level(item),
@@ -496,7 +490,7 @@ class LootCommands(AdventureMixin):
                 content=(
                     box(
                         _("{user} put the {item} into their backpack.").format(
-                            user=self.escape(ctx.author.display_name), item=item
+                            user=escape(ctx.author.display_name), item=item
                         ),
                         lang="css",
                     )
@@ -522,7 +516,7 @@ class LootCommands(AdventureMixin):
                 content=(
                     box(
                         _("{user} sold the {item} for {price} {currency_name}.").format(
-                            user=self.escape(ctx.author.display_name),
+                            user=escape(ctx.author.display_name),
                             item=item,
                             price=humanize_number(price),
                             currency_name=currency_name,
@@ -544,20 +538,20 @@ class LootCommands(AdventureMixin):
                 await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                 return await smart_embed(
                     ctx,
-                    f"**{self.escape(ctx.author.display_name)}**, you need to be level "
+                    f"**{escape(ctx.author.display_name)}**, you need to be level "
                     f"`{equiplevel}` to equip this item. I've put it in your backpack.",
                 )
             if not getattr(character, item.slot[0]):
                 equip_msg = box(
                     _("{user} equipped {item} ({slot} slot).").format(
-                        user=self.escape(ctx.author.display_name), item=item, slot=slot
+                        user=escape(ctx.author.display_name), item=item, slot=slot
                     ),
                     lang="css",
                 )
             else:
                 equip_msg = box(
                     _("{user} equipped {item} ({slot} slot) and put {old_item} into their backpack.").format(
-                        user=self.escape(ctx.author.display_name),
+                        user=escape(ctx.author.display_name),
                         item=item,
                         slot=slot,
                         old_item=getattr(character, item.slot[0]),
@@ -573,7 +567,7 @@ class LootCommands(AdventureMixin):
                 content=(
                     box(
                         _("{user} put the {item} into their backpack.").format(
-                            user=self.escape(ctx.author.display_name), item=item
+                            user=escape(ctx.author.display_name), item=item
                         ),
                         lang="css",
                     )
