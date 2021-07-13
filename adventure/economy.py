@@ -82,7 +82,7 @@ class EconomyCommands(AdventureMixin):
             if character.last_currency_check + 600 < time.time() or character.bal > character.last_known_currency:
                 character.last_known_currency = await bank.get_balance(ctx.author)
                 character.last_currency_check = time.time()
-                await self.config.user(ctx.author).set(await character.to_json(self.config))
+                await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
 
     @commands_atransfer.command(name="withdraw", cooldown_after_parsing=True)
     @commands.guild_only()
@@ -313,7 +313,7 @@ class EconomyCommands(AdventureMixin):
             if character.last_currency_check + 600 < time.time() or character.bal > character.last_known_currency:
                 character.last_known_currency = await bank.get_balance(ctx.author)
                 character.last_currency_check = time.time()
-                await self.config.user(ctx.author).set(await character.to_json(self.config))
+                await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
 
     # in economy since it affects the loot economy, might move later
     @commands.group()
@@ -355,7 +355,7 @@ class EconomyCommands(AdventureMixin):
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
             await c.add_to_backpack(item)
-            await self.config.user(user).set(await c.to_json(self.config))
+            await self.config.user(user).set(await c.to_json(ctx, self.config))
         await ctx.send(
             box(
                 _("An item named {item} has been created and placed in {author}'s backpack.").format(
@@ -403,7 +403,7 @@ class EconomyCommands(AdventureMixin):
                     c.treasure[5] += number
                 else:
                     c.treasure[0] += number
-                await self.config.user(user).set(await c.to_json(self.config))
+                await self.config.user(user).set(await c.to_json(ctx, self.config))
                 await ctx.send(
                     box(
                         _(

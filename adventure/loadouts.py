@@ -52,7 +52,7 @@ class LoadoutCommands(AdventureMixin):
                     return
             loadout = await Character.save_loadout(c)
             c.loadouts[name] = loadout
-            await self.config.user(ctx.author).set(await c.to_json(self.config))
+            await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
             await smart_embed(
                 ctx,
                 _("**{author}**, your current equipment has been saved to {name}.").format(
@@ -81,7 +81,7 @@ class LoadoutCommands(AdventureMixin):
                 )
             else:
                 del c.loadouts[name]
-                await self.config.user(ctx.author).set(await c.to_json(self.config))
+                await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 await smart_embed(
                     ctx,
                     _("**{author}**, loadout {name} has been deleted.").format(
@@ -166,7 +166,7 @@ class LoadoutCommands(AdventureMixin):
                 )
             else:
                 c = await c.equip_loadout(name)
-                await self.config.user(ctx.author).set(await c.to_json(self.config))
+                await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 try:
                     c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
                 except Exception as exc:

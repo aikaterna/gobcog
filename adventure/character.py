@@ -92,7 +92,7 @@ class CharacterCommands(AdventureMixin):
                     c.skill["att"] = 0
                     c.skill["cha"] = 0
                     c.skill["int"] = 0
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     await self.config.user(ctx.author).last_skill_reset.set(int(time.time()))
                     await bank.withdraw_credits(ctx.author, offering)
                     await smart_embed(
@@ -153,7 +153,7 @@ class CharacterCommands(AdventureMixin):
                     c.skill["pool"] -= amount
                     c.skill["int"] += amount
                     spend = "intelligence"
-                await self.config.user(ctx.author).set(await c.to_json(self.config))
+                await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 await smart_embed(
                     ctx,
                     _("{author}, you permanently raised your {spend} value by {amount}.").format(
@@ -484,7 +484,7 @@ class CharacterCommands(AdventureMixin):
                         break
             if msg:
                 await ctx.send(box(msg, lang="css"))
-                await self.config.user(ctx.author).set(await c.to_json(self.config))
+                await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
             else:
                 await smart_embed(
                     ctx,

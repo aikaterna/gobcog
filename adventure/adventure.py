@@ -591,7 +591,7 @@ class Adventure(
                     if c.last_currency_check + 600 < time.time() or c.bal > c.last_known_currency:
                         c.last_known_currency = await bank.get_balance(user)
                         c.last_currency_check = time.time()
-                    await self.config.user(user).set(await c.to_json(self.config))
+                    await self.config.user(user).set(await c.to_json(ctx, self.config))
         if ctx.message.id in self._reward_message:
             extramsg = self._reward_message.pop(ctx.message.id)
             if extramsg:
@@ -1218,7 +1218,7 @@ class Adventure(
                         c.adventures.update({special_action: current_val + 1})
                         c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
                         parsed_users.append(user)
-                    await self.config.user(user).set(await c.to_json(self.config))
+                    await self.config.user(user).set(await c.to_json(ctx, self.config))
             attack, diplomacy, magic, run_msg = await self.handle_run(
                 ctx.guild.id, attack, diplomacy, magic, shame=True
             )
@@ -1439,7 +1439,7 @@ class Adventure(
                             await bank.set_balance(user, 0)
                 c.adventures.update({"loses": c.adventures.get("loses", 0) + 1})
                 c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
-                await self.config.user(user).set(await c.to_json(self.config))
+                await self.config.user(user).set(await c.to_json(ctx, self.config))
             loss_list = []
             result_msg += session.miniboss["defeat"]
             if len(repair_list) > 0:
@@ -1790,7 +1790,7 @@ class Adventure(
                     c.adventures.update({special_action: current_val + 1})
                     c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
                     parsed_users.append(user)
-                await self.config.user(user).set(await c.to_json(self.config))
+                await self.config.user(user).set(await c.to_json(ctx, self.config))
 
     async def handle_run(self, guild_id, attack, diplomacy, magic, shame=False):
         runners = []
@@ -2335,7 +2335,7 @@ class Adventure(
                         special = False
             if special is not False:
                 c.treasure = [sum(x) for x in zip(c.treasure, special)]
-            await self.config.user(user).set(await c.to_json(self.config))
+            await self.config.user(user).set(await c.to_json(ctx, self.config))
             return rebirth_text
         finally:
             lock = self.get_lock(user)

@@ -248,7 +248,7 @@ class ClassAbilities(AdventureMixin):
                                 for item in tinker_wep:
                                     del c.backpack[item.name]
                                 if c.heroclass["name"] == "Tinkerer":
-                                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                                     if tinker_wep:
                                         await class_msg.edit(
                                             content=box(
@@ -264,7 +264,7 @@ class ClassAbilities(AdventureMixin):
                                     c.heroclass["pet"] = {}
                                     c.heroclass = classes[clz]
 
-                                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                                     await self._clear_react(class_msg)
                                     await class_msg.edit(
                                         content=box(
@@ -315,7 +315,7 @@ class ClassAbilities(AdventureMixin):
                             )
                         elif c.heroclass["name"] == "Psychic":
                             c.heroclass["cooldown"] = max(300, (900 - max((c.luck - c.total_cha) * 2, 0))) + time.time()
-                        await self.config.user(ctx.author).set(await c.to_json(self.config))
+                        await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         await self._clear_react(class_msg)
                         await class_msg.edit(content=box(now_class_msg, lang="css"))
                         try:
@@ -466,7 +466,7 @@ class ClassAbilities(AdventureMixin):
                             await user_msg.edit(content=f"{pet_msg}\n{pet_msg2}\n{pet_msg3}")
                             c.heroclass["pet"] = pet_list[pet]
                             c.heroclass["catch_cooldown"] = time.time() + cooldown_time
-                            await self.config.user(ctx.author).set(await c.to_json(self.config))
+                            await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         elif roll == 1:
                             bonus = _("But they stepped on a twig and scared it away.")
                             pet_msg3 = box(
@@ -520,7 +520,7 @@ class ClassAbilities(AdventureMixin):
             if c.heroclass["cooldown"] <= time.time():
                 await self._open_chest(ctx, c.heroclass["pet"]["name"], "pet", character=c)
                 c.heroclass["cooldown"] = time.time() + cooldown_time
-                await self.config.user(ctx.author).set(await c.to_json(self.config))
+                await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
             else:
                 cooldown_time = c.heroclass["cooldown"] - time.time()
                 return await smart_embed(
@@ -548,7 +548,7 @@ class ClassAbilities(AdventureMixin):
                 )
             if c.heroclass["pet"]:
                 c.heroclass["pet"] = {}
-                await self.config.user(ctx.author).set(await c.to_json(self.config))
+                await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 return await smart_embed(
                     ctx,
                     _("**{}** released their pet into the wild..").format(self.escape(ctx.author.display_name)),
@@ -586,7 +586,7 @@ class ClassAbilities(AdventureMixin):
                 if c.heroclass["cooldown"] <= time.time():
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time() + cooldown_time
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
 
                     await smart_embed(
                         ctx,
@@ -656,7 +656,7 @@ class ClassAbilities(AdventureMixin):
                 c.heroclass["ability"] = True
                 c.heroclass["cooldown"] = time.time()
                 async with self.get_lock(c.user):
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     if good:
                         await smart_embed(
                             ctx,
@@ -816,7 +816,7 @@ class ClassAbilities(AdventureMixin):
                 if c.heroclass["cooldown"] <= time.time():
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time() + cooldown_time
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     await smart_embed(
                         ctx,
                         _("{skill} **{c}** is starting to froth at the mouth... {skill}").format(
@@ -868,7 +868,7 @@ class ClassAbilities(AdventureMixin):
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time() + cooldown_time
 
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     await smart_embed(
                         ctx,
                         _("{skill} **{c}** is focusing all of their energy... {skill}").format(
@@ -918,7 +918,7 @@ class ClassAbilities(AdventureMixin):
                 if c.heroclass["cooldown"] <= time.time():
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time() + cooldown_time
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     await smart_embed(
                         ctx,
                         _("{skill} **{c}** is whipping up a performance... {skill}").format(
@@ -1114,7 +1114,7 @@ class ClassAbilities(AdventureMixin):
                     c.backpack[x.name].owned -= 1
                     if c.backpack[x.name].owned <= 0:
                         del c.backpack[x.name]
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 # save so the items are eaten up already
                 for item in c.get_current_equipment():
                     if item.rarity == "forged":
@@ -1152,10 +1152,10 @@ class ClassAbilities(AdventureMixin):
                             del c.backpack[item.name]
                         await ctx.send(created_item)
                         c.backpack[newitem.name] = newitem
-                        await self.config.user(ctx.author).set(await c.to_json(self.config))
+                        await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     else:
                         c.heroclass["cooldown"] = time.time() + cooldown_time
-                        await self.config.user(ctx.author).set(await c.to_json(self.config))
+                        await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         mad_forge = box(
                             _("{author}, {newitem} got mad at your rejection and blew itself up.").format(
                                 author=self.escape(ctx.author.display_name), newitem=newitem
@@ -1166,7 +1166,7 @@ class ClassAbilities(AdventureMixin):
                 else:
                     c.heroclass["cooldown"] = time.time() + cooldown_time
                     c.backpack[newitem.name] = newitem
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     forged_item = box(
                         _("{author}, your new {newitem} is lurking in your backpack.").format(
                             author=self.escape(ctx.author.display_name), newitem=newitem

@@ -148,7 +148,7 @@ class BackPackCommands(AdventureMixin):
                     )
                 await ctx.send(equip_msg)
                 c = await c.equip_item(equip, True, is_dev(ctx.author))  # FIXME:
-                await self.config.user(ctx.author).set(await c.to_json(self.config))
+                await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
 
     @_backpack.command(name="eset", cooldown_after_parsing=True)
     @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
@@ -184,7 +184,7 @@ class BackPackCommands(AdventureMixin):
                 )
             for piece in pieces:
                 character = await character.equip_item(piece, from_backpack=True)
-            await self.config.user(ctx.author).set(await character.to_json(self.config))
+            await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
             await smart_embed(
                 ctx,
                 _("I've equipped all pieces of `{set_name}` that you are able to equip.").format(set_name=set_name),
@@ -253,7 +253,7 @@ class BackPackCommands(AdventureMixin):
                         item.owned -= 1
                         if item.owned <= 0:
                             del character.backpack[item.name]
-                        await self.config.user(ctx.author).set(await character.to_json(self.config))
+                        await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                         return await smart_embed(
                             ctx,
                             _("Your attempt at disassembling `{}` failed and it has been destroyed.").format(item.name),
@@ -263,7 +263,7 @@ class BackPackCommands(AdventureMixin):
                         if item.owned <= 0:
                             del character.backpack[item.name]
                         character.treasure[index] += chests
-                        await self.config.user(ctx.author).set(await character.to_json(self.config))
+                        await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                         return await smart_embed(
                             ctx,
                             _("Your attempt at disassembling `{}` was successful and you have received {} {}.").format(
@@ -291,7 +291,7 @@ class BackPackCommands(AdventureMixin):
                                 del character.backpack[item.name]
                             character.treasure[index] += chests
                             success += 1
-            await self.config.user(ctx.author).set(await character.to_json(self.config))
+            await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
             return await smart_embed(
                 ctx,
                 _("You attempted to disassemble multiple items: {succ} were successful and {fail} failed.").format(
@@ -398,7 +398,7 @@ class BackPackCommands(AdventureMixin):
                         await bank.set_balance(ctx.author, e.max_balance)
                 c.last_known_currency = await bank.get_balance(ctx.author)
                 c.last_currency_check = time.time()
-                await self.config.user(ctx.author).set(await c.to_json(self.config))
+                await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
         msg_list = []
         new_msg = _("{author} sold all their{rarity} items for {price}.\n\n{items}").format(
             author=escape(ctx.author.display_name),
@@ -560,7 +560,7 @@ class BackPackCommands(AdventureMixin):
         if msg:
             character.last_known_currency = await bank.get_balance(ctx.author)
             character.last_currency_check = time.time()
-            await self.config.user(ctx.author).set(await character.to_json(self.config))
+            await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
             pages = [page for page in pagify(msg, delims=["\n"], page_length=1900)]
             await BaseMenu(
                 source=SimpleSource(pages),
@@ -721,9 +721,9 @@ class BackPackCommands(AdventureMixin):
                                 else:
                                     item.owned = 1
                                     buy_user.backpack[item.name] = item
-                                await self.config.user(buyer).set(await buy_user.to_json(self.config))
+                                await self.config.user(buyer).set(await buy_user.to_json(ctx, self.config))
                                 item.owned = newly_owned
-                                await self.config.user(ctx.author).set(await c.to_json(self.config))
+                                await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
 
                             await trade_msg.edit(
                                 content=(
@@ -935,7 +935,7 @@ class BackPackCommands(AdventureMixin):
             )
         else:
 
-            await self.config.user(ctx.author).set(await character.to_json(self.config))
+            await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
             return await smart_embed(
                 ctx,
                 _("You attempted to disassemble multiple items: {succ} were successful and {fail} failed.").format(
@@ -1008,7 +1008,7 @@ class BackPackCommands(AdventureMixin):
                         await bank.set_balance(ctx.author, e.max_balance)
                 character.last_known_currency = await bank.get_balance(ctx.author)
                 character.last_currency_check = time.time()
-                await self.config.user(ctx.author).set(await character.to_json(self.config))
+                await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
             if total_price == 0:
                 return await smart_embed(
                     ctx,

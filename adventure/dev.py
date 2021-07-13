@@ -165,7 +165,7 @@ class DevCommands(AdventureMixin):
                 return
             for _loop_counter in range(num):
                 await c.add_to_backpack(await self._genitem(rarity, slot))
-            await self.config.user(ctx.author).set(await c.to_json(self.config))
+            await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
         await ctx.invoke(self._backpack)
 
     @commands.command()
@@ -249,7 +249,7 @@ class DevCommands(AdventureMixin):
                 c.heroclass["cooldown"] = 0
                 if "catch_cooldown" in c.heroclass:
                     c.heroclass["catch_cooldown"] = 0
-                await self.config.user(target).set(await c.to_json(self.config))
+                await self.config.user(target).set(await c.to_json(ctx, self.config))
         await ctx.tick()
 
     @commands.command(name="adventurestats")

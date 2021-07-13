@@ -106,7 +106,7 @@ class LootCommands(AdventureMixin):
                         # atomically save reduced loot count then lock again when saving inside
                         # open chests
                         c.treasure[redux] -= number
-                        await self.config.user(ctx.author).set(await c.to_json(self.config))
+                        await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         items = await self._open_chests(ctx, box_type, number, character=c)
                         msg = _("{}, you've opened the following items:\n\n").format(
                             self.escape(ctx.author.display_name)
@@ -172,7 +172,7 @@ class LootCommands(AdventureMixin):
                     # atomically save reduced loot count then lock again when saving inside
                     # open chests
                     c.treasure[redux] -= 1
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     await self._open_chest(ctx, ctx.author, box_type, character=c)  # returns item and msg
         if msgs:
             await BaseMenu(
@@ -266,7 +266,7 @@ class LootCommands(AdventureMixin):
                             lang="css",
                         )
                     )
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 else:
                     await smart_embed(
                         ctx,
@@ -301,7 +301,7 @@ class LootCommands(AdventureMixin):
                             lang="css",
                         )
                     )
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 else:
                     await smart_embed(
                         ctx,
@@ -335,7 +335,7 @@ class LootCommands(AdventureMixin):
                             lang="css",
                         )
                     )
-                    await self.config.user(ctx.author).set(await c.to_json(self.config))
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 else:
                     await smart_embed(
                         ctx,
@@ -368,7 +368,7 @@ class LootCommands(AdventureMixin):
             else:
                 items[item_name] = item
             await character.add_to_backpack(item)
-        await self.config.user(ctx.author).set(await character.to_json(self.config))
+        await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
         return items
 
     async def _open_chest(self, ctx: commands.Context, user, chest_type, character):
@@ -502,7 +502,7 @@ class LootCommands(AdventureMixin):
                     )
                 )
             )
-            await self.config.user(ctx.author).set(await character.to_json(self.config))
+            await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
             return
         await self._clear_react(open_msg)
         if self._treasure_controls[react.emoji] == "sell":
@@ -534,14 +534,14 @@ class LootCommands(AdventureMixin):
             await self._clear_react(open_msg)
             character.last_known_currency = await bank.get_balance(ctx.author)
             character.last_currency_check = time.time()
-            await self.config.user(ctx.author).set(await character.to_json(self.config))
+            await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
         elif self._treasure_controls[react.emoji] == "equip":
             equiplevel = character.equip_level(item)
             if is_dev(ctx.author):
                 equiplevel = 0
             if not character.can_equip(item):
                 await character.add_to_backpack(item)
-                await self.config.user(ctx.author).set(await character.to_json(self.config))
+                await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                 return await smart_embed(
                     ctx,
                     f"**{self.escape(ctx.author.display_name)}**, you need to be level "
@@ -566,7 +566,7 @@ class LootCommands(AdventureMixin):
                 )
             await open_msg.edit(content=equip_msg)
             character = await character.equip_item(item, False, is_dev(ctx.author))
-            await self.config.user(ctx.author).set(await character.to_json(self.config))
+            await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
         else:
             await character.add_to_backpack(item)
             await open_msg.edit(
@@ -580,4 +580,4 @@ class LootCommands(AdventureMixin):
                 )
             )
             await self._clear_react(open_msg)
-            await self.config.user(ctx.author).set(await character.to_json(self.config))
+            await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))

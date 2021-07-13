@@ -84,7 +84,7 @@ class AdventureCart(AdventureMixin):
                 item = items["item"]
                 item.owned = pred.result
                 await c.add_to_backpack(item, number=pred.result)
-                await self.config.user(user).set(await c.to_json(self.config))
+                await self.config.user(user).set(await c.to_json(ctx, self.config))
                 with contextlib.suppress(discord.HTTPException):
                     await to_delete.delete()
                     await msg.delete()
