@@ -1417,7 +1417,7 @@ class Character:
     async def to_json(self, ctx: commands.Context, config: Config) -> dict:
         backpack = {}
         for (k, v) in self.backpack.items():
-            for (n, i) in v.to_json(ctx).items():
+            for (n, i) in v.to_json().items():
                 backpack[n] = i
 
         if self.heroclass["name"] == "Ranger" and self.heroclass.get("pet"):
@@ -1438,17 +1438,17 @@ class Character:
             "cha": self._cha,
             "treasure": self.treasure,
             "items": {
-                "head": self.head.to_json(ctx) if self.head else {},
-                "neck": self.neck.to_json(ctx) if self.neck else {},
-                "chest": self.chest.to_json(ctx) if self.chest else {},
-                "gloves": self.gloves.to_json(ctx) if self.gloves else {},
-                "belt": self.belt.to_json(ctx) if self.belt else {},
-                "legs": self.legs.to_json(ctx) if self.legs else {},
-                "boots": self.boots.to_json(ctx) if self.boots else {},
-                "left": self.left.to_json(ctx) if self.left else {},
-                "right": self.right.to_json(ctx) if self.right else {},
-                "ring": self.ring.to_json(ctx) if self.ring else {},
-                "charm": self.charm.to_json(ctx) if self.charm else {},
+                "head": self.head.to_json() if self.head else {},
+                "neck": self.neck.to_json() if self.neck else {},
+                "chest": self.chest.to_json() if self.chest else {},
+                "gloves": self.gloves.to_json() if self.gloves else {},
+                "belt": self.belt.to_json() if self.belt else {},
+                "legs": self.legs.to_json() if self.legs else {},
+                "boots": self.boots.to_json() if self.boots else {},
+                "left": self.left.to_json() if self.left else {},
+                "right": self.right.to_json() if self.right else {},
+                "ring": self.ring.to_json() if self.ring else {},
+                "charm": self.charm.to_json() if self.charm else {},
             },
             "backpack": backpack,
             "loadouts": self.loadouts,  # convert to dict of items
