@@ -1279,7 +1279,7 @@ class Character:
             if item:
                 equipped.append(item)
             elif return_place_holder:
-                equipped.append(get_place_holder(slot))
+                equipped.append(get_place_holder(self._ctx, slot))
         return equipped
 
     async def unequip_item(self, item: Item):
@@ -1592,8 +1592,9 @@ async def has_funds(user, cost):
     return await bank.can_spend(user, cost)
 
 
-def get_place_holder(slot_name) -> Item:
+def get_place_holder(ctx, slot_name) -> Item:
     return Item(
+        ctx=ctx,
         name="Empty Slot",
         slot=[slot_name] if slot_name != "two handed" else ["left", "right"],
         rarity="N/A",
