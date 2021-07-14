@@ -17,7 +17,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .helpers import escape, smart_embed
+from .helpers import escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
 
@@ -62,7 +62,7 @@ class Negaverse(AdventureMixin):
         admin_roll = -1
         nega_set = False
         if (roll >= 0 or nega) and await self.bot.is_owner(ctx.author):
-            if not self.is_dev(ctx.author):
+            if not is_dev(ctx.author):
                 if not await self.no_dev_prompt(ctx):
                     ctx.command.reset_cooldown(ctx)
                     return
@@ -155,7 +155,7 @@ class Negaverse(AdventureMixin):
                 ctx.command.reset_cooldown(ctx)
                 return
             roll = random.randint(max(1, min_roll * 2), 50) if admin_roll == -1 else admin_roll
-            if self.is_dev(nega_member):
+            if is_dev(nega_member):
                 roll = -2
             versus = random.randint(10, 60)
             xp_mod = random.randint(1, 10)

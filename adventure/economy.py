@@ -14,7 +14,7 @@ from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
 from .converters import Stats
-from .helpers import has_separated_economy, smart_embed
+from .helpers import escape, has_separated_economy, smart_embed
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -359,7 +359,7 @@ class EconomyCommands(AdventureMixin):
         await ctx.send(
             box(
                 _("An item named {item} has been created and placed in {author}'s backpack.").format(
-                    item=item, author=self.escape(user.display_name)
+                    item=item, author=escape(user.display_name)
                 ),
                 lang="css",
             )
@@ -411,7 +411,7 @@ class EconomyCommands(AdventureMixin):
                             "{rare} rare, {epic} epic, "
                             "{leg} legendary, {asc} ascended and {set} set treasure chests."
                         ).format(
-                            author=self.escape(user.display_name),
+                            author=escape(user.display_name),
                             normal=str(c.treasure[0]),
                             rare=str(c.treasure[1]),
                             epic=str(c.treasure[2]),
