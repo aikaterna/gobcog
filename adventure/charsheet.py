@@ -348,7 +348,7 @@ class Character:
 
     def remove_restrictions(self):
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
-            requirements = self._ctx.PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
+            requirements = self._ctx.cog.PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
             if any(x in self.sets for x in ["The Supreme One", "Ainz Ooal Gown"]) and self.heroclass["pet"]["name"] in [
                 "Albedo",
                 "Rubedo",
@@ -432,10 +432,10 @@ class Character:
                 set_names[item.set] = (parts, count + 1)
         if return_items:
             return returnable_items
-        for set_name in self._ctx.SET_BONUSES:
+        for set_name in self._ctx.cog.SET_BONUSES:
             if set_name in set_names:
                 continue
-            set_names[set_name] = (max(bonus["parts"] for bonus in self._ctx.SET_BONUSES[set_name]), 0)
+            set_names[set_name] = (max(bonus["parts"] for bonus in self._ctx.cog.SET_BONUSES[set_name]), 0)
         return set_names
 
     def get_set_bonus(self):
@@ -463,7 +463,7 @@ class Character:
                 continue
             if item.set and item.set not in set_names:
                 added.append(item.name)
-                set_names.update({item.set: (item.parts, 1, self._ctx.SET_BONUSES.get(item.set, []))})
+                set_names.update({item.set: (item.parts, 1, self._ctx.cog.SET_BONUSES.get(item.set, []))})
             elif item.set and item.set in set_names:
                 added.append(item.name)
                 parts, count, bonus = set_names[item.set]
@@ -472,7 +472,7 @@ class Character:
         partial_sets = [(s, v[1]) for s, v in set_names.items()]
         self.sets = [s for s, _ in full_sets if s]
         for (_set, parts) in partial_sets:
-            set_bonuses = self._ctx.SET_BONUSES.get(_set, [])
+            set_bonuses = self._ctx.cog.SET_BONUSES.get(_set, [])
             for bonus in set_bonuses:
                 required_parts = bonus.get("parts", 100)
                 if required_parts > parts:
