@@ -439,7 +439,9 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _build_loadout_display(self, userdata, loadout=True, rebirths: int = None, index: int = None):
+    async def _build_loadout_display(
+        self, ctx: commands.Context, userdata, loadout=True, rebirths: int = None, index: int = None
+    ):
         raise NotImplementedError()
 
     @abstractmethod
@@ -515,7 +517,7 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _genitem(self, rarity: str = None, slot: str = None):
+    async def _genitem(self, ctx: commands.Context, rarity: str = None, slot: str = None):
         raise NotImplementedError()
 
     @abstractmethod

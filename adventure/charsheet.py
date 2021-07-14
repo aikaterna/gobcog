@@ -40,6 +40,7 @@ class Item:
     """An object to represent an item in the game world."""
 
     def __init__(self, **kwargs):
+        self._ctx: commands.Context = kwargs.pop("ctx")
         if kwargs.get("rarity") in ["event"]:
             self.name: str = kwargs.get("name")
         elif kwargs.get("rarity") in ["set", "legendary", "ascended"]:
@@ -140,7 +141,7 @@ class Item:
         return item
 
     @classmethod
-    def from_json(cls, data: dict):
+    def from_json(cls, ctx: commands.Context, data: dict):
         name = "".join(data.keys())
         data = data[name]
         rarity = "normal"
@@ -197,17 +198,17 @@ class Item:
         parts = data["parts"] if "parts" in data else 0
         # This is used to preserve integrity of Set items
         # db = get_item_db(rarity)
-        # if db and rarity == "set":
-        # item = db.get(name, {})
-        # if item:
-        # parts = item.get("parts", parts)
-        # _set = item.get("set", _set)
-        # att = item.get("att", att)
-        # inter = item.get("int", inter)
-        # cha = item.get("cha", cha)
-        # dex = item.get("dex", dex)
-        # luck = item.get("luck", luck)
-        # slots = item.get("slot", slots)
+        if rarity == "set":
+            item = ctx.cog.TR_GEAR_SET.get(name, {})
+            if item:
+                parts = item.get("parts", parts)
+                _set = item.get("set", _set)
+                att = item.get("att", att)
+                inter = item.get("int", inter)
+                cha = item.get("cha", cha)
+                dex = item.get("dex", dex)
+                luck = item.get("luck", luck)
+                slots = item.get("slot", slots)
         if rarity not in ["legendary", "event", "ascended"]:
             degrade = 3
         if rarity not in ["event"]:
@@ -228,20 +229,20 @@ class Item:
             "parts": parts,
             "degrade": degrade,
         }
-        return cls(**item_data)
+        return cls(**item_data, ctx=ctx)
 
     def to_json(self) -> dict:
         # db = get_item_db(self.rarity)
-        # if db and self.rarity == "set":
-        # updated_set = db.get(self.name)
-        # if updated_set:
-        # self.att = updated_set.get("att", self.att)
-        # self.int = updated_set.get("int", self.int)
-        # self.cha = updated_set.get("cha", self.cha)
-        # self.dex = updated_set.get("dex", self.dex)
-        # self.luck = updated_set.get("luck", self.luck)
-        # self.set = updated_set.get("set", self.set)
-        # self.parts = updated_set.get("parts", self.parts)
+        if self.rarity == "set":
+            updated_set = self._ctx.cog.TR_GEAR_SET.get(self.name)
+            if updated_set:
+                self.att = updated_set.get("att", self.att)
+                self.int = updated_set.get("int", self.int)
+                self.cha = updated_set.get("cha", self.cha)
+                self.dex = updated_set.get("dex", self.dex)
+                self.luck = updated_set.get("luck", self.luck)
+                self.set = updated_set.get("set", self.set)
+                self.parts = updated_set.get("parts", self.parts)
         data = {
             self.name: {
                 "slot": self.slot,
@@ -274,7 +275,7 @@ class Character:
     """An class to represent the characters stats."""
 
     def __init__(self, **kwargs):
-        self._cog: commands.Cog = kwargs.pop("cog")
+        self._ctx: commands.Context = kwargs.pop("ctx")
         self.exp: int = kwargs.pop("exp")
         self.lvl: int = kwargs.pop("lvl")
         self.treasure: List[int] = kwargs.pop("treasure")
@@ -347,7 +348,7 @@ class Character:
 
     def remove_restrictions(self):
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
-            requirements = self._cog.PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
+            requirements = self._ctx.PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
             if any(x in self.sets for x in ["The Supreme One", "Ainz Ooal Gown"]) and self.heroclass["pet"]["name"] in [
                 "Albedo",
                 "Rubedo",
@@ -431,10 +432,10 @@ class Character:
                 set_names[item.set] = (parts, count + 1)
         if return_items:
             return returnable_items
-        for set_name in self._cog.SET_BONUSES:
+        for set_name in self._ctx.SET_BONUSES:
             if set_name in set_names:
                 continue
-            set_names[set_name] = (max(bonus["parts"] for bonus in self._cog.SET_BONUSES[set_name]), 0)
+            set_names[set_name] = (max(bonus["parts"] for bonus in self._ctx.SET_BONUSES[set_name]), 0)
         return set_names
 
     def get_set_bonus(self):
@@ -462,7 +463,7 @@ class Character:
                 continue
             if item.set and item.set not in set_names:
                 added.append(item.name)
-                set_names.update({item.set: (item.parts, 1, self._cog.SET_BONUSES.get(item.set, []))})
+                set_names.update({item.set: (item.parts, 1, self._ctx.SET_BONUSES.get(item.set, []))})
             elif item.set and item.set in set_names:
                 added.append(item.name)
                 parts, count, bonus = set_names[item.set]
@@ -471,7 +472,7 @@ class Character:
         partial_sets = [(s, v[1]) for s, v in set_names.items()]
         self.sets = [s for s, _ in full_sets if s]
         for (_set, parts) in partial_sets:
-            set_bonuses = self._cog.SET_BONUSES.get(_set, [])
+            set_bonuses = self._ctx.SET_BONUSES.get(_set, [])
             for bonus in set_bonuses:
                 required_parts = bonus.get("parts", 100)
                 if required_parts > parts:
@@ -1255,17 +1256,17 @@ class Character:
     async def save_loadout(char):
         """Return a dict of currently equipped items for loadouts."""
         return {
-            "head": char.head.to_json() if char.head else {},
-            "neck": char.neck.to_json() if char.neck else {},
-            "chest": char.chest.to_json() if char.chest else {},
-            "gloves": char.gloves.to_json() if char.gloves else {},
-            "belt": char.belt.to_json() if char.belt else {},
-            "legs": char.legs.to_json() if char.legs else {},
-            "boots": char.boots.to_json() if char.boots else {},
-            "left": char.left.to_json() if char.left else {},
-            "right": char.right.to_json() if char.right else {},
-            "ring": char.ring.to_json() if char.ring else {},
-            "charm": char.charm.to_json() if char.charm else {},
+            "head": char.head.to_json(char._ctx) if char.head else {},
+            "neck": char.neck.to_json(char._ctx) if char.neck else {},
+            "chest": char.chest.to_json(char._ctx) if char.chest else {},
+            "gloves": char.gloves.to_json(char._ctx) if char.gloves else {},
+            "belt": char.belt.to_json(char._ctx) if char.belt else {},
+            "legs": char.legs.to_json(char._ctx) if char.legs else {},
+            "boots": char.boots.to_json(char._ctx) if char.boots else {},
+            "left": char.left.to_json(char._ctx) if char.left else {},
+            "right": char.right.to_json(char._ctx) if char.right else {},
+            "ring": char.ring.to_json(char._ctx) if char.ring else {},
+            "charm": char.charm.to_json(char._ctx) if char.charm else {},
         }
 
     def get_current_equipment(self, return_place_holder: bool = False) -> List[Item]:
@@ -1298,7 +1299,7 @@ class Character:
         """Return a Character object from config and user."""
         data = await config.user(user).all()
         balance = await bank.get_balance(user)
-        equipment = {k: Item.from_json(v) if v else None for k, v in data["items"].items() if k != "backpack"}
+        equipment = {k: Item.from_json(ctx, v) if v else None for k, v in data["items"].items() if k != "backpack"}
         if "int" not in data["skill"]:
             data["skill"]["int"] = 0
             # auto update old users with new skill slot
@@ -1321,10 +1322,10 @@ class Character:
             # helps move old data to new format
             backpack = {}
             for (n, i) in data["items"]["backpack"].items():
-                item = Item.from_json({n: i})
+                item = Item.from_json(ctx, {n: i})
                 backpack[item.name] = item
         else:
-            backpack = {n: Item.from_json({n: i}) for n, i in data["backpack"].items()}
+            backpack = {n: Item.from_json(ctx, {n: i}) for n, i in data["backpack"].items()}
         while len(data["treasure"]) < 5:
             data["treasure"].append(0)
 
@@ -1391,7 +1392,7 @@ class Character:
         hero_data["last_skill_reset"] = data.get("last_skill_reset", 0)
         hero_data["last_known_currency"] = data.get("last_known_currency", 0)
         hero_data["last_currency_check"] = data.get("last_currency_check", 0)
-        return cls(**hero_data, cog=ctx.cog, daily_bonus_mapping=daily_bonus_mapping)
+        return cls(**hero_data, ctx=ctx, daily_bonus_mapping=daily_bonus_mapping)
 
     def get_set_item_count(self):
         count_set = 0
@@ -1408,7 +1409,7 @@ class Character:
             if item.rarity in ["set"]:
                 count_set += 1
         for (k, v) in self.backpack.items():
-            for (n, i) in v.to_json().items():
+            for (n, i) in v.to_json(self._ctx).items():
                 if i.get("rarity", False) in ["set"]:
                     count_set += v.owned
         return count_set
@@ -1416,7 +1417,7 @@ class Character:
     async def to_json(self, ctx: commands.Context, config: Config) -> dict:
         backpack = {}
         for (k, v) in self.backpack.items():
-            for (n, i) in v.to_json().items():
+            for (n, i) in v.to_json(ctx).items():
                 backpack[n] = i
 
         if self.heroclass["name"] == "Ranger" and self.heroclass.get("pet"):
@@ -1437,17 +1438,17 @@ class Character:
             "cha": self._cha,
             "treasure": self.treasure,
             "items": {
-                "head": self.head.to_json() if self.head else {},
-                "neck": self.neck.to_json() if self.neck else {},
-                "chest": self.chest.to_json() if self.chest else {},
-                "gloves": self.gloves.to_json() if self.gloves else {},
-                "belt": self.belt.to_json() if self.belt else {},
-                "legs": self.legs.to_json() if self.legs else {},
-                "boots": self.boots.to_json() if self.boots else {},
-                "left": self.left.to_json() if self.left else {},
-                "right": self.right.to_json() if self.right else {},
-                "ring": self.ring.to_json() if self.ring else {},
-                "charm": self.charm.to_json() if self.charm else {},
+                "head": self.head.to_json(ctx) if self.head else {},
+                "neck": self.neck.to_json(ctx) if self.neck else {},
+                "chest": self.chest.to_json(ctx) if self.chest else {},
+                "gloves": self.gloves.to_json(ctx) if self.gloves else {},
+                "belt": self.belt.to_json(ctx) if self.belt else {},
+                "legs": self.legs.to_json(ctx) if self.legs else {},
+                "boots": self.boots.to_json(ctx) if self.boots else {},
+                "left": self.left.to_json(ctx) if self.left else {},
+                "right": self.right.to_json(ctx) if self.right else {},
+                "ring": self.ring.to_json(ctx) if self.ring else {},
+                "charm": self.charm.to_json(ctx) if self.charm else {},
             },
             "backpack": backpack,
             "loadouts": self.loadouts,  # convert to dict of items
@@ -1479,11 +1480,11 @@ class Character:
             self.charm,
             self.neck,
         ]:
-            if item and item.to_json() not in list(self.pieces_to_keep.values()):
+            if item and item.to_json(self._ctx) not in list(self.pieces_to_keep.values()):
                 await self.add_to_backpack(item)
         forged = 0
         for (k, v) in self.backpack.items():
-            for (n, i) in v.to_json().items():
+            for (n, i) in v.to_json(self._ctx).items():
                 if i.get("degrade", 0) == -1 and i.get("rarity", "common") == "event":
                     backpack[n] = i
                 elif i.get("rarity", False) in ["set", "forged"] or str(v) in [".mirror_shield"]:
@@ -1553,7 +1554,7 @@ class Character:
                 last_slot = slots
                 continue
             item = getattr(self, slots)
-            items_to_keep[slots] = item.to_json() if self.rebirths >= 30 and item and item.set else {}
+            items_to_keep[slots] = item.to_json(self._ctx) if self.rebirths >= 30 and item and item.set else {}
         self.pieces_to_keep = items_to_keep
 
 

@@ -248,7 +248,7 @@ class CharacterCommands(AdventureMixin):
             else:
                 d.update({v["slot"][0]: {k: v}})
 
-        loadout_display = await self._build_loadout_display({"items": d}, loadout=False, rebirths=c.rebirths)
+        loadout_display = await self._build_loadout_display(ctx, {"items": d}, loadout=False, rebirths=c.rebirths)
         set_msg = _("{set_name} Set Pieces\n\n").format(set_name=title_cased_set_name)
         set_msg += loadout_display
         msg_list.append(box(set_msg, lang="css"))
@@ -349,7 +349,9 @@ class CharacterCommands(AdventureMixin):
             timeout=60,
         ).start(ctx=ctx)
 
-    async def _build_loadout_display(self, userdata, loadout=True, rebirths: int = None, index: int = None):
+    async def _build_loadout_display(
+        self, ctx: commands.Context, userdata, loadout=True, rebirths: int = None, index: int = None
+    ):
         table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
         table.set_style(BeautifulTable.STYLE_RST)
         table.columns.header = [
@@ -387,7 +389,7 @@ class CharacterCommands(AdventureMixin):
                 continue
             if not data:
                 continue
-            item = Item.from_json(data, self.TR_GEAR_SET)
+            item = Item.from_json(ctx, data)
             item_name = str(item)
             slots = len(item.slot)
             slot_name = item.slot[0] if slots == 1 else "two handed"

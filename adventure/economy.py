@@ -347,7 +347,7 @@ class EconomyCommands(AdventureMixin):
         if user is None:
             user = ctx.author
         new_item = {item_name: stats}
-        item = Item.from_json(new_item, self.TR_GEAR_SET)
+        item = Item.from_json(ctx, new_item)
         async with self.get_lock(user):
             try:
                 c = await Character.from_json(ctx, self.config, user, self._daily_bonus)

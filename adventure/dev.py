@@ -69,7 +69,7 @@ class DevCommands(AdventureMixin):
             return
         await self._trader(ctx, True)
 
-    async def _genitem(self, rarity: str = None, slot: str = None):
+    async def _genitem(self, ctx: commands.Context, rarity: str = None, slot: str = None):
         """Generate an item."""
         if rarity == "set":
             items = list(self.TR_GEAR_SET.items())
@@ -83,7 +83,7 @@ class DevCommands(AdventureMixin):
                 else items
             )
             item_name, item_data = random.choice(items)
-            return Item.from_json({item_name: item_data}, self.TR_GEAR_SET)
+            return Item.from_json(ctx, {item_name: item_data})
 
         RARE_INDEX = RARITIES.index("rare")
         EPIC_INDEX = RARITIES.index("epic")
@@ -164,7 +164,7 @@ class DevCommands(AdventureMixin):
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
             for _loop_counter in range(num):
-                await c.add_to_backpack(await self._genitem(rarity, slot))
+                await c.add_to_backpack(await self._genitem(ctx, rarity, slot))
             await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
         await ctx.invoke(self._backpack)
 

@@ -1290,5 +1290,5 @@ class ClassAbilities(AdventureMixin):
                 "rarity": "forged",
             }
         }
-        item = Item.from_json(item, self.TR_GEAR_SET)
+        item = Item.from_json(ctx, item)
         return item
