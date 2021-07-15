@@ -15,7 +15,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .helpers import escape, is_dev, smart_embed
+from .helpers import _sell, escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -500,7 +500,7 @@ class LootCommands(AdventureMixin):
             return
         await self._clear_react(open_msg)
         if self._treasure_controls[react.emoji] == "sell":
-            price = self._sell(character, item)
+            price = _sell(character, item)
             price = max(price, 0)
             if price > 0:
                 try:

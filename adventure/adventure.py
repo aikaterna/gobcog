@@ -2497,7 +2497,7 @@ class Adventure(
             else:
                 rarity = "legendary"  # 45% to roll legendary
 
-        return await self._genitem(rarity)
+        return await self._genitem(c._ctx, rarity)
 
     async def _reward(self, ctx: commands.Context, userlist, amount, modif, special):
         daymult = self._daily_bonus.get(str(datetime.today().isoweekday()), 0)

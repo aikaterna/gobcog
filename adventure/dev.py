@@ -129,6 +129,7 @@ class DevCommands(AdventureMixin):
 
         slot_list = [slot] if slot != "two handed" else ["left", "right"]
         return Item(
+            ctx=ctx,
             name=name,
             slot=slot_list,
             rarity=rarity,

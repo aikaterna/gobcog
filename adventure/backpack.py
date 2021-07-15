@@ -27,7 +27,7 @@ from .converters import (
     RarityConverter,
     SlotConverter,
 )
-from .helpers import escape, is_dev, smart_embed
+from .helpers import _sell, escape, is_dev, smart_embed
 from .menus import BackpackMenu, BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -382,7 +382,7 @@ class BackPackCommands(AdventureMixin):
                     old_owned = item.owned
                     async for _loop_counter in AsyncIter(range(0, old_owned), steps=100):
                         item.owned -= 1
-                        item_price += self._sell(c, item)
+                        item_price += _sell(c, item)
                         if item.owned <= 0:
                             del c.backpack[item.name]
                     item_price = max(item_price, 0)
@@ -443,7 +443,7 @@ class BackPackCommands(AdventureMixin):
                 ctx.command.reset_cooldown(ctx)
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
-            price_shown = self._sell(c, item)
+            price_shown = _sell(c, item)
             messages = [
                 _("**{author}**, do you want to sell this item for {price} each? {item}").format(
                     author=escape(ctx.author.display_name),
@@ -992,7 +992,7 @@ class BackPackCommands(AdventureMixin):
                         item_price = 0
                         async for _loop_counter in AsyncIter(range(0, old_owned), steps=100):
                             item.owned -= 1
-                            item_price += self._sell(character, item)
+                            item_price += _sell(character, item)
                             if item.owned <= 0 and item.name in character.backpack:
                                 del character.backpack[item.name]
                         item_price = max(item_price, 0)
