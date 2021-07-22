@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import logging
+import random
 import time
 
 from beautifultable import ALIGN_LEFT, BeautifulTable
@@ -14,7 +15,8 @@ from redbot.core.utils.predicates import ReactionPredicate
 
 from .abc import AdventureMixin
 from .bank import bank
-from .charsheet import Character
+from .charsheet import Character, Item
+from .constants import ORDER, RARITIES
 from .helpers import _sell, escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
@@ -177,6 +179,79 @@ class LootCommands(AdventureMixin):
                 clear_reactions_after=True,
                 timeout=60,
             ).start(ctx=ctx)
+
+    async def _genitem(self, ctx: commands.Context, rarity: str = None, slot: str = None):
+        """Generate an item."""
+        if rarity == "set":
+            items = list(self.TR_GEAR_SET.items())
+            items = (
+                [
+                    i
+                    for i in items
+                    if i[1]["slot"] == [slot] or (slot == "two handed" and i[1]["slot"] == ["left", "right"])
+                ]
+                if slot
+                else items
+            )
+            item_name, item_data = random.choice(items)
+            return Item.from_json(ctx, {item_name: item_data})
+
+        RARE_INDEX = RARITIES.index("rare")
+        EPIC_INDEX = RARITIES.index("epic")
+        PREFIX_CHANCE = {"rare": 0.5, "epic": 0.75, "legendary": 0.9, "ascended": 1.0, "set": 0}
+        SUFFIX_CHANCE = {"epic": 0.5, "legendary": 0.75, "ascended": 0.5}
+
+        if rarity not in RARITIES:
+            rarity = "normal"
+        if slot is None:
+            slot = random.choice(ORDER)
+        name = ""
+        stats = {"att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 0}
+
+        def add_stats(word_stats):
+            """Add stats in word's dict to local stats dict."""
+            for stat in stats.keys():
+                if stat in word_stats:
+                    stats[stat] += word_stats[stat]
+
+        # only rare and above should have prefix with PREFIX_CHANCE
+        if RARITIES.index(rarity) >= RARE_INDEX and random.random() <= PREFIX_CHANCE[rarity]:
+            #  log.debug(f"Prefix %: {PREFIX_CHANCE[rarity]}")
+            prefix, prefix_stats = random.choice(list(self.PREFIXES.items()))
+            name += f"{prefix} "
+            add_stats(prefix_stats)
+
+        material, material_stat = random.choice(list(self.MATERIALS[rarity].items()))
+        name += f"{material} "
+        for stat in stats.keys():
+            stats[stat] += material_stat
+
+        equipment, equipment_stats = random.choice(list(self.EQUIPMENT[slot].items()))
+        name += f"{equipment}"
+        add_stats(equipment_stats)
+
+        # only epic and above should have suffix with SUFFIX_CHANCE
+        if RARITIES.index(rarity) >= EPIC_INDEX and random.random() <= SUFFIX_CHANCE[rarity]:
+            #  log.debug(f"Suffix %: {SUFFIX_CHANCE[rarity]}")
+            suffix, suffix_stats = random.choice(list(self.SUFFIXES.items()))
+            of_keyword = "of" if "the" not in suffix_stats else "of the"
+            name += f" {of_keyword} {suffix}"
+            add_stats(suffix_stats)
+
+        slot_list = [slot] if slot != "two handed" else ["left", "right"]
+        return Item(
+            ctx=ctx,
+            name=name,
+            slot=slot_list,
+            rarity=rarity,
+            att=stats["att"],
+            int=stats["int"],
+            cha=stats["cha"],
+            dex=stats["dex"],
+            luck=stats["luck"],
+            owned=1,
+            parts=1,
+        )
 
     @commands.command()
     @commands.cooldown(rate=1, per=4, type=commands.BucketType.guild)

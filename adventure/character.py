@@ -18,7 +18,7 @@ from .bank import bank
 from .charsheet import Character, Item
 from .constants import ORDER
 from .converters import EquipableItemConverter, EquipmentConverter
-from .helpers import escape, smart_embed
+from .helpers import _title_case, escape, smart_embed
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -173,7 +173,7 @@ class CharacterCommands(AdventureMixin):
                 _("Use this command with one of the following set names: \n{sets}").format(sets=set_list),
             )
 
-        title_cased_set_name = await self._title_case(set_name)
+        title_cased_set_name = await _title_case(set_name)
         sets = self.SET_BONUSES.get(title_cased_set_name)
         if sets is None:
             return await smart_embed(

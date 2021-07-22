@@ -10,7 +10,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 
 from .abc import AdventureMixin
 from .charsheet import Character
-from .helpers import smart_embed
+from .helpers import escape, smart_embed
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -56,7 +56,7 @@ class LoadoutCommands(AdventureMixin):
             await smart_embed(
                 ctx,
                 _("**{author}**, your current equipment has been saved to {name}.").format(
-                    author=self.escape(ctx.author.display_name), name=name
+                    author=escape(ctx.author.display_name), name=name
                 ),
             )
 
@@ -76,7 +76,7 @@ class LoadoutCommands(AdventureMixin):
                 await smart_embed(
                     ctx,
                     _("**{author}**, you don't have a loadout named {name}.").format(
-                        author=self.escape(ctx.author.display_name), name=name
+                        author=escape(ctx.author.display_name), name=name
                     ),
                 )
             else:
@@ -85,7 +85,7 @@ class LoadoutCommands(AdventureMixin):
                 await smart_embed(
                     ctx,
                     _("**{author}**, loadout {name} has been deleted.").format(
-                        author=self.escape(ctx.author.display_name), name=name
+                        author=escape(ctx.author.display_name), name=name
                     ),
                 )
 
@@ -103,15 +103,13 @@ class LoadoutCommands(AdventureMixin):
         if not c.loadouts:
             return await smart_embed(
                 ctx,
-                _("**{author}**, you don't have any loadouts saved.").format(
-                    author=self.escape(ctx.author.display_name)
-                ),
+                _("**{author}**, you don't have any loadouts saved.").format(author=escape(ctx.author.display_name)),
             )
         if name is not None and name.lower() not in c.loadouts:
             return await smart_embed(
                 ctx,
                 _("**{author}**, you don't have a loadout named {name}.").format(
-                    author=self.escape(ctx.author.display_name), name=name
+                    author=escape(ctx.author.display_name), name=name
                 ),
             )
         else:
@@ -123,7 +121,7 @@ class LoadoutCommands(AdventureMixin):
                     index = count
                 stats = await self._build_loadout_display({"items": loadout}, rebirths=c.rebirths, index=count + 1)
                 msg = _("{name} Loadout for {author}\n\n{stats}").format(
-                    name=l_name, author=self.escape(ctx.author.display_name), stats=stats
+                    name=l_name, author=escape(ctx.author.display_name), stats=stats
                 )
                 msg_list.append(box(msg, lang="css"))
                 count += 1
@@ -161,7 +159,7 @@ class LoadoutCommands(AdventureMixin):
                 return await smart_embed(
                     ctx,
                     _("**{author}**, you don't have a loadout named {name}.").format(
-                        author=self.escape(ctx.author.display_name), name=name
+                        author=escape(ctx.author.display_name), name=name
                     ),
                 )
             else:
@@ -182,7 +180,7 @@ class LoadoutCommands(AdventureMixin):
                         "Dexterity: {stat_dex}, "
                         "Luck: {stat_luck}."
                     ).format(
-                        author=self.escape(ctx.author.display_name),
+                        author=escape(ctx.author.display_name),
                         stat_att=c.get_stat_value("att")[0],
                         skill_att=c.skill["att"],
                         stat_int=c.get_stat_value("int")[0],

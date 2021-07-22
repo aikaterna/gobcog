@@ -15,7 +15,7 @@ from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .helpers import smart_embed
+from .helpers import escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
 
@@ -71,14 +71,12 @@ class AdventureCart(AdventureMixin):
                 except Exception as exc:
                     log.exception("Error with the new character sheet", exc_info=exc)
                     return
-                if c.is_backpack_full(is_dev=self.is_dev(user)):
+                if c.is_backpack_full(is_dev=is_dev(user)):
                     with contextlib.suppress(discord.HTTPException):
                         await to_delete.delete()
                         await msg.delete()
                     await channel.send(
-                        _("**{author}**, Your backpack is currently full.").format(
-                            author=self.escape(user.display_name)
-                        )
+                        _("**{author}**, Your backpack is currently full.").format(author=escape(user.display_name))
                     )
                     return
                 item = items["item"]
@@ -94,7 +92,7 @@ class AdventureCart(AdventureMixin):
                             "{author} bought {p_result} {item_name} for "
                             "{item_price} {currency_name} and put it into their backpack."
                         ).format(
-                            author=self.escape(user.display_name),
+                            author=escape(user.display_name),
                             p_result=pred.result,
                             item_name=item.formatted_name,
                             item_price=humanize_number(items["price"] * pred.result),
@@ -110,7 +108,7 @@ class AdventureCart(AdventureMixin):
                 await msg.delete()
             await channel.send(
                 _("**{author}**, you do not have enough {currency_name}.").format(
-                    author=self.escape(user.display_name), currency_name=currency_name
+                    author=escape(user.display_name), currency_name=currency_name
                 )
             )
             self._current_traders[guild.id]["users"].remove(user)
