@@ -625,7 +625,7 @@ class Character:
                 f"{int_space}{inter:<3} |"
                 f"{dex_space}{dex:<3} |"
                 f"{luck_space}{luck:<3} )"
-                f" | Lvl { self.self.equip_level(item):<5}"
+                f" | Lvl { self.equip_level(item):<5}"
                 f"{owned}{settext}"
             )
 
