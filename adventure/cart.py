@@ -49,6 +49,7 @@ class AdventureCart(AdventureMixin):
             _("{user}, how many {item} would you like to buy?").format(user=user.mention, item=item_data)
         )
         ctx = await self.bot.get_context(reaction.message)
+        ctx.cog = self
         ctx.author = user
         pred = MessagePredicate.valid_int(ctx)
         try:

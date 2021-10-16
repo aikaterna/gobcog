@@ -1016,6 +1016,7 @@ class ClassAbilities(AdventureMixin):
                             timeout=30,
                         )
                         new_ctx = await self.bot.get_context(reply)
+                        ctx.cog = self
                         if reply.content.lower() in ["cancel", "exit"]:
                             return await smart_embed(ctx, _("Forging process has been cancelled."))
                         with contextlib.suppress(BadArgument):
@@ -1067,6 +1068,7 @@ class ClassAbilities(AdventureMixin):
                         if reply.content.lower() in ["cancel", "exit"]:
                             return await smart_embed(ctx, _("Forging process has been cancelled."))
                         new_ctx = await self.bot.get_context(reply)
+                        ctx.cog = self
                         with contextlib.suppress(BadArgument):
                             item = None
                             item = await ItemConverter().convert(new_ctx, reply.content)
