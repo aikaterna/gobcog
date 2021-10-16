@@ -2434,7 +2434,7 @@ class Adventure(
                 except KeyError:
                     self._last_trade[message.guild.id] = 0
                 ctx = await self.bot.get_context(message)
-                ctx.cog = self
+                ctx.command = self.makecart
                 await asyncio.sleep(5)
                 await self._trader(ctx)
 
