@@ -1038,7 +1038,7 @@ class Adventure(
         await self.bot.wait_until_ready()
         if user.bot:
             return
-        emojis = ReactionPredicate.NUMBER_EMOJIS + self._adventure_actions
+        emojis = list(ReactionPredicate.NUMBER_EMOJIS) + self._adventure_actions
         if str(reaction.emoji) not in emojis:
             return
         if self.red_340_or_newer:
