@@ -335,7 +335,7 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def backpack_autoequip(self, ctx: commands.Context, *, spend: str):
+    async def backpack_autoequip(self, ctx: commands.Context, *, attribute: str):
         raise NotImplementedError()
 
     @abstractmethod
@@ -457,7 +457,7 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def autoequip(self, ctx: commands.Context, *, spend: str):
+    async def autoequip(self, ctx: commands.Context, *, attribute: str):
         raise NotImplementedError()
 
     #######################################################################

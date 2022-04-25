@@ -101,7 +101,7 @@ class BackPackCommands(AdventureMixin):
             ).start(ctx=ctx)
 
     @_backpack.command(name="autoequip")
-    async def backpack_autoequip(self, ctx: commands.Context, *, spend: str):
+    async def backpack_autoequip(self, ctx: commands.Context, *, attribute: str):
         """Autoequip all matching items from your backpack."""
         if self.in_adventure(ctx):
             return await smart_embed(
@@ -115,22 +115,24 @@ class BackPackCommands(AdventureMixin):
         dex = ["dexterity", "dex"]
         luc = ["luck", "luc"]
 
-        if spend not in att + cha + intel + dex + luc:
-            return await smart_embed(ctx, _("Don't try to fool me! There is no such thing as {}.").format(spend))
-        elif spend in att:
+        if attribute in att:
             stat = "att"
-        elif spend in cha:
+        elif attribute in cha:
             stat = "cha"
-        elif spend in intel:
+        elif attribute in intel:
             stat = "int"
-        elif spend in dex:
+        elif attribute in dex:
             stat = "dex"
-        else:
+        elif attribute in luc:
             stat = "luck"
+        else:
+            stat = "total"
 
         def get_item_attribute(item: Item, stat: str) -> int:
             if item is None:
                 return 0
+            elif stat == "total":
+                return item.total_stats
             else:
                 item_json = item.to_json()
                 return item_json[item.name][stat]
