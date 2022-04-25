@@ -511,7 +511,14 @@ class CharacterCommands(AdventureMixin):
 
     @commands.command()
     async def autoequip(self, ctx: commands.Context, *, attribute: Optional[str] = None):
-        """This equips an item from your backpack."""
+        """
+        This auto-equips all matching items from your backpack.
+
+        Usage: `[p]autoequip [attribute]`
+
+        `attribute` is optional. It may be one of [att, cha, int, dex, luc].
+        If not set all items with the highest total stats will be equipped.
+        """
         if self.in_adventure(ctx):
             return await smart_embed(
                 ctx,
