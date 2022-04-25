@@ -128,6 +128,15 @@ class BackPackCommands(AdventureMixin):
         else:
             stat = "luck"
 
+        def get_item_attribute(item: Item, stat: str) -> int:
+            if item is None:
+                return 0
+            else:
+                item_json = item.to_json()
+                return item_json[item.name][stat]
+
+        to_equip = {}
+
         async with self.get_lock(ctx.author):
             try:
                 c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
@@ -135,15 +144,32 @@ class BackPackCommands(AdventureMixin):
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
 
-            for slot in ORDER:
-                slot_items = c.get_sorted_backpack(c.backpack, slot, None, stat)
+            async for slot in AsyncIter(ORDER, steps=100):
+                slot_bpk = await c.get_sorted_backpack(c.backpack, slot, None, stat)
 
-                for item in slot_items:
+                to_equip[slot] = None
+
+                if len(slot_bpk) == 0:
+                    continue
+
+                async for item_name, item in AsyncIter(slot_bpk[0], steps=100):
                     if not c.can_equip(item):
                         continue
 
-                    await ctx.invoke(self.backpack_equip, equip_item=item)
+                    to_equip[slot] = item
                     break
+
+        if get_item_attribute(to_equip["left"], stat) + get_item_attribute(
+            to_equip["right"], stat
+        ) > get_item_attribute(to_equip["two handed"], stat):
+            to_equip["two handed"] = None
+        else:
+            to_equip["left"] = None
+            to_equip["right"] = None
+
+        async for key in AsyncIter(to_equip, steps=100):
+            if to_equip[key] is not None:
+                await ctx.invoke(self.backpack_equip, equip_item=to_equip[key])
 
     @_backpack.command(name="equip")
     async def backpack_equip(self, ctx: commands.Context, *, equip_item: EquipableItemConverter):
