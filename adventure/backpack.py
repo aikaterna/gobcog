@@ -57,6 +57,7 @@ class BackPackCommands(AdventureMixin):
         Equip:       `[p]backpack equip item_name`
         Sell All:    `[p]backpack sellall rarity slot`
         Disassemble: `[p]backpack disassemble item_name`
+        Autoequip:   `[p]backpack autoequip attribute_name`
 
         Note: An item **degrade** level is how many rebirths it will last, before it is broken down.
         """
@@ -98,6 +99,51 @@ class BackPackCommands(AdventureMixin):
                 clear_reactions_after=True,
                 timeout=60,
             ).start(ctx=ctx)
+
+    @_backpack.command(name="autoequip")
+    async def backpack_autoequip(self, ctx: commands.Context, *, spend: str):
+        """Autoequip all matching items from your backpack."""
+        if self.in_adventure(ctx):
+            return await smart_embed(
+                ctx,
+                _("You tried to autoequip an item but the monster ahead of you commands your attention."),
+            )
+
+        att = ["attack", "att", "atk"]
+        cha = ["diplomacy", "charisma", "cha", "dipl"]
+        intel = ["intelligence", "intellect", "int", "magic"]
+        dex = ["dexterity", "dex"]
+        luc = ["luck", "luc"]
+
+        if spend not in att + cha + intel + dex + luc:
+            return await smart_embed(ctx, _("Don't try to fool me! There is no such thing as {}.").format(spend))
+        elif spend in att:
+            stat = "att"
+        elif spend in cha:
+            stat = "cha"
+        elif spend in intel:
+            stat = "int"
+        elif spend in dex:
+            stat = "dex"
+        else:
+            stat = "luck"
+
+        async with self.get_lock(ctx.author):
+            try:
+                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+
+            for slot in ORDER:
+                slot_items = c.get_sorted_backpack(c.backpack, slot, None, stat)
+
+                for item in slot_items:
+                    if not c.can_equip(item):
+                        continue
+
+                    await ctx.invoke(self.backpack_equip, equip_item=item)
+                    break
 
     @_backpack.command(name="equip")
     async def backpack_equip(self, ctx: commands.Context, *, equip_item: EquipableItemConverter):
