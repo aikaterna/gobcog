@@ -335,6 +335,10 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    async def backpack_autoequip(self, ctx: commands.Context, *, spend: str):
+        raise NotImplementedError()
+
+    @abstractmethod
     async def backpack_eset(self, ctx: commands.Context, *, set_name: str):
         raise NotImplementedError()
 
@@ -450,6 +454,10 @@ class AdventureMixin(ABC):
 
     @abstractmethod
     async def equip(self, ctx: commands.Context, *, item: EquipableItemConverter):
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def autoequip(self, ctx: commands.Context, *, spend: str):
         raise NotImplementedError()
 
     #######################################################################

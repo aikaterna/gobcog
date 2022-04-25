@@ -507,3 +507,16 @@ class CharacterCommands(AdventureMixin):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
 
         await ctx.invoke(self.backpack_equip, equip_item=item)
+
+    @commands.command()
+    async def autoequip(self, ctx: commands.Context, *, spend: str):
+        """This equips an item from your backpack."""
+        if self.in_adventure(ctx):
+            return await smart_embed(
+                ctx,
+                _("You tried to autoequip your items but the monster ahead nearly decapitated you."),
+            )
+        if not await self.allow_in_dm(ctx):
+            return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
+
+        await ctx.invoke(self.backpack_autoequip, spend=spend)
