@@ -666,7 +666,7 @@ class Character:
         tmp = {}
 
         def _sort(item):
-            if stat is not None and stat in ["att", "cha", "int", "dex", "luck"]:
+            if stat is not None and stat in ["att", "cha", "int", "dex", "luck", "total"]:
                 if stat == "att":
                     return item[1].att
                 elif stat == "cha":
@@ -675,8 +675,10 @@ class Character:
                     return item[1].int
                 elif stat == "dex":
                     return item[1].dex
-                else:
+                elif stat == "luck":
                     return item[1].luck
+                else:
+                    return item[1].total_stats
             else:
                 return self.get_rarity_index(item[1].rarity), item[1].lvl, item[1].total_stats
 
