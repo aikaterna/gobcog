@@ -107,7 +107,7 @@ class BackPackCommands(AdventureMixin):
 
         Usage: `[p]backpack autoequip [attribute]`
 
-        `attribute` is optional. It may be one of [att, cha, int, dex, luc].
+        `attribute` is optional. It may be one of `att`, `cha`, `int`, `dex`, `luc`.
         If not set all items with the highest total stats will be equipped.
         """
         if self.in_adventure(ctx):
