@@ -3,6 +3,7 @@ import asyncio
 import logging
 import time
 from operator import itemgetter
+from typing import Optional
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
@@ -509,7 +510,7 @@ class CharacterCommands(AdventureMixin):
         await ctx.invoke(self.backpack_equip, equip_item=item)
 
     @commands.command()
-    async def autoequip(self, ctx: commands.Context, *, attribute: str):
+    async def autoequip(self, ctx: commands.Context, *, attribute: Optional[str] = None):
         """This equips an item from your backpack."""
         if self.in_adventure(ctx):
             return await smart_embed(
