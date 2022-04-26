@@ -512,7 +512,9 @@ class Character:
                     ]:
                         class_desc += _("\n\n- Current servant: [{}]").format(self.heroclass["pet"]["name"])
                     else:
-                        class_desc += _("\n\n- Current pet: [{}]").format(self.heroclass["pet"]["name"])
+                        class_desc += _("\n\n- Current pet: [{pet_name} (bonus: {pet_bonus}%)]").format(
+                            pet_name=self.heroclass["pet"]["name"], pet_bonus=(self.heroclass["pet"]["bonus"] - 1 * 100)
+                        )
         else:
             class_desc = _("Hero.")
 
