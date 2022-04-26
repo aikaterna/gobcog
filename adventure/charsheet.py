@@ -572,6 +572,9 @@ class Character:
             bptotal=self.get_backpack_slots(),
         )
 
+    def get_equipped_item(self, slot: str) -> Item:
+        return getattr(self, slot)
+
     def get_equipment(self):
         """Define a secondary like __str__ to show our equipment."""
         form_string = ""

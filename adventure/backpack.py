@@ -167,12 +167,17 @@ class BackPackCommands(AdventureMixin):
                     if not c.can_equip(item):
                         continue
 
+                    if get_item_attribute(item, stat) < get_item_attribute(c.get_equipped_item(slot), stat):
+                        continue
+
                     to_equip[slot] = item
                     break
 
-        if get_item_attribute(to_equip["left"], stat) + get_item_attribute(
-            to_equip["right"], stat
-        ) > get_item_attribute(to_equip["two handed"], stat):
+        left_stat = get_item_attribute(to_equip["left"], stat)
+        right_stat = get_item_attribute(to_equip["right"], stat)
+        two_handed_stat = get_item_attribute(to_equip["two handed"], stat)
+
+        if (left_stat + right_stat) > two_handed_stat:
             to_equip["two handed"] = None
         else:
             to_equip["left"] = None
