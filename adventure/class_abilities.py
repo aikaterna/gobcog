@@ -461,7 +461,9 @@ class ClassAbilities(AdventureMixin):
                                 )
                             else:
                                 pet_msg3 = box(
-                                    _("{bonus}\nThey successfully tamed the {pet}.").format(bonus=bonus, pet=pet),
+                                    _("{bonus}\nThey successfully tamed the {pet} (bonus: {pet_bonus}%).").format(
+                                        bonus=bonus, pet=pet, pet_bonus=(pet_list[pet]["bonus"] - 1 * 100)
+                                    ),
                                     lang="css",
                                 )
                             await user_msg.edit(content=f"{pet_msg}\n{pet_msg2}\n{pet_msg3}")
