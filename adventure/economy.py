@@ -272,7 +272,7 @@ class EconomyCommands(AdventureMixin):
 
     @commands.command(name="apayday", cooldown_after_parsing=True)
     @has_separated_economy()
-    @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
+    @commands.cooldown(rate=1, per=3600, type=commands.BucketType.user)
     async def commands_apayday(self, ctx: commands.Context):
         """Get some free gold."""
         author = ctx.author
