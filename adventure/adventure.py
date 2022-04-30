@@ -797,6 +797,12 @@ class Adventure(
             failed = True
 
         transcended_chance = random.randint(0, 10)
+        transcended_match = []
+        transcended_0 = [5]
+        transcended_25 = [5,10]
+        transcended_50 = [0,5,10]
+        transcended_75 = [0,3,6,9]
+
         theme = await self.config.theme()
         extra_monsters = await self.config.themes.all()
         extra_monsters = extra_monsters.get(theme, {}).get("monsters", {})
@@ -804,7 +810,16 @@ class Adventure(
         monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
         transcended = False
         if not failed:
-            if transcended_chance == 5:
+            if c.rebirths >= 25:
+                transcended_match = transcended_25
+            elif c.rebirths >= 50:
+                transcended_match = transcended_50
+            elif c.rebirths >= 75:
+                transcended_match = transcended_75
+            else:
+                transcended_match = transcended_0
+
+            if transcended_chance in transcended_match:
                 monster_stats = 2 + max((c.rebirths // 10) - 1, 0)
                 transcended = True
             elif c.rebirths >= 10:
@@ -862,8 +877,20 @@ class Adventure(
             elif attribute == " possessed":
                 self.bot.dispatch("adventure_possessed", ctx)
         else:
-            timer = 60 * 3
             no_monster = random.randint(0, 100) == 25
+            timer = 60 * 1
+            if no_monster == False:
+                if monster_roster[challenge]["boss"]:
+                    timer = 60 * 3
+                    self.bot.dispatch("adventure_boss", ctx)
+                    text = box(_("\n [Adventurer Alarm!]"), lang="css")
+                elif monster_roster[challenge]["miniboss"]:
+                    timer = 60 * 2
+                    self.bot.dispatch("adventure_miniboss", ctx)
+                    text = box(_("\n [Adventurer Warning!]"), lang="css")
+                elif "Transcended" in new_challenge:
+                    self.bot.dispatch("adventure_transcended", ctx)
+                    text = box(_("\n [Transcension Warning!]"), lang="css")
         self._sessions[ctx.guild.id] = GameSession(
             ctx=ctx,
             challenge=new_challenge if not no_monster else None,
@@ -966,19 +993,60 @@ class Adventure(
             embed = discord.Embed(colour=discord.Colour.blurple())
             use_embeds = await self.config.guild(ctx.guild).embed() and ctx.channel.permissions_for(ctx.me).embed_links
             timeout = 60 * 3
+            dragon_text = _(
+                "but **a monstrous beast** "
+                "just landed in front of you glaring! \n\n"
+                "What will you do and will other heroes be brave enough to help you?\n"
+                "Heroes have 3 minutes to participate via reaction:"
+                "\n\nReact with: {reactions}"
+            ).format(
+                chall=session.challenge,
+                reactions=_("**Fight** - **Spell** - **Talk** - **Pray** - **Run**"),
+            )
+            basilisk_text = _(
+                "but **a monstrous beast** stepped out looking around. \n\n"
+                "What will you do and will other heroes help your cause?\n"
+                "Heroes have 2 minutes to participate via reaction:"
+                "\n\nReact with: {reactions}"
+            ).format(
+                reactions=_("**Fight** - **Spell** - **Talk** - **Pray** - **Run**"),
+            )
             obscured_text = _(
                 "What will you do and will other heroes help your cause?\n"
                 "Heroes have {time} minutes to participate via reaction:"
                 "\n\nReact with: {reactions}"
             ).format(
                 reactions=_("**Fight** - **Spell** - **Talk** - **Pray** - **Run**"),
-                time=timeout // 60,
             )
-            if use_embeds:
-                embed.description = f"{adventure_msg}\n{obscured_text}"
-                adventure_msg = await ctx.send(embed=embed)
+        embed = discord.Embed(colour=discord.Colour.blurple())
+            use_embeds = await self.config.guild(ctx.guild).embed() and ctx.channel.permissions_for(ctx.me).embed_links
+            if session.boss:
+                if use_embeds:
+                    embed.description = f"{adventure_msg}\n{dragon_text}"
+                    embed.colour = discord.Colour.dark_red()
+                    if session.monster["image"]:
+                        embed.set_image(url=session.monster["image"])
+                    adventure_msg = await ctx.send(embed=embed)
+                else:
+                    adventure_msg = await ctx.send(f"{adventure_msg}\n{dragon_text}")
+                timeout = 60 * 3
+            elif session.miniboss:
+                if use_embeds:
+                    embed.description = f"{adventure_msg}\n{basilisk_text}"
+                    embed.colour = discord.Colour.dark_red()
+                    if session.monster["image"]:
+                        embed.set_image(url=session.monster["image"])
+                    adventure_msg = await ctx.send(embed=embed)
+                else:
+                    adventure_msg = await ctx.send(f"{adventure_msg}\n{basilisk_text}")
+                timeout = 60 * 2
             else:
-                adventure_msg = await ctx.send(f"{adventure_msg}\n{obscured_text}")
+                if use_embeds:
+                    embed.description = f"{adventure_msg}\n{obscured_text}"
+                    adventure_msg = await ctx.send(embed=embed)
+                else:
+                    adventure_msg = await ctx.send(f"{adventure_msg}\n{obscured_text}")
+                timeout = 60 * 1     
 
         session.message_id = adventure_msg.id
         session.message = adventure_msg
