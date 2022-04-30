@@ -990,9 +990,6 @@ class Adventure(
                     adventure_msg = await ctx.send(f"{adventure_msg}\n{normal_text}")
                 timeout = 60 * 2
         else:
-            embed = discord.Embed(colour=discord.Colour.blurple())
-            use_embeds = await self.config.guild(ctx.guild).embed() and ctx.channel.permissions_for(ctx.me).embed_links
-            timeout = 60 * 3
             dragon_text = _(
                 "but **a monstrous beast** "
                 "just landed in front of you glaring! \n\n"
