@@ -1019,7 +1019,7 @@ class Adventure(
                 reactions=_("**Fight** - **Spell** - **Talk** - **Pray** - **Run**"),
             )
         embed = discord.Embed(colour=discord.Colour.blurple())
-            use_embeds = await self.config.guild(ctx.guild).embed() and ctx.channel.permissions_for(ctx.me).embed_links
+        use_embeds = await self.config.guild(ctx.guild).embed() and ctx.channel.permissions_for(ctx.me).embed_links
             if session.boss:
                 if use_embeds:
                     embed.description = f"{adventure_msg}\n{dragon_text}"
