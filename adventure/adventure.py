@@ -842,7 +842,7 @@ class Adventure(
             elif c.rebirths >= 20:
                 easy_mode = bool(random.getrandbits(1))
             else:
-                easy_mode = True
+                easy_mode = False
 
         monster_roster, monster_stats, transcended = await self.update_monster_roster(ctx)
         if not challenge or challenge not in monster_roster:
