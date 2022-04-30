@@ -1020,33 +1020,33 @@ class Adventure(
             )
         embed = discord.Embed(colour=discord.Colour.blurple())
         use_embeds = await self.config.guild(ctx.guild).embed() and ctx.channel.permissions_for(ctx.me).embed_links
-            if session.boss:
-                if use_embeds:
-                    embed.description = f"{adventure_msg}\n{dragon_text}"
-                    embed.colour = discord.Colour.dark_red()
-                    if session.monster["image"]:
-                        embed.set_image(url=session.monster["image"])
-                    adventure_msg = await ctx.send(embed=embed)
-                else:
-                    adventure_msg = await ctx.send(f"{adventure_msg}\n{dragon_text}")
-                timeout = 60 * 3
-            elif session.miniboss:
-                if use_embeds:
-                    embed.description = f"{adventure_msg}\n{basilisk_text}"
-                    embed.colour = discord.Colour.dark_red()
-                    if session.monster["image"]:
-                        embed.set_image(url=session.monster["image"])
-                    adventure_msg = await ctx.send(embed=embed)
-                else:
-                    adventure_msg = await ctx.send(f"{adventure_msg}\n{basilisk_text}")
-                timeout = 60 * 2
+        if session.boss:
+            if use_embeds:
+                embed.description = f"{adventure_msg}\n{dragon_text}"
+                embed.colour = discord.Colour.dark_red()
+                if session.monster["image"]:
+                    embed.set_image(url=session.monster["image"])
+                adventure_msg = await ctx.send(embed=embed)
             else:
-                if use_embeds:
-                    embed.description = f"{adventure_msg}\n{obscured_text}"
-                    adventure_msg = await ctx.send(embed=embed)
-                else:
-                    adventure_msg = await ctx.send(f"{adventure_msg}\n{obscured_text}")
-                timeout = 60 * 1     
+                adventure_msg = await ctx.send(f"{adventure_msg}\n{dragon_text}")
+            timeout = 60 * 3
+        elif session.miniboss:
+            if use_embeds:
+                embed.description = f"{adventure_msg}\n{basilisk_text}"
+                embed.colour = discord.Colour.dark_red()
+                if session.monster["image"]:
+                    embed.set_image(url=session.monster["image"])
+                adventure_msg = await ctx.send(embed=embed)
+            else:
+                adventure_msg = await ctx.send(f"{adventure_msg}\n{basilisk_text}")
+            timeout = 60 * 2
+        else:
+            if use_embeds:
+                embed.description = f"{adventure_msg}\n{obscured_text}"
+                adventure_msg = await ctx.send(embed=embed)
+            else:
+                adventure_msg = await ctx.send(f"{adventure_msg}\n{obscured_text}")
+            timeout = 60 * 1     
 
         session.message_id = adventure_msg.id
         session.message = adventure_msg
