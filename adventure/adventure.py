@@ -836,13 +836,13 @@ class Adventure(
         text = ""
         c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
         easy_mode = await self.config.easy_mode()
-        if not easy_mode:
-            if c.rebirths >= 30:
-                easy_mode = False
-            elif c.rebirths >= 20:
-                easy_mode = bool(random.getrandbits(1))
-            else:
-                easy_mode = False
+        #if not easy_mode:
+        #    if c.rebirths >= 30:
+        #        easy_mode = False
+        #    elif c.rebirths >= 20:
+        #        easy_mode = bool(random.getrandbits(1))
+        #    else:
+        #        easy_mode = False
 
         monster_roster, monster_stats, transcended = await self.update_monster_roster(ctx)
         if not challenge or challenge not in monster_roster:
@@ -877,8 +877,8 @@ class Adventure(
             elif attribute == " possessed":
                 self.bot.dispatch("adventure_possessed", ctx)
         else:
-            no_monster = random.randint(0, 100) == 25
             timer = 60 * 1
+            no_monster = random.randint(0, 100) == 25
             if no_monster == False:
                 if monster_roster[challenge]["boss"]:
                     timer = 60 * 3
@@ -891,6 +891,7 @@ class Adventure(
                 elif "Transcended" in new_challenge:
                     self.bot.dispatch("adventure_transcended", ctx)
                     text = box(_("\n [Transcension Warning!]"), lang="css")
+                    
         self._sessions[ctx.guild.id] = GameSession(
             ctx=ctx,
             challenge=new_challenge if not no_monster else None,
