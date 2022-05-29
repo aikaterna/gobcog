@@ -1230,7 +1230,7 @@ class Adventure(
                 run_msg = _("It's a shame for the following adventurers...\n{run_msg}\n").format(run_msg=run_msg)
 
             output = _(
-                "All adventures prepared for an epic adventure, but they soon realise all this treasure was unprotected!\n{run_msg}{text}"
+                "All adventurers prepared for an epic adventure, but they soon realise all this treasure was unprotected!\n{run_msg}{text}"
             ).format(
                 text=text,
                 run_msg=run_msg,
