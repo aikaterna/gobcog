@@ -767,7 +767,7 @@ class ClassAbilities(AdventureMixin):
 
                     if msg:
                         image = None
-                        if roll >= 0.4:
+                        if roll >= 0.4 and not session.no_monster:
                             image = session.monster["image"]
                         return await smart_embed(ctx, msg, image=image)
                     else:
