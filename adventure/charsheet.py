@@ -1511,7 +1511,7 @@ class Character:
             tresure[0] += max(int(self.rebirths), 0)
 
         self.weekly_score.update({"rebirths": self.weekly_score.get("rebirths", 0) + 1})
-        self.heroclass["cooldown"] = time.time() + 60 # Set skill cooldown to 60s from rebirth
+        self.heroclass["cooldown"] = time.time() + 60  # Set skill cooldown to 60s from rebirth
         return {
             "adventures": self.adventures,
             "nega": self.nega,

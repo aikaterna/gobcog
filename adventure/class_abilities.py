@@ -692,8 +692,6 @@ class ClassAbilities(AdventureMixin):
                             magic_roll = 0.6
                             diplo_roll = 0.4
 
-
-
                         if roll == 1:
                             hp = int(hp * self.ATTRIBS[session.attribute][0] * session.monster_stats)
                             dipl = int(diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats)
@@ -745,7 +743,6 @@ class ClassAbilities(AdventureMixin):
                                 challenge=session.challenge,
                             )
                             self._sessions[ctx.guild.id].exposed = True
-
 
                         if roll >= physical_roll:
                             if pdef >= 1.5:
