@@ -281,7 +281,7 @@ class ClassAbilities(AdventureMixin):
                                 await class_msg.edit(
                                     content=box(
                                         _("{}, you will remain a {}").format(
-                                            escape(ctx.author.display_name, c.heroclass["name"])
+                                            escape(ctx.author.display_name), c.heroclass["name"]
                                         ),
                                         lang="css",
                                     )
