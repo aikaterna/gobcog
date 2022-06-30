@@ -678,6 +678,22 @@ class ClassAbilities(AdventureMixin):
                         cdef = session.monster_modified_stats.get("cdef", 1.0)
                         hp = session.monster_modified_stats["hp"]
                         diplo = session.monster_modified_stats["dipl"]
+                        choice = random.choice(["physical", "magic", "diplomacy"])
+                        if choice == "physical":
+                            physical_roll = 0.4
+                            magic_roll = 0.6
+                            diplo_roll = 0.8
+                        elif choice == "magic":
+                            physical_roll = 0.8
+                            magic_roll = 0.4
+                            diplo_roll = 0.6
+                        else:
+                            physical_roll = 0.8
+                            magic_roll = 0.6
+                            diplo_roll = 0.4
+
+
+
                         if roll == 1:
                             hp = int(hp * self.ATTRIBS[session.attribute][0] * session.monster_stats)
                             dipl = int(diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats)
@@ -729,7 +745,9 @@ class ClassAbilities(AdventureMixin):
                                 challenge=session.challenge,
                             )
                             self._sessions[ctx.guild.id].exposed = True
-                        if roll >= 0.4:
+
+
+                        if roll >= physical_roll:
                             if pdef >= 1.5:
                                 msg += _("Swords bounce off this monster as it's skin is **almost impenetrable!**\n")
                             elif pdef >= 1.25:
@@ -740,7 +758,7 @@ class ClassAbilities(AdventureMixin):
                                 msg += _("This monster is **soft and easy** to slice!\n")
                             else:
                                 msg += _("Swords slice through this monster like a **hot knife through butter!**\n")
-                        if roll >= 0.6:
+                        if roll >= magic_roll:
                             if mdef >= 1.5:
                                 msg += _("Magic? Pfft, magic is **no match** for this creature!\n")
                             elif mdef >= 1.25:
@@ -751,7 +769,7 @@ class ClassAbilities(AdventureMixin):
                                 msg += _("This monster's hide **melts to magic!**\n")
                             else:
                                 msg += _("Magic spells are **hugely effective** against this monster!\n")
-                        if roll >= 0.8:
+                        if roll >= diplo_roll:
                             if cdef >= 1.5:
                                 msg += _(
                                     "You think you are charismatic? Pfft, this creature **couldn't care less** for what you want to say!\n"
