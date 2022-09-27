@@ -68,7 +68,7 @@ async def smart_embed(
                 msg = await interaction.followup.send(embed=embed, ephemeral=ephemeral, view=view, wait=True)
             else:
                 await interaction.response.send_message(embed=embed, ephemeral=ephemeral, view=view)
-                msg = await interaction.original_message()
+                msg = await interaction.original_response()
             return msg
         else:
             return await ctx.send(embed=embed, ephemeral=ephemeral, view=view)
@@ -77,7 +77,7 @@ async def smart_embed(
             msg = await interaction.followup.send(message, ephemeral=ephemeral, view=view, wait=True)
         else:
             await interaction.response.send_message(message, ephemeral=ephemeral, view=view)
-            msg = await interaction.original_message()
+            msg = await interaction.original_response()
         return msg
     else:
         return await ctx.send(message, ephemeral=ephemeral, view=view)
