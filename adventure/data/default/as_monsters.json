@@ -1742,7 +1742,7 @@
         "pdef": 1.2,
         "mdef": 1.07,
         "dipl": 963.0,
-        "image": "ttps://cdn.pixabay.com/photo/2019/08/19/23/27/dragon-4417431_960_720.png",
+        "image": "https://cdn.pixabay.com/photo/2019/08/19/23/27/dragon-4417431_960_720.png",
         "boss": true,
         "miniboss": {},
         "color": ""
