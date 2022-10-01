@@ -573,6 +573,9 @@ class Character:
             bptotal=self.get_backpack_slots(),
         )
 
+    def get_equipped_item(self, slot: str) -> Item:
+        return getattr(self, slot)
+
     def get_equipment(self):
         """Define a secondary like __str__ to show our equipment."""
         form_string = ""
@@ -663,11 +666,25 @@ class Character:
         reverse_rarities = list(reversed(RARITIES))
         return reverse_rarities.index(rarity)
 
-    async def get_sorted_backpack(self, backpack: dict, slot=None, rarity=None):
+    async def get_sorted_backpack(self, backpack: dict, slot=None, rarity=None, stat: str = None):
         tmp = {}
 
         def _sort(item):
-            return self.get_rarity_index(item[1].rarity), item[1].lvl, item[1].total_stats
+            if stat is not None and stat in ["att", "cha", "int", "dex", "luck", "total"]:
+                if stat == "att":
+                    return item[1].att
+                elif stat == "cha":
+                    return item[1].cha
+                elif stat == "int":
+                    return item[1].int
+                elif stat == "dex":
+                    return item[1].dex
+                elif stat == "luck":
+                    return item[1].luck
+                else:
+                    return item[1].total_stats
+            else:
+                return self.get_rarity_index(item[1].rarity), item[1].lvl, item[1].total_stats
 
         async for item in AsyncIter(backpack, steps=100):
             slots = backpack[item].slot

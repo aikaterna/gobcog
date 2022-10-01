@@ -3,6 +3,7 @@ import asyncio
 import logging
 import time
 from operator import itemgetter
+from typing import Optional
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
@@ -507,3 +508,23 @@ class CharacterCommands(AdventureMixin):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
 
         await ctx.invoke(self.backpack_equip, equip_item=item)
+
+    @commands.command()
+    async def autoequip(self, ctx: commands.Context, *, attribute: Optional[str] = None):
+        """
+        This auto-equips all matching items from your backpack.
+
+        Usage: `[p]autoequip [attribute]`
+
+        `attribute` is optional. It may be one of `att`, `cha`, `int`, `dex`, `luc`.
+        If not set all items with the highest total stats will be equipped.
+        """
+        if self.in_adventure(ctx):
+            return await smart_embed(
+                ctx,
+                _("You tried to autoequip your items but the monster ahead nearly decapitated you."),
+            )
+        if not await self.allow_in_dm(ctx):
+            return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
+
+        await ctx.invoke(self.backpack_autoequip, attribute=attribute)

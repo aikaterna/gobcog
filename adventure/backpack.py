@@ -57,6 +57,7 @@ class BackPackCommands(AdventureMixin):
         Equip:       `[p]backpack equip item_name`
         Sell All:    `[p]backpack sellall rarity slot`
         Disassemble: `[p]backpack disassemble item_name`
+        Autoequip:   `[p]backpack autoequip attribute_name`
 
         Note: An item **degrade** level is how many rebirths it will last, before it is broken down.
         """
@@ -98,6 +99,93 @@ class BackPackCommands(AdventureMixin):
                 clear_reactions_after=True,
                 timeout=60,
             ).start(ctx=ctx)
+
+    @_backpack.command(name="autoequip")
+    async def backpack_autoequip(self, ctx: commands.Context, *, attribute: Optional[str] = None):
+        """
+        This auto-equips all matching items from your backpack.
+
+        Usage: `[p]backpack autoequip [attribute]`
+
+        `attribute` is optional. It may be one of `att`, `cha`, `int`, `dex`, `luc`.
+        If not set all items with the highest total stats will be equipped.
+        """
+        if self.in_adventure(ctx):
+            return await smart_embed(
+                ctx,
+                _("You tried to autoequip an item but the monster ahead of you commands your attention."),
+            )
+
+        att = ["attack", "att", "atk"]
+        cha = ["diplomacy", "charisma", "cha", "dipl"]
+        intel = ["intelligence", "intellect", "int", "magic"]
+        dex = ["dexterity", "dex"]
+        luc = ["luck", "luc"]
+
+        if attribute is None:
+            stat = "total"
+        elif attribute not in att + cha + intel + dex + luc:
+            return await smart_embed(ctx, _("Don't try to fool me! There is no such thing as {}.").format(attribute))
+        elif attribute in att:
+            stat = "att"
+        elif attribute in cha:
+            stat = "cha"
+        elif attribute in intel:
+            stat = "int"
+        elif attribute in dex:
+            stat = "dex"
+        else:
+            stat = "luck"
+
+        def get_item_attribute(item: Item, stat: str) -> int:
+            if item is None:
+                return 0
+            elif stat == "total":
+                return item.total_stats
+            else:
+                item_json = item.to_json()
+                return item_json[item.name][stat]
+
+        to_equip = {}
+
+        async with self.get_lock(ctx.author):
+            try:
+                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+
+            async for slot in AsyncIter(ORDER, steps=100):
+                slot_bpk = await c.get_sorted_backpack(c.backpack, slot, None, stat)
+
+                to_equip[slot] = None
+
+                if len(slot_bpk) == 0:
+                    continue
+
+                async for item_name, item in AsyncIter(slot_bpk[0], steps=100):
+                    if not c.can_equip(item):
+                        continue
+
+                    if get_item_attribute(item, stat) < get_item_attribute(c.get_equipped_item(slot), stat):
+                        continue
+
+                    to_equip[slot] = item
+                    break
+
+        left_stat = get_item_attribute(to_equip["left"], stat)
+        right_stat = get_item_attribute(to_equip["right"], stat)
+        two_handed_stat = get_item_attribute(to_equip["two handed"], stat)
+
+        if (left_stat + right_stat) > two_handed_stat:
+            to_equip["two handed"] = None
+        else:
+            to_equip["left"] = None
+            to_equip["right"] = None
+
+        async for key in AsyncIter(to_equip, steps=100):
+            if to_equip[key] is not None:
+                await ctx.invoke(self.backpack_equip, equip_item=to_equip[key])
 
     @_backpack.command(name="equip")
     async def backpack_equip(self, ctx: commands.Context, *, equip_item: EquipableItemConverter):
