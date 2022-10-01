@@ -100,7 +100,7 @@
     "Harpy Windsinger": {"hp": 135, "pdef": 1, "mdef": 0.75, "dipl": 120, "image": "https://www.maxpixel.net/static/photo/1x/Bird-Zoo-Harpy-Berlin-2772092.jpg", "boss": false, "miniboss": {}, "color":""},
     "Harpy Witch": {"hp": 65, "pdef": 1, "mdef": 1.2, "dipl": 130, "image": "https://cdn.pixabay.com/photo/2015/01/31/18/44/harpie-618781_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Horse Spirit": {"hp": 195, "pdef": 1, "mdef": 1.15, "dipl": 225, "image": "https://cdn.pixabay.com/photo/2014/12/25/16/53/spirit-579807_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
-    "Ice Dragon": {"hp": 265, "pdef": 1, "mdef": 0.85, "dipl": 260, "image": "ttps://cdn.pixabay.com/photo/2019/08/19/23/27/dragon-4417431_960_720.png", "boss": true, "miniboss": {}, "color":""},
+    "Ice Dragon": {"hp": 265, "pdef": 1, "mdef": 0.85, "dipl": 260, "image": "https://cdn.pixabay.com/photo/2019/08/19/23/27/dragon-4417431_960_720.png", "boss": true, "miniboss": {}, "color":""},
     "Ice Elemental": {"hp": 220, "pdef": 1, "mdef": 1.1, "dipl": 235, "image": "https://cdn.pixabay.com/photo/2017/11/07/00/07/fantasy-2925250_960_720.jpg", "boss": false, "miniboss": {}, "color":""},
     "Ice Wyvern": {"hp": 255, "pdef": 1, "mdef": 1, "dipl": 265, "image": "https://gourmetpapermache.files.wordpress.com/2018/10/1a.jpg", "boss": true, "miniboss": {}, "color":""},
     "Imp": {"hp": 24, "pdef": 0.9, "mdef": 0.9, "dipl": 20, "image": "https://media-waterdeep.cursecdn.com/avatars/thumbnails/0/361/234/315/636252778560366227.jpeg", "boss": false, "miniboss": {}, "color":""},
