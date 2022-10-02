@@ -124,7 +124,7 @@
         "pdef": 1.51,
         "mdef": 1.2,
         "dipl": 508.5,
-        "image": "http://www.wizards.com/dnd/images/MM35_gallery/MM35_PG130.jpg",
+        "image": "https://upload.wikimedia.org/wikipedia/commons/2/2f/DnD_Gnoll.png",
         "boss": false,
         "miniboss": {},
         "color": ""
@@ -194,7 +194,7 @@
         "pdef": 1.13,
         "mdef": 29.47,
         "dipl": 549.5,
-        "image": "https://cdn.pixabay.com/photo/2015/07/02/10/44/crow-828944_960_720.jpg",
+        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Bryce_Canyon_National_Park%2C_United_States_%28Unsplash_T5Ye7puWZxo%29.jpg/640px-Bryce_Canyon_National_Park%2C_United_States_%28Unsplash_T5Ye7puWZxo%29.jpg",
         "boss": false,
         "miniboss": {},
         "color": ""
@@ -444,7 +444,7 @@
         "pdef": 1.7,
         "mdef": 1.5,
         "dipl": 539.25,
-        "image": "https://cdn.pixabay.com/photo/2015/04/11/19/56/cougar-718092_960_720.jpg",
+        "image": "https://cdn.pixabay.com/photo/2022/01/27/05/11/cougar-6971086_960_720.jpg",
         "boss": false,
         "miniboss": {},
         "color": ""
@@ -574,7 +574,7 @@
         "pdef": 1.2,
         "mdef": 1.2,
         "dipl": 533.5,
-        "image": "https://cdn.pixabay.com/photo/2015/09/02/12/35/sword-918542_960_720.jpg",
+        "image": "https://cdn.pixabay.com/photo/2018/02/10/22/55/sword-3144759_960_720.png",
         "boss": false,
         "miniboss": {},
         "color": ""
@@ -694,7 +694,7 @@
         "pdef": 1.2,
         "mdef": 1.63,
         "dipl": 546.0,
-        "image": "https://cdn.pixabay.com/photo/2016/03/09/09/28/bear-1245807_960_720.jpg",
+        "image": "https://cdn.pixabay.com/photo/2016/03/27/18/10/bear-1283347_960_720.jpg",
         "boss": false,
         "miniboss": {},
         "color": ""
@@ -904,7 +904,7 @@
         "pdef": 1.26,
         "mdef": 1.2,
         "dipl": 539.0,
-        "image": "https://cdn.pixabay.com/photo/2017/02/24/15/08/bear-2095379_960_720.jpg",
+        "image": "https://cdn.pixabay.com/photo/2013/11/15/18/14/grizzlies-210996_960_720.jpg",
         "boss": false,
         "miniboss": {},
         "color": ""
@@ -1454,7 +1454,7 @@
         "pdef": 1.23,
         "mdef": 1.2,
         "dipl": 613.5,
-        "image": "https://cdn.pixabay.com/photo/2015/11/03/10/19/garden-1020507_960_720.jpg",
+        "image": "https://cdn.pixabay.com/photo/2019/09/08/20/54/elephant-4461911_960_720.jpg",
         "boss": false,
         "miniboss": {},
         "color": ""
@@ -1474,7 +1474,7 @@
         "pdef": 1.2,
         "mdef": 1.51,
         "dipl": 537.0,
-        "image": "https://cdn.pixabay.com/photo/2015/03/26/09/47/sky-690293_960_720.jpg",
+        "image": "https://cdn.pixabay.com/photo/2016/10/07/18/49/priestess-1722370_960_720.jpg",
         "boss": false,
         "miniboss": {},
         "color": ""
@@ -1692,7 +1692,7 @@
         "pdef": 1.8,
         "mdef": 1.2,
         "dipl": 975.0,
-        "image": "https://barakabe.files.wordpress.com/2013/05/dragon5.jpg",
+        "image": "https://i.imgur.com/x8RIYvo.jpeg",
         "boss": true,
         "miniboss": {},
         "color": ""
@@ -1742,7 +1742,7 @@
         "pdef": 1.2,
         "mdef": 1.07,
         "dipl": 963.0,
-        "image": "https://gourmetpapermache.files.wordpress.com/2018/10/1a.jpg",
+        "image": "https://cdn.pixabay.com/photo/2019/08/19/23/27/dragon-4417431_960_720.png",
         "boss": true,
         "miniboss": {},
         "color": ""

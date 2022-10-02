@@ -1,7 +1,8 @@
 ---
 name: Bug reports for commands
 about: For bugs that involve commands found within Adventure
-title: '[Command Bug] '
+title: "[Command Bug] "
+labels: ''
 assignees: ''
 
 ---
@@ -12,7 +13,7 @@ assignees: ''
 - [ ] I confirm that I am the owner of the bot running Adventure.
 - [ ] I confirm that I have not modified the source code of Adventure.
 - [ ] I'm an Adventure user but not the bot owner.
-- [ ] I confirm that I have checked the [issue tracker](../) and a this bug hasn't been reported already.
+- [ ] I confirm that I have checked the [issue tracker](../) and this bug hasn't been reported already.
 
 ## Command name
 
@@ -26,7 +27,7 @@ assignees: ''
 <!--- Tell us what happens instead of the expected behavior -->
 
 ## Possible Solution
-<!--- Not obligatory, but suggest a fix/reason for the bug, -->
+<!--- Not obligatory, but suggest a fix/reason for the bug -->
 
 ## Steps to Reproduce
 <!--- Provide a link to a live example, or an unambiguous set of steps to -->
@@ -46,4 +47,4 @@ assignees: ''
 <!--- Provide a detailed description of the change or addition you are proposing -->
 
 ## Possible Implementation
-<!--- Not obligatory, but suggest an idea for implementing addition or change -->
+<!--- Not obligatory, but suggest an idea for implementing an addition or change -->

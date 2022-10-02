@@ -1,7 +1,8 @@
 ---
 name: Feature request
 about: For feature requests regarding Adventure itself.
-title: '[Feature Request] '
+title: "[Feature Request] "
+labels: ''
 assignees: ''
 
 ---

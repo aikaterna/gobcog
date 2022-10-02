@@ -281,7 +281,7 @@ class ClassAbilities(AdventureMixin):
                                 await class_msg.edit(
                                     content=box(
                                         _("{}, you will remain a {}").format(
-                                            escape(ctx.author.display_name, c.heroclass["name"])
+                                            escape(ctx.author.display_name), c.heroclass["name"]
                                         ),
                                         lang="css",
                                     )
@@ -678,6 +678,20 @@ class ClassAbilities(AdventureMixin):
                         cdef = session.monster_modified_stats.get("cdef", 1.0)
                         hp = session.monster_modified_stats["hp"]
                         diplo = session.monster_modified_stats["dipl"]
+                        choice = random.choice(["physical", "magic", "diplomacy"])
+                        if choice == "physical":
+                            physical_roll = 0.4
+                            magic_roll = 0.6
+                            diplo_roll = 0.8
+                        elif choice == "magic":
+                            physical_roll = 0.8
+                            magic_roll = 0.4
+                            diplo_roll = 0.6
+                        else:
+                            physical_roll = 0.8
+                            magic_roll = 0.6
+                            diplo_roll = 0.4
+
                         if roll == 1:
                             hp = int(hp * self.ATTRIBS[session.attribute][0] * session.monster_stats)
                             dipl = int(diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats)
@@ -729,7 +743,8 @@ class ClassAbilities(AdventureMixin):
                                 challenge=session.challenge,
                             )
                             self._sessions[ctx.guild.id].exposed = True
-                        if roll >= 0.4:
+
+                        if roll >= physical_roll:
                             if pdef >= 1.5:
                                 msg += _("Swords bounce off this monster as it's skin is **almost impenetrable!**\n")
                             elif pdef >= 1.25:
@@ -740,7 +755,7 @@ class ClassAbilities(AdventureMixin):
                                 msg += _("This monster is **soft and easy** to slice!\n")
                             else:
                                 msg += _("Swords slice through this monster like a **hot knife through butter!**\n")
-                        if roll >= 0.6:
+                        if roll >= magic_roll:
                             if mdef >= 1.5:
                                 msg += _("Magic? Pfft, magic is **no match** for this creature!\n")
                             elif mdef >= 1.25:
@@ -751,10 +766,10 @@ class ClassAbilities(AdventureMixin):
                                 msg += _("This monster's hide **melts to magic!**\n")
                             else:
                                 msg += _("Magic spells are **hugely effective** against this monster!\n")
-                        if roll >= 0.8:
+                        if roll >= diplo_roll:
                             if cdef >= 1.5:
                                 msg += _(
-                                    "You think you are charismatic? Pfft, this creature couldn't care less for what you want to say!\n"
+                                    "You think you are charismatic? Pfft, this creature **couldn't care less** for what you want to say!\n"
                                 )
                             elif cdef >= 1.25:
                                 msg += _("Any attempts to communicate with this creature will be **very difficult!**\n")
@@ -767,7 +782,7 @@ class ClassAbilities(AdventureMixin):
 
                     if msg:
                         image = None
-                        if roll >= 0.4:
+                        if roll >= 0.4 and not session.no_monster:
                             image = session.monster["image"]
                         return await smart_embed(ctx, msg, image=image)
                     else:
@@ -1184,8 +1199,8 @@ class ClassAbilities(AdventureMixin):
         base_att = max(character._att, 1)
         modifier_bonus_luck = 0.01 * base_luck // 10
         modifier_bonus_int = 0.01 * base_int // 20
-        modifier_penalty_str = -0.01 * base_att // 20
-        modifier_penalty_cha = -0.01 * base_cha // 10
+        modifier_penalty_str = 0.01 * base_att // 20
+        modifier_penalty_cha = 0.01 * base_cha // 20
         modifier = sum([modifier_bonus_int, modifier_bonus_luck, modifier_penalty_cha, modifier_penalty_str, modifier])
         modifier = max(0.001, modifier)
 
