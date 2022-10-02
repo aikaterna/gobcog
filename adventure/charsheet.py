@@ -689,8 +689,11 @@ class Character:
                 final.append(sorted(tmp[slot_name], key=_sort))
         return final
 
-    async def looted(self, how_many: int = 1) -> List[Tuple[str, int]]:
-        items = [i for n, i in self.backpack.items() if i.rarity not in ["normal", "rare", "epic", "forged"]]
+    async def looted(self, how_many: int = 1, exclude: set = None) -> List[Tuple[str, int]]:
+        if exclude is None:
+            exclude = {"normal", "rare", "epic", "forged"}
+        exclude.add("forged")
+        items = [i for n, i in self.backpack.items() if i.rarity not in exclude]
         looted_so_far = 0
         looted = []
         if not items:
