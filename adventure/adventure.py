@@ -1315,11 +1315,10 @@ class Adventure(
                         loss = c.bal
                     if user not in [u for u, t in repair_list]:
                         repair_list.append([user, loss])
-                        if user not in [u for u, t in repair_list]:
-                            if c.bal > loss:
-                                await bank.withdraw_credits(user, loss)
-                            else:
-                                await bank.set_balance(user, 0)
+                        if c.bal > loss:
+                            await bank.withdraw_credits(user, loss)
+                        else:
+                            await bank.set_balance(user, 0)
         if session.easy_mode:
             if (slain or persuaded) and not failed:
                 success = True
