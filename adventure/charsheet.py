@@ -5,7 +5,7 @@ import logging
 import random
 import time
 from copy import copy
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any, Dict, List, MutableMapping, Optional, Tuple
 
 import discord

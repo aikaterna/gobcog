@@ -8,7 +8,7 @@ import time
 from abc import ABC
 from datetime import datetime, timedelta
 from types import SimpleNamespace
-from typing import Literal, MutableMapping, Union
+from typing import Literal, MutableMapping
 
 import discord
 from discord.ext.commands import CheckFailure

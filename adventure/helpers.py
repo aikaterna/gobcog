@@ -1,4 +1,3 @@
-import contextlib
 import random
 import re
 import time
@@ -6,7 +5,6 @@ from typing import Union
 
 import discord
 from discord.ext.commands import CheckFailure
-from redbot.core import commands
 from redbot.core.commands import check
 from redbot.core.utils.chat_formatting import escape as _escape
 from redbot.core.utils.common_filters import filter_various_mentions
