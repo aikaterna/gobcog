@@ -4,7 +4,6 @@ import contextlib
 import logging
 import random
 import time
-from math import ceil
 
 import discord
 from discord.ext.commands.errors import BadArgument
@@ -701,9 +700,9 @@ class ClassAbilities(AdventureMixin):
                                 challenge=session.challenge,
                                 attr=session.attribute,
                                 hp_symbol=self.emojis.hp,
-                                hp=humanize_number(ceil(hp)),
+                                hp=humanize_number(int(hp)),
                                 dipl_symbol=self.emojis.dipl,
-                                dipl=humanize_number(ceil(dipl)),
+                                dipl=humanize_number(int(dipl)),
                                 trans=f" (**Transcended**) {self.emojis.skills.psychic}"
                                 if session.transcended
                                 else f"{self.emojis.skills.psychic}",
@@ -718,9 +717,9 @@ class ClassAbilities(AdventureMixin):
                                 challenge=session.challenge,
                                 attr=session.attribute,
                                 hp_symbol=self.emojis.hp,
-                                hp=humanize_number(ceil(hp)),
+                                hp=humanize_number(int(hp)),
                                 dipl_symbol=self.emojis.dipl,
-                                dipl=humanize_number(ceil(dipl)),
+                                dipl=humanize_number(int(dipl)),
                             )
                             self._sessions[ctx.guild.id].exposed = True
                         elif roll >= 0.90:
@@ -729,7 +728,7 @@ class ClassAbilities(AdventureMixin):
                                 challenge=session.challenge,
                                 attr=session.attribute,
                                 hp_symbol=self.emojis.hp,
-                                hp=humanize_number(ceil(hp)),
+                                hp=humanize_number(int(hp)),
                             )
                             self._sessions[ctx.guild.id].exposed = True
                         elif roll > 0.75:
