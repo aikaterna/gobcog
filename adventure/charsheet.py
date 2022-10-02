@@ -5,7 +5,7 @@ import logging
 import random
 from copy import copy
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, MutableMapping, Optional, Tuple
+from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
@@ -1294,7 +1294,11 @@ class Character:
 
     @classmethod
     async def from_json(
-        cls, ctx: commands.Context, config: Config, user: discord.Member, daily_bonus_mapping: Dict[str, float]
+        cls,
+        ctx: commands.Context,
+        config: Config,
+        user: Union[discord.Member, discord.User],
+        daily_bonus_mapping: Dict[str, float],
     ):
         """Return a Character object from config and user."""
         data = await config.user(user).all()

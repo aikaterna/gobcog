@@ -3,6 +3,7 @@ import asyncio
 import logging
 import time
 from operator import itemgetter
+from typing import Union
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
@@ -264,7 +265,7 @@ class CharacterCommands(AdventureMixin):
 
     @commands.command()
     @commands.bot_has_permissions(add_reactions=True)
-    async def stats(self, ctx: commands.Context, *, user: discord.Member = None):
+    async def stats(self, ctx: commands.Context, *, user: Union[discord.Member, discord.User] = None):
         """This draws up a character sheet of you or an optionally specified member."""
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))

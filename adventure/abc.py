@@ -296,7 +296,9 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def remove_item(self, ctx: commands.Context, user: discord.Member, *, full_item_name: str):
+    async def remove_item(
+        self, ctx: commands.Context, user: Union[discord.Member, discord.User], *, full_item_name: str
+    ):
         raise NotImplementedError()
 
     @abstractmethod
@@ -435,7 +437,7 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def stats(self, ctx: commands.Context, *, user: discord.Member = None):
+    async def stats(self, ctx: commands.Context, *, user: Union[discord.Member, discord.User] = None):
         raise NotImplementedError()
 
     @abstractmethod
@@ -539,7 +541,7 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def devreset(self, ctx: commands.Context, users: commands.Greedy[discord.Member]):
+    async def devreset(self, ctx: commands.Context, users: commands.Greedy[Union[discord.Member, discord.User]]):
         raise NotImplementedError()
 
     @abstractmethod
@@ -583,12 +585,18 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _give_item(self, ctx: commands.Context, user: discord.Member, item_name: str, *, stats: Stats):
+    async def _give_item(
+        self, ctx: commands.Context, user: Union[discord.Member, discord.User], item_name: str, *, stats: Stats
+    ):
         raise NotImplementedError()
 
     @abstractmethod
     async def _give_loot(
-        self, ctx: commands.Context, loot_type: str, users: commands.Greedy[discord.Member] = None, number: int = 1
+        self,
+        ctx: commands.Context,
+        loot_type: str,
+        users: commands.Greedy[Union[discord.Member, discord.User]] = None,
+        number: int = 1,
     ):
         raise NotImplementedError()
 
@@ -686,7 +694,11 @@ class AdventureMixin(ABC):
 
     @abstractmethod
     async def _negaverse(
-        self, ctx: commands.Context, offering: int = None, roll: Optional[int] = -1, nega: discord.Member = None
+        self,
+        ctx: commands.Context,
+        offering: int = None,
+        roll: Optional[int] = -1,
+        nega: Union[discord.Member, discord.User] = None,
     ):
         raise NotImplementedError()
 

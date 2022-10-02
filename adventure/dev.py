@@ -3,6 +3,7 @@ import asyncio
 import logging
 import random
 from string import ascii_letters, digits
+from typing import Union
 
 import discord
 from redbot.core import commands
@@ -161,7 +162,7 @@ class DevCommands(AdventureMixin):
     @commands.command()
     @commands.bot_has_permissions(add_reactions=True)
     @commands.is_owner()
-    async def devreset(self, ctx: commands.Context, users: commands.Greedy[discord.Member]):
+    async def devreset(self, ctx: commands.Context, users: commands.Greedy[Union[discord.Member, discord.User]]):
         """[Dev] Reset the skill cooldown for multiple users."""
         if not await self.no_dev_prompt(ctx):
             return

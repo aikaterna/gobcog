@@ -5,7 +5,7 @@ import logging
 import random
 import time
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 import discord
 from redbot.core import commands
@@ -31,7 +31,11 @@ class Negaverse(AdventureMixin):
     @commands.cooldown(rate=1, per=3600, type=commands.BucketType.user)
     @commands.guild_only()
     async def _negaverse(
-        self, ctx: commands.Context, offering: int = None, roll: Optional[int] = -1, nega: discord.Member = None
+        self,
+        ctx: commands.Context,
+        offering: int = None,
+        roll: Optional[int] = -1,
+        nega: Union[discord.Member, discord.User] = None,
     ):
         """This will send you to fight a nega-member!"""
         if self.in_adventure(ctx):
