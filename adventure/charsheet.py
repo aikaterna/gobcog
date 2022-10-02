@@ -345,6 +345,7 @@ class Character:
         self.daily_bonus = kwargs.pop(
             "daily_bonus_mapping", {"1": 0, "2": 0, "3": 0.5, "4": 0, "5": 0.5, "6": 1.0, "7": 1.0}
         )
+
     def remove_restrictions(self) -> Optional[Dict]:
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
             original_pet = self.heroclass["pet"]
