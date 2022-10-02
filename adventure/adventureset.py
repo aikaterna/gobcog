@@ -9,7 +9,7 @@ from redbot.core import commands
 from redbot.core.commands import get_dict_converter
 from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number
 
 from .abc import AdventureMixin
 from .bank import bank
@@ -150,7 +150,9 @@ class AdventureSetCommands(AdventureMixin):
         """
         toggle = await self.config.easy_mode()
         await self.config.easy_mode.set(not toggle)
-        await smart_embed(ctx, _("Adventure easy mode is now **{}**.").format("Enabled" if not toggle else "Disabled"))
+        await smart_embed(
+            ctx, _("Adventure easy mode is now {}.").format(bold(_("Enabled") if not toggle else _("Disabled")))
+        )
 
     @adventureset.command()
     @commands.is_owner()
@@ -160,7 +162,7 @@ class AdventureSetCommands(AdventureMixin):
         await self.config.separate_economy.set(not toggle)
         self._separate_economy = not toggle
         await smart_embed(
-            ctx, _("Adventurer currency is: **{}**").format(_("Separated" if not toggle else _("Unified")))
+            ctx, _("Adventurer currency is: {}").format(bold(_("Separated") if not toggle else _("Unified")))
         )
 
     @adventureset.group(name="economy")

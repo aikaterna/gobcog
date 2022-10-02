@@ -9,7 +9,7 @@ from beautifultable import ALIGN_LEFT, BeautifulTable
 from redbot.core import commands
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
@@ -73,7 +73,7 @@ class CharacterCommands(AdventureMixin):
                         "{author}, this will cost you at least {offering} {currency_name}.\n"
                         "You currently have {bal}. Do you want to proceed?"
                     ).format(
-                        author=escape(ctx.author.display_name),
+                        author=bold(ctx.author.display_name),
                         offering=humanize_number(offering),
                         currency_name=currency_name,
                         bal=humanize_number(bal),
@@ -97,39 +97,39 @@ class CharacterCommands(AdventureMixin):
                     await bank.withdraw_credits(ctx.author, offering)
                     await smart_embed(
                         ctx,
-                        _("{}, your skill points have been reset.").format(escape(ctx.author.display_name)),
+                        _("{}, your skill points have been reset.").format(bold(ctx.author.display_name)),
                     )
                 else:
                     await smart_embed(
                         ctx,
-                        _("Don't play games with me, {}.").format(escape(ctx.author.display_name)),
+                        _("Don't play games with me, {}.").format(bold(ctx.author.display_name)),
                     )
                 return
 
             if c.skill["pool"] <= 0:
                 return await smart_embed(
                     ctx,
-                    _("{}, you do not have unspent skillpoints.").format(escape(ctx.author.display_name)),
+                    _("{}, you do not have unspent skillpoints.").format(bold(ctx.author.display_name)),
                 )
             elif c.skill["pool"] < amount:
                 return await smart_embed(
                     ctx,
                     _("{}, you only have {} unspent skillpoints.").format(
-                        escape(ctx.author.display_name), c.skill["pool"]
+                        bold(ctx.author.display_name), c.skill["pool"]
                     ),
                 )
             if spend is None:
                 await smart_embed(
                     ctx,
                     _(
-                        "**{author}**, you currently have **{skillpoints}** unspent skillpoints.\n"
+                        "{author}, you currently have {skillpoints} unspent skillpoints.\n"
                         "If you want to put them towards a permanent attack, "
                         "charisma or intelligence bonus, use "
                         "`{prefix}skill attack`, `{prefix}skill charisma` or "
                         "`{prefix}skill intelligence`"
                     ).format(
-                        author=escape(ctx.author.display_name),
-                        skillpoints=str(c.skill["pool"]),
+                        author=bold(ctx.author.display_name),
+                        skillpoints=bold(str(c.skill["pool"])),
                         prefix=ctx.prefix,
                     ),
                 )
@@ -157,7 +157,7 @@ class CharacterCommands(AdventureMixin):
                 await smart_embed(
                     ctx,
                     _("{author}, you permanently raised your {spend} value by {amount}.").format(
-                        author=escape(ctx.author.display_name), spend=spend, amount=amount
+                        author=bold(ctx.author.display_name), spend=spend, amount=amount
                     ),
                 )
 

@@ -11,7 +11,7 @@ from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number, pagify
+from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number, pagify
 from redbot.core.utils.menus import menu, start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
@@ -346,7 +346,7 @@ class BackPackCommands(AdventureMixin):
                     )
                 )
             else:
-                msg = await ctx.send("Are you sure you want to sell **ALL ITEMS** in your inventory?")
+                msg = await ctx.send(_("Are you sure you want to sell **ALL ITEMS** in your inventory?"))
 
             start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
             pred = ReactionPredicate.yes_or_no(msg, ctx.author)
@@ -445,8 +445,8 @@ class BackPackCommands(AdventureMixin):
                 return
             price_shown = _sell(c, item)
             messages = [
-                _("**{author}**, do you want to sell this item for {price} each? {item}").format(
-                    author=escape(ctx.author.display_name),
+                _("{author}, do you want to sell this item for {price} each? {item}").format(
+                    author=bold(ctx.author.display_name),
                     item=box(str(item), lang="css"),
                     price=humanize_number(price_shown),
                 )
@@ -491,8 +491,8 @@ class BackPackCommands(AdventureMixin):
             price = 0
             item.owned -= 1
             price += price_shown
-            msg += _("**{author}** sold one {item} for {price} {currency_name}.\n").format(
-                author=escape(ctx.author.display_name),
+            msg += _("{author} sold one {item} for {price} {currency_name}.\n").format(
+                author=bold(ctx.author.display_name),
                 item=box(item, lang="css"),
                 price=humanize_number(price),
                 currency_name=currency_name,
@@ -516,8 +516,8 @@ class BackPackCommands(AdventureMixin):
                 if item.owned <= 0:
                     del character.backpack[item.name]
                 count += 1
-            msg += _("**{author}** sold all their {old_item} for {price} {currency_name}.\n").format(
-                author=escape(ctx.author.display_name),
+            msg += _("{author} sold all their {old_item} for {price} {currency_name}.\n").format(
+                author=bold(ctx.author.display_name),
                 old_item=box(str(item) + " - " + str(old_owned), lang="css"),
                 price=humanize_number(price),
                 currency_name=currency_name,
@@ -542,8 +542,8 @@ class BackPackCommands(AdventureMixin):
                 price += price_shown
             count += 1
             if price != 0:
-                msg += _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
-                    author=escape(ctx.author.display_name),
+                msg += _("{author} sold all but one of their {old_item} for {price} {currency_name}.\n").format(
+                    author=bold(ctx.author.display_name),
                     old_item=box(str(item) + " - " + str(old_owned - 1), lang="css"),
                     price=humanize_number(price),
                     currency_name=currency_name,
@@ -592,8 +592,8 @@ class BackPackCommands(AdventureMixin):
         if self.in_adventure(user=buyer):
             return await smart_embed(
                 ctx,
-                _("**{buyer}** is currently in an adventure... you were unable to reach them via pigeon.").format(
-                    buyer=escape(buyer.display_name)
+                _("{buyer} is currently in an adventure... you were unable to reach them via pigeon.").format(
+                    buyer=bold(buyer.display_name)
                 ),
             )
         if asking < 0:
@@ -610,14 +610,14 @@ class BackPackCommands(AdventureMixin):
             return
 
         if buy_user.is_backpack_full(is_dev=is_dev(buyer)):
-            await ctx.send(_("**{author}**'s backpack is currently full.").format(author=escape(buyer.display_name)))
+            await ctx.send(_("{author}'s backpack is currently full.").format(author=bold(buyer.display_name)))
             return
 
         if not any([x for x in c.backpack if item.name.lower() == x.lower()]):
             return await smart_embed(
                 ctx,
-                _("**{author}**, you have to specify an item from your backpack to trade.").format(
-                    author=escape(ctx.author.display_name)
+                _("{author}, you have to specify an item from your backpack to trade.").format(
+                    author=bold(ctx.author.display_name)
                 ),
             )
         lookup = list(x for n, x in c.backpack.items() if str(item) == str(x))
@@ -625,10 +625,10 @@ class BackPackCommands(AdventureMixin):
             await smart_embed(
                 ctx,
                 _(
-                    "**{author}**, I found multiple items ({items}) "
+                    "{author}, I found multiple items ({items}) "
                     "matching that name in your backpack.\nPlease be more specific."
                 ).format(
-                    author=escape(ctx.author.display_name),
+                    author=bold(ctx.author.display_name),
                     items=humanize_list([x.name for x in lookup]),
                 ),
             )
@@ -742,8 +742,8 @@ class BackPackCommands(AdventureMixin):
                             await self._clear_react(trade_msg)
                         else:
                             await trade_msg.edit(
-                                content=_("**{buyer}**, you do not have enough {currency_name}.").format(
-                                    buyer=escape(buyer.display_name),
+                                content=_("{buyer}, you do not have enough {currency_name}.").format(
+                                    buyer=bold(buyer.display_name),
                                     currency_name=currency_name,
                                 )
                             )

@@ -8,7 +8,7 @@ import time
 import discord
 from redbot.core import commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_number
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 
@@ -77,7 +77,7 @@ class AdventureCart(AdventureMixin):
                         await to_delete.delete()
                         await msg.delete()
                     await channel.send(
-                        _("**{author}**, Your backpack is currently full.").format(author=escape(user.display_name))
+                        _("{author}, Your backpack is currently full.").format(author=bold(user.display_name))
                     )
                     return
                 item = items["item"]
@@ -108,8 +108,8 @@ class AdventureCart(AdventureMixin):
                 await to_delete.delete()
                 await msg.delete()
             await channel.send(
-                _("**{author}**, you do not have enough {currency_name}.").format(
-                    author=escape(user.display_name), currency_name=currency_name
+                _("{author}, you do not have enough {currency_name}.").format(
+                    author=bold(user.display_name), currency_name=currency_name
                 )
             )
             self._current_traders[guild.id]["users"].remove(user)

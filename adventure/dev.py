@@ -7,7 +7,7 @@ from string import ascii_letters, digits
 import discord
 from redbot.core import commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number, pagify
+from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number, pagify
 
 from .abc import AdventureMixin
 from .bank import bank
@@ -185,7 +185,7 @@ class DevCommands(AdventureMixin):
     @commands.is_owner()
     async def _adventurestats(self, ctx: commands.Context):
         """[Owner] Show all current adventures."""
-        msg = "**Active Adventures**\n"
+        msg = bold(_("Active Adventures\n"))
         embed_list = []
 
         if len(self._sessions) > 0:

@@ -10,14 +10,14 @@ from typing import Optional
 import discord
 from redbot.core import commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_number
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .helpers import escape, is_dev, smart_embed
+from .helpers import is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
 
@@ -50,9 +50,9 @@ class Negaverse(AdventureMixin):
             return await smart_embed(
                 ctx,
                 _(
-                    "**{author}**, you need to specify how many "
+                    "{author}, you need to specify how many "
                     "{currency_name} you are willing to offer to the gods for your success."
-                ).format(author=escape(ctx.author.display_name), currency_name=currency_name),
+                ).format(author=bold(ctx.author.display_name), currency_name=currency_name),
             )
         if offering <= 500 or bal <= 500:
             ctx.command.reset_cooldown(ctx)
@@ -77,10 +77,10 @@ class Negaverse(AdventureMixin):
         try:
             nv_msg = await ctx.send(
                 _(
-                    "**{author}**, this will cost you at least {offer} {currency_name}.\n"
+                    "{author}, this will cost you at least {offer} {currency_name}.\n"
                     "You currently have {bal}. Do you want to proceed?"
                 ).format(
-                    author=escape(ctx.author.display_name),
+                    author=bold(ctx.author.display_name),
                     offer=humanize_number(offering),
                     currency_name=currency_name,
                     bal=humanize_number(bal),
@@ -99,8 +99,8 @@ class Negaverse(AdventureMixin):
                 with contextlib.suppress(discord.HTTPException):
                     ctx.command.reset_cooldown(ctx)
                     await nv_msg.edit(
-                        content=_("**{}** decides against visiting the negaverse... for now.").format(
-                            escape(ctx.author.display_name)
+                        content=_("{user} decides against visiting the negaverse... for now.").format(
+                            user=bold(ctx.author.display_name)
                         )
                     )
                     lock.release()
@@ -136,14 +136,14 @@ class Negaverse(AdventureMixin):
                 await bank.withdraw_credits(ctx.author, offering)
             if nega_set:
                 nega_member = nega
-                negachar = _("The Almighty Nega-{c}").format(c=escape(nega_member.display_name))
+                negachar = _("The Almighty Nega-{c}").format(c=nega_member.display_name)
             else:
                 nega_member = random.choice(ctx.message.guild.members)
-                negachar = _("Nega-{c}").format(c=escape(nega_member.display_name))
+                negachar = _("Nega-{c}").format(c=nega_member.display_name)
 
             nega_msg = await ctx.send(
-                _("**{author}** enters the negaverse and meets **{negachar}**.").format(
-                    author=escape(ctx.author.display_name), negachar=negachar
+                _("{author} enters the negaverse and meets {negachar}.").format(
+                    author=bold(ctx.author.display_name), negachar=bold(negachar)
                 )
             )
 
@@ -178,18 +178,18 @@ class Negaverse(AdventureMixin):
                     item_string = "\n".join([f"{v} x{i}" for v, i in items])
                     looted = box(f"{item_string}", lang="css")
                     await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
-                loss_msg = _(
-                    ", losing {loss} {currency_name} as **{negachar}** rifled through their belongings."
-                ).format(loss=loss_string, currency_name=currency_name, negachar=negachar)
+                loss_msg = _(", losing {loss} {currency_name} as {negachar} rifled through their belongings.").format(
+                    loss=loss_string, currency_name=currency_name, negachar=bold(negachar)
+                )
                 if looted:
-                    loss_msg += _(" **{negachar}** also stole the following items:\n\n{items}").format(
-                        items=looted, negachar=negachar
+                    loss_msg += _(" {negachar} also stole the following items:\n\n{items}").format(
+                        items=looted, negachar=bold(negachar)
                     )
                 await nega_msg.edit(
-                    content=_("{content}\n**{author}** fumbled and died to **{negachar}'s** savagery{loss_msg}").format(
+                    content=_("{content}\n{author} fumbled and died to {negachar}'s savagery{loss_msg}").format(
                         content=nega_msg.content,
-                        author=escape(ctx.author.display_name),
-                        negachar=negachar,
+                        author=bold(ctx.author.display_name),
+                        negachar=bold(negachar),
                         loss_msg=loss_msg,
                     )
                 )
@@ -213,18 +213,18 @@ class Negaverse(AdventureMixin):
                         item_string = "\n".join([f"{v} {i}" for v, i in items])
                         looted = box(f"{item_string}", lang="css")
                         await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
-                loss_msg = _(
-                    ", losing {loss} {currency_name} as **{negachar}** rifled through their belongings."
-                ).format(loss=loss_string, currency_name=currency_name, negachar=negachar)
+                loss_msg = _(", losing {loss} {currency_name} as {negachar} rifled through their belongings.").format(
+                    loss=loss_string, currency_name=currency_name, negachar=bold(negachar)
+                )
                 if looted:
-                    loss_msg += _(" **{negachar}** also stole the following items:\n\n{items}").format(
-                        items=looted, negachar=negachar
+                    loss_msg += _(" {negachar} also stole the following items:\n\n{items}").format(
+                        items=looted, negachar=bold(negachar)
                     )
                 await nega_msg.edit(
-                    content=_("{content}\n**{author}** fumbled and died to **{negachar}'s** savagery{loss_msg}").format(
+                    content=_("{content}\n{author} fumbled and died to {negachar}'s savagery{loss_msg}").format(
                         content=nega_msg.content,
-                        author=escape(ctx.author.display_name),
-                        negachar=negachar,
+                        author=bold(ctx.author.display_name),
+                        negachar=bold(negachar),
                         loss_msg=loss_msg,
                     )
                 )
@@ -232,13 +232,13 @@ class Negaverse(AdventureMixin):
             elif roll == 50 and versus < 50:
                 await nega_msg.edit(
                     content=_(
-                        "{content}\n**{author}** decapitated **{negachar}**. "
+                        "{content}\n{author} decapitated {negachar}. "
                         "You gain {xp_gain} xp and take "
                         "{offering} {currency_name} back from the shadowy corpse."
                     ).format(
                         content=nega_msg.content,
-                        author=escape(ctx.author.display_name),
-                        negachar=negachar,
+                        author=bold(ctx.author.display_name),
+                        negachar=bold(negachar),
                         xp_gain=humanize_number(xp_won),
                         offering=humanize_number(offering),
                         currency_name=currency_name,
@@ -255,15 +255,15 @@ class Negaverse(AdventureMixin):
             elif roll > versus:
                 await nega_msg.edit(
                     content=_(
-                        "{content}\n**{author}** "
-                        "{dice}({roll}) bravely defeated **{negachar}** {dice}({versus}). "
+                        "{content}\n{author} "
+                        "{dice}({roll}) bravely defeated {negachar} {dice}({versus}). "
                         "You gain {xp_gain} xp."
                     ).format(
                         dice=self.emojis.dice,
                         content=nega_msg.content,
-                        author=escape(ctx.author.display_name),
+                        author=bold(ctx.author.display_name),
                         roll=roll,
-                        negachar=negachar,
+                        negachar=bold(negachar),
                         versus=versus,
                         xp_gain=humanize_number(xp_won),
                     )
@@ -279,14 +279,12 @@ class Negaverse(AdventureMixin):
             elif roll == versus:
                 ctx.command.reset_cooldown(ctx)
                 await nega_msg.edit(
-                    content=_(
-                        "{content}\n**{author}** {dice}({roll}) almost killed **{negachar}** {dice}({versus})."
-                    ).format(
+                    content=_("{content}\n{author} {dice}({roll}) almost killed {negachar} {dice}({versus}).").format(
                         dice=self.emojis.dice,
                         content=nega_msg.content,
-                        author=escape(ctx.author.display_name),
+                        author=bold(ctx.author.display_name),
                         roll=roll,
-                        negachar=negachar,
+                        negachar=bold(negachar),
                         versus=versus,
                     )
                 )
@@ -309,23 +307,21 @@ class Negaverse(AdventureMixin):
                         item_string = "\n".join([f"{i}  - {v}" for v, i in items])
                         looted = box(f"{item_string}", lang="css")
                         await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
-                loss_msg = _(", losing {loss} {currency_name} as **{negachar}** looted their backpack.").format(
+                loss_msg = _(", losing {loss} {currency_name} as {negachar} looted their backpack.").format(
                     loss=loss_string,
                     currency_name=currency_name,
-                    negachar=negachar,
+                    negachar=bold(negachar),
                 )
                 if looted:
-                    loss_msg += _(" **{negachar}** also stole the following items:\n\n{items}").format(
-                        items=looted, negachar=negachar
+                    loss_msg += _(" {negachar} also stole the following items:\n\n{items}").format(
+                        items=looted, negachar=bold(negachar)
                     )
                 await nega_msg.edit(
-                    content=_(
-                        "**{author}** {dice}({roll}) was killed by **{negachar}** {dice}({versus}){loss_msg}"
-                    ).format(
+                    content=_("{author} {dice}({roll}) was killed by {negachar} {dice}({versus}){loss_msg}").format(
                         dice=self.emojis.dice,
-                        author=escape(ctx.author.display_name),
+                        author=bold(ctx.author.display_name),
                         roll=roll,
-                        negachar=negachar,
+                        negachar=bold(negachar),
                         versus=versus,
                         loss_msg=loss_msg,
                     )

@@ -9,7 +9,7 @@ from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import box, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_number
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
@@ -72,7 +72,7 @@ class LootCommands(AdventureMixin):
                 )
             if c.is_backpack_full(is_dev=is_dev(ctx.author)):
                 await ctx.send(
-                    _("**{author}**, your backpack is currently full.").format(author=escape(ctx.author.display_name))
+                    _("{author}, your backpack is currently full.").format(author=bold(ctx.author.display_name))
                 )
                 return
             if box_type == "normal":
@@ -96,8 +96,8 @@ class LootCommands(AdventureMixin):
             if treasure < 1 or treasure < number:
                 await smart_embed(
                     ctx,
-                    _("**{author}**, you do not have enough {box} treasure chests to open.").format(
-                        author=escape(ctx.author.display_name), box=box_type
+                    _("{author}, you do not have enough {box} treasure chests to open.").format(
+                        author=bold(ctx.author.display_name), box=box_type
                     ),
                 )
             else:
@@ -294,21 +294,21 @@ class LootCommands(AdventureMixin):
             if box_rarity.lower() == "rare" and c.rebirths < rebirth_rare:
                 return await smart_embed(
                     ctx,
-                    ("**{}**, you need to have {} or more rebirths to convert rare treasure chests.").format(
-                        escape(ctx.author.display_name), rebirth_rare
+                    ("{user}, you need to have {rebirth} or more rebirths to convert rare treasure chests.").format(
+                        user=bold(ctx.author.display_name), rebirth=rebirth_rare
                     ),
                 )
             elif box_rarity.lower() == "epic" and c.rebirths < rebirth_epic:
                 return await smart_embed(
                     ctx,
-                    ("**{}**, you need to have {} or more rebirths to convert epic treasure chests.").format(
-                        escape(ctx.author.display_name), rebirth_epic
+                    ("{user}, you need to have {rebirth} or more rebirths to convert epic treasure chests.").format(
+                        user=bold(ctx.author.display_name), rebirth=rebirth_epic
                     ),
                 )
             elif c.rebirths < 2:
                 return await smart_embed(
                     ctx,
-                    _("**{c}**, you need to 3 rebirths to use this.").format(c=escape(ctx.author.display_name)),
+                    _("{c}, you need to 3 rebirths to use this.").format(c=bold(ctx.author.display_name)),
                 )
 
             if box_rarity.lower() == "normal" and c.rebirths >= rebirth_normal:
@@ -341,8 +341,8 @@ class LootCommands(AdventureMixin):
                 else:
                     await smart_embed(
                         ctx,
-                        _("**{author}**, you do not have {amount} normal treasure chests to convert.").format(
-                            author=escape(ctx.author.display_name),
+                        _("{author}, you do not have {amount} normal treasure chests to convert.").format(
+                            author=bold(ctx.author.display_name),
                             amount=humanize_number(normalcost * amount),
                         ),
                     )
@@ -410,16 +410,16 @@ class LootCommands(AdventureMixin):
                 else:
                     await smart_embed(
                         ctx,
-                        _("**{author}**, you do not have {amount} epic treasure chests to convert.").format(
-                            author=escape(ctx.author.display_name),
+                        _("{author}, you do not have {amount} epic treasure chests to convert.").format(
+                            author=bold(ctx.author.display_name),
                             amount=humanize_number(epiccost * amount),
                         ),
                     )
             else:
                 await smart_embed(
                     ctx,
-                    _("**{}**, please select between normal, rare, or epic treasure chests to convert.").format(
-                        escape(ctx.author.display_name)
+                    _("{user}, please select between normal, rare, or epic treasure chests to convert.").format(
+                        user=bold(ctx.author.display_name)
                     ),
                 )
 
@@ -613,7 +613,7 @@ class LootCommands(AdventureMixin):
                 await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                 return await smart_embed(
                     ctx,
-                    f"**{escape(ctx.author.display_name)}**, you need to be level "
+                    f"{bold(ctx.author.display_name)}, you need to be level "
                     f"`{equiplevel}` to equip this item. I've put it in your backpack.",
                 )
             if not getattr(character, item.slot[0]):
