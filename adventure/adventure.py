@@ -19,7 +19,7 @@ from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number, humanize_timedelta, pagify
+from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number, humanize_timedelta, pagify, bold
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
@@ -2536,6 +2536,7 @@ class Adventure(
             roll = random.randint(1, 5)
             if c.heroclass.get("pet", {}).get("bonuses", {}).get("always", False):
                 roll = 5
+            old_pet = c.remove_restrictions()
             if roll == 5 and c.heroclass["name"] == "Ranger" and c.heroclass["pet"]:
                 petxp = int(userxp * c.heroclass["pet"]["bonus"])
                 newxp += petxp
@@ -2565,6 +2566,10 @@ class Adventure(
                     coin=humanize_number(int(usercp)),
                     currency=currency_name,
                 )
+                if old_pet:
+                    phrase += _(
+                       "{user} saw their {pet_name} flee during this adventure due to their pathetic strength.\n"
+                    ).format(user=bold(escape(user.display_name)), pet_name=old_pet["name"])
                 self._rewards[user.id]["xp"] = userxp
                 self._rewards[user.id]["cp"] = usercp
             if special is not False:

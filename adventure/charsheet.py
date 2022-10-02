@@ -325,7 +325,6 @@ class Character:
         self.total_int = self.int + self.skill["int"]
         self.total_cha = self.cha + self.skill["cha"]
         self.total_stats = self.total_att + self.total_int + self.total_cha + self.dex + self.luck
-        self.remove_restrictions()
         self.adventures: dict = kwargs.pop("adventures")
         self.nega: dict = kwargs.pop("nega")
         self.weekly_score: dict = kwargs.pop("weekly_score")
@@ -346,9 +345,9 @@ class Character:
         self.daily_bonus = kwargs.pop(
             "daily_bonus_mapping", {"1": 0, "2": 0, "3": 0.5, "4": 0, "5": 0.5, "6": 1.0, "7": 1.0}
         )
-
-    def remove_restrictions(self):
+    def remove_restrictions(self) -> Optional[Dict]:
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
+            original_pet = self.heroclass["pet"]
             requirements = self._ctx.cog.PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
             if any(x in self.sets for x in ["The Supreme One", "Ainz Ooal Gown"]) and self.heroclass["pet"]["name"] in [
                 "Albedo",
@@ -356,14 +355,13 @@ class Character:
                 "Guardians of Nazarick",
             ]:
                 return
-
             if self.heroclass["pet"]["cha"] > (self.total_cha + (self.total_int // 3) + (self.luck // 2)):
                 self.heroclass["pet"] = {}
-                return
-
+                return original_pet
             if requirements:
                 if requirements.get("set") and requirements.get("set") not in self.sets:
                     self.heroclass["pet"] = {}
+                    return original_pet
 
     def can_equip(self, item: Item):
         if self.user.id in DEV_LIST:
