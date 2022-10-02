@@ -280,7 +280,7 @@ class LeaderboardCommands(AdventureMixin):
         TypeError
             If the bank is guild-specific and no guild was specified
         """
-        current_week = date.today().isocalendar()[1]
+        current_week = int(str(date.today().isocalendar()[0]) + str(date.today().isocalendar()[1]))
         keyword = "adventures"
         raw_accounts = await self.config.all_users()
         if guild is not None:

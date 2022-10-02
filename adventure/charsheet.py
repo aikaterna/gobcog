@@ -1363,7 +1363,7 @@ class Character:
                 "xp__earnings": 0,
                 "gold__losses": 0,
             }
-        current_week = date.today().isocalendar()[1]
+        current_week = int(str(date.today().isocalendar()[0]) + str(date.today().isocalendar()[1]))
         if "weekly_score" in data and data["weekly_score"]["week"] >= current_week:
             weekly = data["weekly_score"]
         else:
