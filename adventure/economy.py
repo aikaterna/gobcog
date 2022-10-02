@@ -369,7 +369,11 @@ class EconomyCommands(AdventureMixin):
 
     @give.command(name="loot")
     async def _give_loot(
-        self, ctx: commands.Context, loot_type: str, users: commands.Greedy[discord.Member] = None, number: int = 1
+        self,
+        ctx: commands.Context,
+        loot_type: str,
+        users: commands.Greedy[Union[discord.Member, discord.User]] = None,
+        number: int = 1,
     ):
         """[Owner] Give treasure chest(s) to all specified users."""
 
