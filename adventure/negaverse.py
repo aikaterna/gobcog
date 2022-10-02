@@ -173,7 +173,9 @@ class Negaverse(AdventureMixin):
                 offering_value += curr_balance
                 loss_string = _("all of their")
                 loss_state = True
-                items = await character.looted(how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"})
+                items = await character.looted(
+                    how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"}
+                )
                 if items:
                     item_string = "\n".join([f"{v} x{i}" for v, i in items])
                     looted = box(f"{item_string}", lang="css")
@@ -208,7 +210,9 @@ class Negaverse(AdventureMixin):
                     loss_string = _("all of their")
                 loss_state = True
                 if character.bal < loss:
-                    items = await character.looted(how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"})
+                    items = await character.looted(
+                        how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"}
+                    )
                     if items:
                         item_string = "\n".join([f"{v} {i}" for v, i in items])
                         looted = box(f"{item_string}", lang="css")
@@ -304,7 +308,9 @@ class Negaverse(AdventureMixin):
                     offering_value += curr_balance
                 loss_state = True
                 if character.bal < loss:
-                    items = await character.looted(how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"})
+                    items = await character.looted(
+                        how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"}
+                    )
                     if items:
                         item_string = "\n".join([f"{i}  - {v}" for v, i in items])
                         looted = box(f"{item_string}", lang="css")
