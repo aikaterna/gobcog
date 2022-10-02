@@ -2569,7 +2569,7 @@ class Adventure(
                 if old_pet:
                     phrase += _(
                         "{user} saw their {pet_name} flee during this adventure due to their pathetic strength.\n"
-                    ).format(user=bold(escape(user.display_name)), pet_name=old_pet["name"])
+                    ).format(user=bold(user.display_name), pet_name=old_pet["name"])
                 self._rewards[user.id]["xp"] = userxp
                 self._rewards[user.id]["cp"] = usercp
             if special is not False:
