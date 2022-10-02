@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import asyncio
 import contextlib
 import logging
 import os
@@ -6,11 +7,14 @@ from typing import Union
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
+from redbot.cogs.mod.converters import RawUserIds
 from redbot.core import commands
 from redbot.core.commands import get_dict_converter
 from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number
+from redbot.core.utils.menus import start_adding_reactions
+from redbot.core.utils.predicates import ReactionPredicate
 
 from .abc import AdventureMixin
 from .bank import bank
@@ -608,3 +612,39 @@ class AdventureSetCommands(AdventureMixin):
                 await ctx.author.send(box(msg, lang="ini"))
         else:
             await ctx.send(box(msg, lang="ini"))
+
+    @adventureset.command()
+    @commands.is_owner()
+    @commands.bot_has_permissions(add_reactions=True)
+    async def adventureset_delete(self, ctx: commands.Context, user_id: RawUserIds):
+        """Deletes a user's profile by their discord ID"""
+        user = ctx.bot.get_user(user_id)
+        if not user:
+            await self.config.user_from_id(user_id).clear()
+            await bank._config.user_from_id(user_id).clear()
+            await ctx.send(
+                _("User not found within users I serve, removing any data for {user_id}, if any.").format(
+                    user_id=user_id
+                )
+            )
+            return
+        msg = await smart_embed(
+            ctx,
+            _("Are you sure you want to permanently delete {user}'s profile (user_id)?").format(
+                user=user, user_id=user_id
+            ),
+        )
+        start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
+        pred = ReactionPredicate.yes_or_no(msg, ctx.author)
+        try:
+            await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
+        except asyncio.TimeoutError:
+            await self._clear_react(msg)
+            return await smart_embed(ctx, "I can't wait forever, you know.")
+        else:
+            if not pred.result:
+                await ctx.send(_("Profile deletion cancelled."))
+                await msg.delete()
+                return
+        await self.red_delete_data_for_user(user_id=user_id)
+        await ctx.tick()
