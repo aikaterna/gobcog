@@ -1299,7 +1299,10 @@ class Character:
     ):
         """Return a Character object from config and user."""
         data = await config.user(user).all()
-        balance = await bank.get_balance(user)
+        try:
+            balance = await bank.get_balance(user)
+        except Exception:
+            balance = 0
         equipment = {k: Item.from_json(ctx, v) if v else None for k, v in data["items"].items() if k != "backpack"}
         if "int" not in data["skill"]:
             data["skill"]["int"] = 0
