@@ -357,6 +357,8 @@ class Negaverse(AdventureMixin):
                     current_wins_value = character.nega.get("wins", 0)
                     character.nega.update({"wins": current_wins_value + 1})
                     changed = True
+                    if character.static_last_known_currency is None:
+                        character.static_last_known_currency = character.bal
                 if loss_state is not False:
                     current_loses_value = character.nega.get("loses", 0)
                     character.nega.update({"loses": current_loses_value + 1})
