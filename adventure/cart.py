@@ -137,7 +137,16 @@ class AdventureCart(AdventureMixin):
         if room:
             room = ctx.guild.get_channel(room)
         if room is None or bypass:
-            room = ctx
+            room = ctx.channel
+        if room is None:
+            return
+        room: discord.TextChannel
+        room_perms = room.permissions_for(ctx.me)
+        if not all([room_perms.send_messages, room_perms.add_reactions]):
+            log.debug(
+                "I don't have permissions to send messages or add reactions in {} ({})".format(room.id, room.guild.id)
+            )
+            return
         self.bot.dispatch("adventure_cart", ctx)  # dispatch after silent return
         stockcount = random.randint(3, 9)
         controls = {em_list[i + 1]: i for i in range(stockcount)}
