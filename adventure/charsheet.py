@@ -5,7 +5,7 @@ import logging
 import random
 import time
 from copy import copy
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union
 
 import discord
@@ -689,8 +689,11 @@ class Character:
                 final.append(sorted(tmp[slot_name], key=_sort))
         return final
 
-    async def looted(self, how_many: int = 1) -> List[Tuple[str, int]]:
-        items = [i for n, i in self.backpack.items() if i.rarity not in ["normal", "rare", "epic", "forged"]]
+    async def looted(self, how_many: int = 1, exclude: set = None) -> List[Tuple[str, int]]:
+        if exclude is None:
+            exclude = {"normal", "rare", "epic", "forged"}
+        exclude.add("forged")
+        items = [i for n, i in self.backpack.items() if i.rarity not in exclude]
         looted_so_far = 0
         looted = []
         if not items:
@@ -1303,7 +1306,10 @@ class Character:
     ):
         """Return a Character object from config and user."""
         data = await config.user(user).all()
-        balance = await bank.get_balance(user)
+        try:
+            balance = await bank.get_balance(user)
+        except Exception:
+            balance = 0
         equipment = {k: Item.from_json(ctx, v) if v else None for k, v in data["items"].items() if k != "backpack"}
         if "int" not in data["skill"]:
             data["skill"]["int"] = 0

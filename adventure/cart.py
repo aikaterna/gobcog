@@ -8,7 +8,7 @@ import time
 import discord
 from redbot.core import commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_number
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 
@@ -77,7 +77,7 @@ class AdventureCart(AdventureMixin):
                         await to_delete.delete()
                         await msg.delete()
                     await channel.send(
-                        _("**{author}**, Your backpack is currently full.").format(author=escape(user.display_name))
+                        _("{author}, Your backpack is currently full.").format(author=bold(user.display_name))
                     )
                     return
                 item = items["item"]
@@ -108,8 +108,8 @@ class AdventureCart(AdventureMixin):
                 await to_delete.delete()
                 await msg.delete()
             await channel.send(
-                _("**{author}**, you do not have enough {currency_name}.").format(
-                    author=escape(user.display_name), currency_name=currency_name
+                _("{author}, you do not have enough {currency_name}.").format(
+                    author=bold(user.display_name), currency_name=currency_name
                 )
             )
             self._current_traders[guild.id]["users"].remove(user)
@@ -137,7 +137,16 @@ class AdventureCart(AdventureMixin):
         if room:
             room = ctx.guild.get_channel(room)
         if room is None or bypass:
-            room = ctx
+            room = ctx.channel
+        if room is None:
+            return
+        room: discord.TextChannel
+        room_perms = room.permissions_for(ctx.me)
+        if not all([room_perms.send_messages, room_perms.add_reactions]):
+            log.debug(
+                "I don't have permissions to send messages or add reactions in {} ({})".format(room.id, room.guild.id)
+            )
+            return
         self.bot.dispatch("adventure_cart", ctx)  # dispatch after silent return
         stockcount = random.randint(3, 9)
         controls = {em_list[i + 1]: i for i in range(stockcount)}

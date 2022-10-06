@@ -4,7 +4,7 @@ import logging
 
 from redbot.core import commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box
+from redbot.core.utils.chat_formatting import bold, box
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
@@ -55,8 +55,8 @@ class LoadoutCommands(AdventureMixin):
             await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
             await smart_embed(
                 ctx,
-                _("**{author}**, your current equipment has been saved to {name}.").format(
-                    author=escape(ctx.author.display_name), name=name
+                _("{author}, your current equipment has been saved to {name}.").format(
+                    author=bold(ctx.author.display_name), name=name
                 ),
             )
 
@@ -75,8 +75,8 @@ class LoadoutCommands(AdventureMixin):
             if name not in c.loadouts:
                 await smart_embed(
                     ctx,
-                    _("**{author}**, you don't have a loadout named {name}.").format(
-                        author=escape(ctx.author.display_name), name=name
+                    _("{author}, you don't have a loadout named {name}.").format(
+                        author=bold(ctx.author.display_name), name=name
                     ),
                 )
             else:
@@ -84,8 +84,8 @@ class LoadoutCommands(AdventureMixin):
                 await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 await smart_embed(
                     ctx,
-                    _("**{author}**, loadout {name} has been deleted.").format(
-                        author=escape(ctx.author.display_name), name=name
+                    _("{author}, loadout {name} has been deleted.").format(
+                        author=bold(ctx.author.display_name), name=name
                     ),
                 )
 
@@ -103,13 +103,13 @@ class LoadoutCommands(AdventureMixin):
         if not c.loadouts:
             return await smart_embed(
                 ctx,
-                _("**{author}**, you don't have any loadouts saved.").format(author=escape(ctx.author.display_name)),
+                _("{author}, you don't have any loadouts saved.").format(author=bold(ctx.author.display_name)),
             )
         if name is not None and name.lower() not in c.loadouts:
             return await smart_embed(
                 ctx,
-                _("**{author}**, you don't have a loadout named {name}.").format(
-                    author=escape(ctx.author.display_name), name=name
+                _("{author}, you don't have a loadout named {name}.").format(
+                    author=bold(ctx.author.display_name), name=name
                 ),
             )
         else:
@@ -158,8 +158,8 @@ class LoadoutCommands(AdventureMixin):
                 ctx.command.reset_cooldown(ctx)
                 return await smart_embed(
                     ctx,
-                    _("**{author}**, you don't have a loadout named {name}.").format(
-                        author=escape(ctx.author.display_name), name=name
+                    _("{author}, you don't have a loadout named {name}.").format(
+                        author=bold(ctx.author.display_name), name=name
                     ),
                 )
             else:
