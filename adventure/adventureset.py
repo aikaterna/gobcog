@@ -613,11 +613,11 @@ class AdventureSetCommands(AdventureMixin):
         else:
             await ctx.send(box(msg, lang="ini"))
 
-    @adventureset.command()
+    @adventureset.command(name="delete")
     @commands.is_owner()
     @commands.bot_has_permissions(add_reactions=True)
     async def adventureset_delete(self, ctx: commands.Context, user_id: RawUserIds):
-        """Deletes a user's profile by their discord ID"""
+        """[Owner] Delete a user's adventure profile."""
         user = ctx.bot.get_user(user_id)
         if not user:
             await self.config.user_from_id(user_id).clear()
@@ -630,7 +630,7 @@ class AdventureSetCommands(AdventureMixin):
             return
         msg = await smart_embed(
             ctx,
-            _("Are you sure you want to permanently delete {user}'s profile (user_id)?").format(
+            _("Are you sure you want to permanently delete {user}'s profile (`{user_id}`)?").format(
                 user=user, user_id=user_id
             ),
         )
@@ -646,5 +646,5 @@ class AdventureSetCommands(AdventureMixin):
                 await ctx.send(_("Profile deletion cancelled."))
                 await msg.delete()
                 return
-        await self.red_delete_data_for_user(user_id=user_id)
+        await self.red_delete_data_for_user(requester="owner", user_id=user_id)
         await ctx.tick()
