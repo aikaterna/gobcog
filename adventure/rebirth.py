@@ -54,7 +54,7 @@ class RebirthCommands(AdventureMixin):
                 if c.static_last_known_currency is None:
                     c.static_last_known_currency = last_known_currency
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
-                elif c.static_last_known_currency is not None:
+                if c.static_last_known_currency is not None:
                     last_known_currency = c.static_last_known_currency
                 currency_name = await bank.get_currency_name(
                     ctx.guild,
