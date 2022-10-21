@@ -1511,7 +1511,7 @@ class Adventure(
                     self._loss_message[ctx.message.id] = humanize_list(loss_list).strip()
             miniboss = session.challenge
             special = session.miniboss["special"]
-            result_msg += _("The {miniboss}'s {special} was countered, but he still managed to kill you.").format(
+            result_msg += _("The {miniboss}'s {special} was countered, but they still managed to kill you.").format(
                 miniboss=bold(miniboss), special=special
             )
         amount = 1 * session.monster_stats
