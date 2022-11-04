@@ -1570,17 +1570,14 @@ class Character:
 
 
 async def calculate_sp(lvl_end: int, c: Character):
-    points = c.rebirths * 10
-    async for _loop_counter in AsyncIter(range(lvl_end), steps=100):
-        if lvl_end >= 300:
-            points += 1
-        elif lvl_end >= 200:
-            points += 5
-        elif lvl_end >= 100:
-            points += 1
-        elif lvl_end >= 0:
-            points += 0.5
-        lvl_end -= 1
+    points_300 = lvl_end - 300 if lvl_end >= 300 else 0
+    points_200 = (lvl_end - 200) - points_300 if lvl_end >= 200 else 0
+    points_100 = (lvl_end - 100) - points_300 - points_200 if lvl_end >= 100 else 0
+    points_0 = lvl_end - points_100 - points_300 - points_200
+    if 200 <= lvl_end < 300:
+        points_200 += 1
+        points_0 -= 1
+    points = (c.rebirths * 10) + (points_300 * 1) + (points_200 * 5) + (points_100 * 1) + (points_0 * 0.5)
 
     return int(points)
 
