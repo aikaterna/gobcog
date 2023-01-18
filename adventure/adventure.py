@@ -6,6 +6,7 @@ import logging
 import random
 import time
 from abc import ABC
+from collections import defaultdict
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 from typing import Literal, MutableMapping
@@ -2499,7 +2500,8 @@ class Adventure(
         daymult = self._daily_bonus.get(str(datetime.today().isoweekday()), 0)
         xp = max(1, round(amount))
         cp = max(1, round(amount))
-        newxp = 0
+        total_adventure_xp = 0
+        temp = defaultdict(dict)
         newcp = 0
         rewards_list = []
         phrase = ""
@@ -2513,6 +2515,28 @@ class Adventure(
             session_bonus = 0 if session.easy_mode else 1
         else:
             session_bonus = 0
+
+        async for user in AsyncIter(userlist, steps=100):
+            try:
+                c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                continue
+
+            userxp = int(xp + (xp * 0.5 * c.rebirths) + max((xp * 0.1 * min(250, c._int / 10)), 0))
+            userxp = int(userxp * (c.gear_set_bonus.get("xpmult", 1) + daymult + session_bonus))
+            total_adventure_xp += userxp
+            if c.heroclass.get("pet", {}).get("bonuses", {}).get("always", False):
+                roll = 5
+            else:
+                roll = random.randint(1, 5)
+            temp[user.id]["roll"] = roll
+            if roll == 5 and c.heroclass["name"] == "Ranger" and c.heroclass["pet"]:
+                petxp = int(userxp * c.heroclass["pet"]["bonus"])
+                total_adventure_xp += petxp
+                userxp += petxp
+        newxp = total_adventure_xp
+        per_participant_xp = total_adventure_xp / len(userlist)
         async for user in AsyncIter(userlist, steps=100):
             self._rewards[user.id] = {}
             try:
@@ -2520,15 +2544,11 @@ class Adventure(
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 continue
-            userxp = int(xp + (xp * 0.5 * c.rebirths) + max((xp * 0.1 * min(250, c._int / 10)), 0))
             usercp = int(cp + max((cp * 0.1 * min(1000, (c._luck + c._att) / 10)), 0))
-            userxp = int(userxp * (c.gear_set_bonus.get("xpmult", 1) + daymult + session_bonus))
             usercp = int(usercp * (c.gear_set_bonus.get("cpmult", 1) + daymult))
-            newxp += userxp
             newcp += usercp
-            roll = random.randint(1, 5)
-            if c.heroclass.get("pet", {}).get("bonuses", {}).get("always", False):
-                roll = 5
+            roll = temp.get(user.id, {}).get("roll")
+            userxp = int(per_participant_xp)
             if roll == 5 and c.heroclass["name"] == "Ranger" and c.heroclass["pet"]:
                 petxp = int(userxp * c.heroclass["pet"]["bonus"])
                 newxp += petxp
