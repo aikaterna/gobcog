@@ -497,7 +497,7 @@ class Adventure(
         delta = timedelta(minutes=6)
         with contextlib.suppress(asyncio.CancelledError):
             while True:
-                async for guild_id, session in AsyncIter(self._sessions.copy(), steps=100):
+                async for guild_id, session in AsyncIter(self._sessions.copy().items(), steps=100):
                     if session.start_time + delta > datetime.now():
                         if guild_id in self._sessions:
                             del self._sessions[guild_id]
