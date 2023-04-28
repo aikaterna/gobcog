@@ -2,14 +2,16 @@
 import logging
 import time
 from operator import itemgetter
-from typing import List, Optional
+from typing import List, Optional, Union
+
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
 from redbot.core import commands
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number
+
 
 from .abc import AdventureMixin
 from .bank import bank
@@ -80,7 +82,7 @@ class CharacterCommands(AdventureMixin):
                         "{author}, this will cost you at least {offering} {currency_name}.\n"
                         "You currently have {bal}. Do you want to proceed?"
                     ).format(
-                        author=escape(ctx.author.display_name),
+                        author=bold(ctx.author.display_name),
                         offering=humanize_number(offering),
                         currency_name=currency_name,
                         bal=humanize_number(bal),
@@ -99,25 +101,25 @@ class CharacterCommands(AdventureMixin):
                     await bank.withdraw_credits(ctx.author, offering)
                     await smart_embed(
                         ctx,
-                        _("{}, your skill points have been reset.").format(escape(ctx.author.display_name)),
+                        _("{}, your skill points have been reset.").format(bold(ctx.author.display_name)),
                     )
                 else:
                     await smart_embed(
                         ctx,
-                        _("Don't play games with me, {}.").format(escape(ctx.author.display_name)),
+                        _("Don't play games with me, {}.").format(bold(ctx.author.display_name)),
                     )
                 return
 
             if c.skill["pool"] <= 0:
                 return await smart_embed(
                     ctx,
-                    _("{}, you do not have unspent skillpoints.").format(escape(ctx.author.display_name)),
+                    _("{}, you do not have unspent skillpoints.").format(bold(ctx.author.display_name)),
                 )
             elif c.skill["pool"] < amount:
                 return await smart_embed(
                     ctx,
                     _("{}, you only have {} unspent skillpoints.").format(
-                        escape(ctx.author.display_name), c.skill["pool"]
+                        bold(ctx.author.display_name), c.skill["pool"]
                     ),
                 )
             if skill is None:
@@ -131,7 +133,7 @@ class CharacterCommands(AdventureMixin):
                 await smart_embed(
                     ctx,
                     _(
-                        "**{author}**, you currently have **{skillpoints}** unspent skillpoints.\n"
+                        "{author}, you currently have {skillpoints} unspent skillpoints.\n"
                         "If you want to put them towards a permanent attack, "
                         "charisma or intelligence bonus, use "
                         "`{command1}`, `{command2}` or "
@@ -168,7 +170,7 @@ class CharacterCommands(AdventureMixin):
                 await smart_embed(
                     ctx,
                     _("{author}, you permanently raised your {spend} value by {amount}.").format(
-                        author=escape(ctx.author.display_name), spend=spend, amount=amount
+                        author=bold(ctx.author.display_name), spend=spend, amount=amount
                     ),
                 )
 
@@ -288,7 +290,7 @@ class CharacterCommands(AdventureMixin):
 
     @commands.hybrid_command()
     @commands.bot_has_permissions(add_reactions=True)
-    async def stats(self, ctx: commands.Context, *, user: discord.Member = None):
+    async def stats(self, ctx: commands.Context, *, user: Union[discord.Member, discord.User] = None):
         """This draws up a character sheet of you or an optionally specified member."""
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))

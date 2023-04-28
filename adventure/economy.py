@@ -2,6 +2,7 @@
 import logging
 import re
 import time
+from typing import Union
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
@@ -323,7 +324,9 @@ class EconomyCommands(AdventureMixin):
         """[Owner] Commands to add things to players' inventories."""
 
     @give.command(name="item")
-    async def _give_item(self, ctx: commands.Context, user: discord.Member, item_name: str, *, stats: Stats):
+    async def _give_item(
+        self, ctx: commands.Context, user: Union[discord.Member, discord.User], item_name: str, *, stats: Stats
+    ):
         """[Owner] Adds a custom item to a specified member.
 
         Item names containing spaces must be enclosed in double quotes. `[p]give item @locastan
@@ -366,7 +369,11 @@ class EconomyCommands(AdventureMixin):
 
     @give.command(name="loot")
     async def _give_loot(
-        self, ctx: commands.Context, loot_type: str, users: commands.Greedy[discord.Member] = None, number: int = 1
+        self,
+        ctx: commands.Context,
+        loot_type: str,
+        users: commands.Greedy[Union[discord.Member, discord.User]] = None,
+        number: int = 1,
     ):
         """[Owner] Give treasure chest(s) to all specified users."""
 

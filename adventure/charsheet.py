@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import logging
 import random
+import time
 from copy import copy
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, MutableMapping, Optional, Tuple
+from datetime import date, datetime
+from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
@@ -688,8 +689,11 @@ class Character:
                 final.append(sorted(tmp[slot_name], key=_sort))
         return final
 
-    async def looted(self, how_many: int = 1) -> List[Tuple[str, int]]:
-        items = [i for n, i in self.backpack.items() if i.rarity not in ["normal", "rare", "epic", "forged"]]
+    async def looted(self, how_many: int = 1, exclude: set = None) -> List[Tuple[str, int]]:
+        if exclude is None:
+            exclude = {"normal", "rare", "epic", "forged"}
+        exclude.add("forged")
+        items = [i for n, i in self.backpack.items() if i.rarity not in exclude]
         looted_so_far = 0
         looted = []
         if not items:
@@ -1294,11 +1298,18 @@ class Character:
 
     @classmethod
     async def from_json(
-        cls, ctx: commands.Context, config: Config, user: discord.Member, daily_bonus_mapping: Dict[str, float]
+        cls,
+        ctx: commands.Context,
+        config: Config,
+        user: Union[discord.Member, discord.User],
+        daily_bonus_mapping: Dict[str, float],
     ):
         """Return a Character object from config and user."""
         data = await config.user(user).all()
-        balance = await bank.get_balance(user)
+        try:
+            balance = await bank.get_balance(user)
+        except Exception:
+            balance = 0
         equipment = {k: Item.from_json(ctx, v) if v else None for k, v in data["items"].items() if k != "backpack"}
         if "int" not in data["skill"]:
             data["skill"]["int"] = 0
@@ -1510,7 +1521,7 @@ class Character:
             tresure[0] += max(int(self.rebirths), 0)
 
         self.weekly_score.update({"rebirths": self.weekly_score.get("rebirths", 0) + 1})
-
+        self.heroclass["cooldown"] = time.time() + 60  # Set skill cooldown to 60s from rebirth
         return {
             "adventures": self.adventures,
             "nega": self.nega,
@@ -1559,17 +1570,14 @@ class Character:
 
 
 async def calculate_sp(lvl_end: int, c: Character):
-    points = c.rebirths * 10
-    async for _loop_counter in AsyncIter(range(lvl_end), steps=100):
-        if lvl_end >= 300:
-            points += 1
-        elif lvl_end >= 200:
-            points += 5
-        elif lvl_end >= 100:
-            points += 1
-        elif lvl_end >= 0:
-            points += 0.5
-        lvl_end -= 1
+    points_300 = lvl_end - 300 if lvl_end >= 300 else 0
+    points_200 = (lvl_end - 200) - points_300 if lvl_end >= 200 else 0
+    points_100 = (lvl_end - 100) - points_300 - points_200 if lvl_end >= 100 else 0
+    points_0 = lvl_end - points_100 - points_300 - points_200
+    if 200 <= lvl_end < 300:
+        points_200 += 1
+        points_0 -= 1
+    points = (c.rebirths * 10) + (points_300 * 1) + (points_200 * 5) + (points_100 * 1) + (points_0 * 0.5)
 
     return int(points)
 

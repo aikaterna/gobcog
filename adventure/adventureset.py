@@ -2,6 +2,7 @@
 import contextlib
 import logging
 import os
+from typing import Union
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
@@ -9,7 +10,7 @@ from redbot.core import commands
 from redbot.core.commands import get_dict_converter
 from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number
 
 from .abc import AdventureMixin
 from .bank import bank
@@ -150,7 +151,9 @@ class AdventureSetCommands(AdventureMixin):
         """
         toggle = await self.config.easy_mode()
         await self.config.easy_mode.set(not toggle)
-        await smart_embed(ctx, _("Adventure easy mode is now **{}**.").format("Enabled" if not toggle else "Disabled"))
+        await smart_embed(
+            ctx, _("Adventure easy mode is now {}.").format(bold(_("Enabled") if not toggle else _("Disabled")))
+        )
 
     @adventureset.command()
     @commands.is_owner()
@@ -160,7 +163,7 @@ class AdventureSetCommands(AdventureMixin):
         await self.config.separate_economy.set(not toggle)
         self._separate_economy = not toggle
         await smart_embed(
-            ctx, _("Adventurer currency is: **{}**").format(_("Separated" if not toggle else _("Unified")))
+            ctx, _("Adventurer currency is: {}").format(bold(_("Separated") if not toggle else _("Unified")))
         )
 
     @adventureset.group(name="economy")
@@ -352,7 +355,9 @@ class AdventureSetCommands(AdventureMixin):
 
     @adventureset.command(name="remove")
     @commands.is_owner()
-    async def remove_item(self, ctx: commands.Context, user: discord.Member, *, full_item_name: str):
+    async def remove_item(
+        self, ctx: commands.Context, user: Union[discord.Member, discord.User], *, full_item_name: str
+    ):
         """[Owner] Lets you remove an item from a user.
 
         Use the full name of the item including the rarity characters like . or []  or {}.
@@ -378,12 +383,12 @@ class AdventureSetCommands(AdventureMixin):
                     item = c.backpack[full_item_name]
                 except KeyError:
                     return await smart_embed(
-                        ctx, _("{} does not have an item named `{}`.").format(user, full_item_name)
+                        ctx, _("{} does not have an item named `{}`.").format(bold(user), full_item_name)
                     )
             with contextlib.suppress(KeyError):
                 del c.backpack[item.name]
             await self.config.user(user).set(await c.to_json(self.config))
-        await ctx.send(_("{item} removed from {user}.").format(item=box(str(item), lang="css"), user=user))
+        await ctx.send(_("{item} removed from {user}.").format(item=box(str(item), lang="css"), user=bold(user)))
 
     @adventureset.command()
     @commands.is_owner()

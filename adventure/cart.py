@@ -78,6 +78,7 @@ class TraderModal(discord.ui.Modal):
                 except Exception as exc:
                     log.exception("Error with the new character sheet", exc_info=exc)
                     return
+
                 if c.is_backpack_full(is_dev=is_dev(spender)):
                     await interaction.response.send_message(
                         _("**{author}**, Your backpack is currently full.").format(author=escape(spender.display_name))
@@ -184,6 +185,7 @@ class Trader(discord.ui.View):
         if stockcount is None:
             stockcount = random.randint(3, 9)
         self.cog._curent_trader_stock[ctx.guild.id] = (stockcount, {})
+
 
         stock = await self.generate(stockcount)
         currency_name = await bank.get_currency_name(

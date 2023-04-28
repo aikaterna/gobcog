@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 from typing import Literal, MutableMapping, Optional, Union
 
+
 import discord
 from discord.ext.commands import CheckFailure
 from redbot import VersionInfo, version_info
@@ -19,7 +20,7 @@ from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number, humanize_timedelta, pagify
+from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number, humanize_timedelta, pagify
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
@@ -36,7 +37,7 @@ from .defaults import default_global, default_guild, default_user
 from .dev import DevCommands
 from .economy import EconomyCommands
 from .game_session import GameSession
-from .helpers import _get_epoch, _remaining, escape, is_dev, smart_embed
+from .helpers import _get_epoch, _remaining, is_dev, smart_embed
 from .leaderboards import LeaderboardCommands
 from .loadouts import LoadoutCommands
 from .loot import LootCommands
@@ -92,7 +93,7 @@ class Adventure(
             user_id
         ).clear()  # This will only ever touch the separate currency, leaving bot economy to be handled by core.
 
-    __version__ = "3.5.3"
+    __version__ = "3.5.8"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -556,7 +557,7 @@ class Adventure(
             # Only let the bot owner specify a specific challenge
             challenge = None
 
-        adventure_msg = _("You feel adventurous, **{}**?").format(escape(ctx.author.display_name))
+        adventure_msg = _("You feel adventurous, {}?").format(bold(ctx.author.display_name))
         try:
             reward, participants = await self._simple(ctx, adventure_msg, challenge)
             await self.config.guild(ctx.guild).cooldown.set(time.time())
@@ -845,12 +846,11 @@ class Adventure(
             attribute = attribute.lower()
         else:
             attribute = random.choice(list(self.ATTRIBS.keys()))
-        if transcended:
-            new_challenge = challenge.replace("Ascended", "Transcended")
-        else:
-            new_challenge = challenge
-
+        new_challenge = challenge
         if easy_mode:
+            if transcended:
+                # Shows Transcended on Easy mode
+                new_challenge = _("Transcended {}").format(challenge.replace("Ascended", ""))
             no_monster = False
             if monster_roster[challenge]["boss"]:
                 timer = 60 * 5
@@ -861,7 +861,7 @@ class Adventure(
                 self.bot.dispatch("adventure_miniboss", ctx)
             else:
                 timer = 60 * 2
-            if "Transcended" in new_challenge:
+            if transcended:
                 self.bot.dispatch("adventure_transcended", ctx)
             elif "Ascended" in new_challenge:
                 self.bot.dispatch("adventure_ascended", ctx)
@@ -870,6 +870,9 @@ class Adventure(
             elif attribute == " possessed":
                 self.bot.dispatch("adventure_possessed", ctx)
         else:
+            if transcended:
+                # Hide Transcended on Easy mode
+                new_challenge = challenge.replace("Ascended", "")
             timer = 60 * 3
             no_monster = random.randint(0, 100) == 25
         self._sessions[ctx.guild.id] = GameSession(
@@ -892,7 +895,7 @@ class Adventure(
         )
         adventure_msg = (
             f"{adventure_msg}{text}\n{random.choice(self.LOCATIONS)}\n"
-            f"**{escape(ctx.author.display_name)}**{random.choice(self.RAISINS)}"
+            f"{bold(ctx.author.display_name)}{random.choice(self.RAISINS)}"
         )
         await self._choice(ctx, adventure_msg)
         if ctx.guild.id not in self._sessions:
@@ -993,6 +996,7 @@ class Adventure(
         session.message = adventure_msg
         # start_adding_reactions(adventure_msg, self._adventure_actions)
         timer = await self._adv_countdown(ctx, session.timer, "Time remaining")
+
         self.tasks[adventure_msg.id] = timer
         try:
             await asyncio.wait_for(timer, timeout=timeout + 5)
@@ -1114,9 +1118,9 @@ class Adventure(
                     if user_id not in self._react_messaged:
                         await reaction.message.channel.send(
                             _(
-                                "**{c}**, you are already in an existing adventure. "
+                                "{c}, you are already in an existing adventure. "
                                 "Wait for it to finish before joining another one."
-                            ).format(c=escape(user.display_name))
+                            ).format(c=bold(user.display_name))
                         )
                         self._react_messaged.append(user_id)
                 else:
@@ -1156,13 +1160,13 @@ class Adventure(
         pray_name_list = []
         repair_list = []
         for user in fight_list:
-            fight_name_list.append(f"**{escape(user.display_name)}**")
+            fight_name_list.append(f"{bold(user.display_name)}")
         for user in magic_list:
-            wizard_name_list.append(f"**{escape(user.display_name)}**")
+            wizard_name_list.append(f"{bold(user.display_name)}")
         for user in talk_list:
-            talk_name_list.append(f"**{escape(user.display_name)}**")
+            talk_name_list.append(f"{bold(user.display_name)}")
         for user in pray_list:
-            pray_name_list.append(f"**{escape(user.display_name)}**")
+            pray_name_list.append(f"{bold(user.display_name)}")
 
         fighters_final_string = _(" and ").join(
             [", ".join(fight_name_list[:-1]), fight_name_list[-1]] if len(fight_name_list) > 2 else fight_name_list
@@ -1232,7 +1236,7 @@ class Adventure(
                 run_msg = _("It's a shame for the following adventurers...\n{run_msg}\n").format(run_msg=run_msg)
 
             output = _(
-                "All adventures prepared for an epic adventure, but they soon realise all this treasure was unprotected!\n{run_msg}{text}"
+                "All adventurers prepared for an epic adventure, but they soon realise all this treasure was unprotected!\n{run_msg}{text}"
             ).format(
                 text=text,
                 run_msg=run_msg,
@@ -1257,8 +1261,12 @@ class Adventure(
         )
         result_msg = run_msg + pray_msg + talk_msg + fight_msg
         challenge_attrib = session.attribute
-        hp = int(session.monster_modified_stats["hp"] * self.ATTRIBS[challenge_attrib][0] * session.monster_stats)
-        dipl = int(session.monster_modified_stats["dipl"] * self.ATTRIBS[challenge_attrib][1] * session.monster_stats)
+        hp = max(
+            int(session.monster_modified_stats["hp"] * self.ATTRIBS[challenge_attrib][0] * session.monster_stats), 1
+        )
+        dipl = max(
+            int(session.monster_modified_stats["dipl"] * self.ATTRIBS[challenge_attrib][1] * session.monster_stats), 1
+        )
 
         dmg_dealt = int(attack + magic)
         diplomacy = int(diplomacy)
@@ -1267,16 +1275,16 @@ class Adventure(
         damage_str = ""
         diplo_str = ""
         if dmg_dealt > 0:
-            damage_str = _("The group {status} **{challenge}** **({result}/{int_hp})**.\n").format(
+            damage_str = _("The group {status} {challenge} **({result}/{int_hp})**.\n").format(
                 status=_("hit the") if failed or not slain else _("killed the"),
-                challenge=challenge,
+                challenge=bold(challenge),
                 result=humanize_number(dmg_dealt),
                 int_hp=humanize_number(hp),
             )
         if diplomacy > 0:
-            diplo_str = _("The group {status} the **{challenge}** with {how} **({diplomacy}/{int_dipl})**.\n").format(
+            diplo_str = _("The group {status} the {challenge} with {how} **({diplomacy}/{int_dipl})**.\n").format(
                 status=_("tried to persuade") if not persuaded else _("distracted"),
-                challenge=challenge,
+                challenge=bold(challenge),
                 how=_("flattery") if failed or not persuaded else _("insults"),
                 diplomacy=humanize_number(diplomacy),
                 int_dipl=humanize_number(dipl),
@@ -1311,18 +1319,17 @@ class Adventure(
                         loss = c.bal
                     if user not in [u for u, t in repair_list]:
                         repair_list.append([user, loss])
-                        if user not in [u for u, t in repair_list]:
-                            if c.bal > loss:
-                                await bank.withdraw_credits(user, loss)
-                            else:
-                                await bank.set_balance(user, 0)
+                        if c.bal > loss:
+                            await bank.withdraw_credits(user, loss)
+                        else:
+                            await bank.set_balance(user, 0)
         if session.easy_mode:
             if (slain or persuaded) and not failed:
                 success = True
                 roll = random.randint(1, 10)
                 monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
                 if session.transcended:
-                    if session.boss and "Trancended" in session.challenge:
+                    if session.boss and not session.no_monster:
                         avaliable_loot = [
                             [0, 0, 1, 5, 2, 1],
                             [0, 0, 0, 0, 1, 1],
@@ -1374,7 +1381,7 @@ class Adventure(
                 roll = random.randint(1, 10)
                 monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
                 if session.transcended:
-                    if session.boss and "Trancended" in session.challenge:
+                    if session.boss and not session.no_monster:
                         avaliable_loot = [
                             [0, 0, 1, 5, 4, 2],
                             [0, 0, 3, 4, 5, 2],
@@ -1508,9 +1515,9 @@ class Adventure(
                     self._loss_message[ctx.message.id] = humanize_list(loss_list).strip()
             miniboss = session.challenge
             special = session.miniboss["special"]
-            result_msg += _(
-                "The **{miniboss}'s** " "{special} was countered, but he still managed to kill you."
-            ).format(miniboss=miniboss, special=special)
+            result_msg += _("The {miniboss}'s {special} was countered, but they still managed to kill you.").format(
+                miniboss=bold(miniboss), special=special
+            )
         amount = 1 * session.monster_stats
         amount *= (hp + dipl) if slain and persuaded else hp if slain else dipl
         amount += int(amount * (0.25 * people))
@@ -1804,7 +1811,7 @@ class Adventure(
         session = self._sessions[guild_id]
         if len(list(session.run)) != 0:
             for user in session.run:
-                runners.append(f"**{escape(user.display_name)}**")
+                runners.append(f"{bold(user.display_name)}")
             msg += _("{} just ran away.\n").format(humanize_list(runners))
             if shame:
                 msg += _(
@@ -1867,13 +1874,13 @@ class Adventure(
                     bonus = max(bonus_roll, int((roll + att_value + rebirths) * bonus_multi))
                     attack += int((roll - bonus + att_value) / pdef)
                     report += (
-                        f"**{escape(user.display_name)}**: "
+                        f"{bold(user.display_name)}: "
                         f"{self.emojis.dice}({roll}) + "
                         f"{self.emojis.berserk}{humanize_number(bonus)} + "
                         f"{self.emojis.attack}{str(humanize_number(att_value))}\n"
                     )
                 else:
-                    msg += _("**{}** fumbled the attack.\n").format(escape(user.display_name))
+                    msg += _("{user} fumbled the attack.\n").format(user=bold(user.display_name))
                     fumblelist.append(user)
                     fumble_count += 1
             elif roll_perc > 0.95 or c.heroclass["name"] == "Berserker":
@@ -1881,7 +1888,7 @@ class Adventure(
                 crit_bonus = 0
                 base_bonus = random.randint(5, 10) + rebirths
                 if roll_perc > 0.95:
-                    msg += _("**{}** landed a critical hit.\n").format(escape(user.display_name))
+                    msg += _("{user} landed a critical hit.\n").format(user=bold(user.display_name))
                     critlist.append(user)
                     crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
@@ -1891,7 +1898,7 @@ class Adventure(
                 attack += int((roll + base_bonus + crit_bonus + att_value) / pdef)
                 bonus = base_str + crit_str
                 report += (
-                    f"**{escape(user.display_name)}**: "
+                    f"{bold(user.display_name)}: "
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.berserk}{bonus} + "
                     f"{self.emojis.attack}{str(humanize_number(att_value))}\n"
@@ -1899,7 +1906,7 @@ class Adventure(
             else:
                 attack += int((roll + att_value) / pdef) + rebirths
                 report += (
-                    f"**{escape(user.display_name)}**: "
+                    f"{bold(user.display_name)}: "
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.attack}{str(humanize_number(att_value))}\n"
                 )
@@ -1935,7 +1942,7 @@ class Adventure(
             int_value = c.total_int
             rebirths = c.rebirths * (3 if c.heroclass["name"] == "Wizard" else 1)
             if roll_perc < 0.10:
-                msg += _("{}**{}** almost set themselves on fire.\n").format(failed_emoji, escape(user.display_name))
+                msg += _("{}{} almost set themselves on fire.\n").format(failed_emoji, bold(user.display_name))
                 fumblelist.append(user)
                 fumble_count += 1
                 if c.heroclass["name"] == "Wizard" and c.heroclass["ability"]:
@@ -1944,7 +1951,7 @@ class Adventure(
                     bonus = max(bonus_roll, int((roll + int_value + rebirths) * bonus_multi))
                     magic += int((roll - bonus + int_value) / mdef)
                     report += (
-                        f"**{escape(user.display_name)}**: "
+                        f"{bold(user.display_name)}: "
                         f"{self.emojis.dice}({roll}) + "
                         f"{self.emojis.magic_crit}{humanize_number(bonus)} + "
                         f"{self.emojis.magic}{str(humanize_number(int_value))}\n"
@@ -1955,7 +1962,7 @@ class Adventure(
                 base_bonus = random.randint(5, 10) + rebirths
                 base_str = f"{self.emojis.magic_crit}️ {humanize_number(base_bonus)}"
                 if roll_perc > 0.95:
-                    msg += _("**{}** had a surge of energy.\n").format(escape(user.display_name))
+                    msg += _("{} had a surge of energy.\n").format(bold(user.display_name))
                     critlist.append(user)
                     crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
@@ -1965,7 +1972,7 @@ class Adventure(
                 magic += int((roll + base_bonus + crit_bonus + int_value) / mdef)
                 bonus = base_str + crit_str
                 report += (
-                    f"**{escape(user.display_name)}**: "
+                    f"{bold(user.display_name)}: "
                     f"{self.emojis.dice}({roll}) + "
                     f"{bonus} + "
                     f"{self.emojis.magic}{humanize_number(int_value)}\n"
@@ -1973,7 +1980,7 @@ class Adventure(
             else:
                 magic += int((roll + int_value) / mdef) + c.rebirths // 5
                 report += (
-                    f"**{escape(user.display_name)}**: "
+                    f"{bold(user.display_name)}: "
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.magic}{humanize_number(int_value)}\n"
                 )
@@ -2027,8 +2034,8 @@ class Adventure(
                 roll = max(random.randint((1 + mod), max_roll), 1)
                 roll_perc = roll / max_roll
                 if len(fight_list + talk_list + magic_list) == 0:
-                    msg += _("**{}** blessed like a madman but nobody was there to receive it.\n").format(
-                        escape(user.display_name)
+                    msg += _("{} blessed like a madman but nobody was there to receive it.\n").format(
+                        bold(user.display_name)
                     )
                 if roll_perc < 0.15:
                     pray_att_bonus = 0
@@ -2045,10 +2052,10 @@ class Adventure(
                     magic -= pray_magic_bonus
                     fumblelist.append(user)
                     msg += _(
-                        "**{user}'s** sermon offended the mighty {god}. {failed_emoji}"
+                        "{user}'s sermon offended the mighty {god}. {failed_emoji}"
                         "({len_f_list}{attack}/{len_t_list}{talk}/{len_m_list}{magic}) {roll_emoji}({roll})\n"
                     ).format(
-                        user=escape(user.display_name),
+                        user=bold(user.display_name),
                         god=god,
                         failed_emoji=failed_emoji,
                         attack=self.emojis.attack,
@@ -2083,16 +2090,16 @@ class Adventure(
                     diplomacy += pray_diplo_bonus
                     if roll == 50:
                         roll_msg = _(
-                            "**{user}** turned into an avatar of mighty {god}. "
+                            "{user} turned into an avatar of mighty {god}. "
                             "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll_emoji}({roll})\n"
                         )
                     else:
                         roll_msg = _(
-                            "**{user}** blessed you all in {god}'s name. "
+                            "{user} blessed you all in {god}'s name. "
                             "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll_emoji}({roll})\n"
                         )
                     msg += roll_msg.format(
-                        user=escape(user.display_name),
+                        user=bold(user.display_name),
                         god=god,
                         attack=self.emojis.attack,
                         talk=self.emojis.talk,
@@ -2106,9 +2113,7 @@ class Adventure(
             else:
                 roll = random.randint(1, 10)
                 if len(fight_list + talk_list + magic_list) == 0:
-                    msg += _("**{}** prayed like a madman but nobody else helped them.\n").format(
-                        escape(user.display_name)
-                    )
+                    msg += _("{} prayed like a madman but nobody else helped them.\n").format(bold(user.display_name))
 
                 elif roll == 5:
                     attack_buff = 0
@@ -2125,10 +2130,10 @@ class Adventure(
                     magic += magic_buff
                     diplomacy += talk_buff
                     msg += _(
-                        "**{user}'s** prayer called upon the mighty {god} to help you. "
+                        "{user}'s prayer called upon the mighty {god} to help you. "
                         "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll_emoji}({roll})\n"
                     ).format(
-                        user=escape(user.display_name),
+                        user=bold(user.display_name),
                         god=god,
                         attack=self.emojis.attack,
                         talk=self.emojis.talk,
@@ -2141,7 +2146,7 @@ class Adventure(
                     )
                 else:
                     fumblelist.append(user)
-                    msg += _("{}**{}'s** prayers went unanswered.\n").format(failed_emoji, escape(user.display_name))
+                    msg += _("{}{}'s prayers went unanswered.\n").format(failed_emoji, bold(user.display_name))
         for user in fumblelist:
             if user in pray_list:
                 pray_list.remove(user)
@@ -2182,13 +2187,9 @@ class Adventure(
                 if c.heroclass["name"] == "Bard" and c.heroclass["ability"]:
                     bonus = random.randint(5, 15)
                     diplomacy += int((roll - bonus + dipl_value + rebirths) / cdef)
-                    report += (
-                        f"**{escape(user.display_name)}** " f"🎲({roll}) +💥{bonus} +🗨{humanize_number(dipl_value)} | "
-                    )
+                    report += f"{bold(user.display_name)} " f"🎲({roll}) +💥{bonus} +🗨{humanize_number(dipl_value)} | "
                 else:
-                    msg += _("{}**{}** accidentally offended the enemy.\n").format(
-                        failed_emoji, escape(user.display_name)
-                    )
+                    msg += _("{}{} accidentally offended the enemy.\n").format(failed_emoji, bold(user.display_name))
                     fumblelist.append(user)
                     fumble_count += 1
             elif roll_perc > 0.95 or c.heroclass["name"] == "Bard":
@@ -2196,7 +2197,7 @@ class Adventure(
                 crit_bonus = 0
                 base_bonus = random.randint(5, 10) + rebirths
                 if roll_perc > 0.95:
-                    msg += _("**{}** made a compelling argument.\n").format(escape(user.display_name))
+                    msg += _("{} made a compelling argument.\n").format(bold(user.display_name))
                     critlist.append(user)
                     crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {crit_bonus}"
@@ -2207,7 +2208,7 @@ class Adventure(
                 diplomacy += int((roll + base_bonus + crit_bonus + dipl_value) / cdef)
                 bonus = base_str + crit_str
                 report += (
-                    f"**{escape(user.display_name)}** "
+                    f"{bold(user.display_name)} "
                     f"{self.emojis.dice}({roll}) + "
                     f"{bonus} + "
                     f"{self.emojis.talk}{humanize_number(dipl_value)}\n"
@@ -2215,7 +2216,7 @@ class Adventure(
             else:
                 diplomacy += int((roll + dipl_value + c.rebirths // 5) / cdef)
                 report += (
-                    f"**{escape(user.display_name)}** "
+                    f"{bold(user.display_name)} "
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.talk}{humanize_number(dipl_value)}\n"
                 )
@@ -2308,9 +2309,9 @@ class Adventure(
                     c.skill["pool"] = 0
                 c.skill["pool"] += ending_points - starting_points
                 if c.skill["pool"] > 0:
-                    extra = _(" You have **{}** skill points available.").format(c.skill["pool"])
-                rebirth_text = _("{} {} is now level **{}**!{}\n{}").format(
-                    levelup_emoji, user.mention, lvl_end, extra, rebirthextra
+                    extra = _(" You have {} skill points available.").format(bold(str(c.skill["pool"])))
+                rebirth_text = _("{} {} is now level {}!{}\n{}").format(
+                    levelup_emoji, user.mention, bold(str(lvl_end)), extra, rebirthextra
                 )
             if c.rebirths > 1:
                 roll = random.randint(1, 100)
@@ -2521,15 +2522,15 @@ class Adventure(
                 usercp += petcp
                 self._rewards[user.id]["cp"] = usercp
                 reward_message += "{mention} gained {xp} XP and {coin} {currency}.\n".format(
-                    mention=user.mention if can_embed else f"**{user.display_name}**",
+                    mention=user.mention if can_embed else f"{bold(user.display_name)}",
                     xp=humanize_number(int(userxp)),
                     coin=humanize_number(int(usercp)),
                     currency=currency_name,
                 )
                 percent = round((c.heroclass["pet"]["bonus"] - 1.0) * 100)
-                phrase += _("\n**{user}** received a **{percent}%** reward bonus from their {pet_name}.").format(
-                    user=escape(user.display_name),
-                    percent=str(percent),
+                phrase += _("\n{user} received a {percent}% reward bonus from their {pet_name}.").format(
+                    user=bold(user.display_name),
+                    percent=bold(str(percent)),
                     pet_name=c.heroclass["pet"]["name"],
                 )
 
@@ -2546,7 +2547,7 @@ class Adventure(
                 self._rewards[user.id]["special"] = special
             else:
                 self._rewards[user.id]["special"] = False
-            rewards_list.append(f"**{escape(user.display_name)}**")
+            rewards_list.append(f"{bold(user.display_name)}")
 
         self._reward_message[ctx.message.id] = reward_message
         to_reward = " and ".join(

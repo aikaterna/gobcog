@@ -1,7 +1,8 @@
 ---
 name: Bug report
 about: For bugs that don't involve a command.
-title: '[Bug] '
+title: "[Bug] "
+labels: ''
 assignees: ''
 
 ---

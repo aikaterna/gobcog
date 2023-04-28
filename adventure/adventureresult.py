@@ -1,5 +1,5 @@
 import logging
-from typing import List, Literal, MutableMapping, Optional, Union
+from typing import List, MutableMapping
 
 from redbot.core import commands
 
