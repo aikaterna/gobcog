@@ -714,6 +714,7 @@ class HeroClassConverter(Transformer):
         except ValueError:
             await smart_embed(ctx, _("{} may be a class somewhere, but not on my watch.").format(argument))
             raise BadArgument
+        return argument.lower()
 
     @classmethod
     async def transform(cls, interaction: discord.Interaction, argument: str) -> str:
