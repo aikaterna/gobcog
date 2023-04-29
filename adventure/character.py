@@ -4,7 +4,6 @@ import time
 from operator import itemgetter
 from typing import List, Optional, Union
 
-
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
 from redbot.core import commands
@@ -12,11 +11,10 @@ from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number
 
-
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ORDER, ANSI_ESCAPE, ANSI_CLOSE, ANSITextColours
+from .constants import ANSI_CLOSE, ANSI_ESCAPE, ORDER, ANSITextColours
 from .converters import EquipableItemConverter, EquipmentConverter, SkillConverter
 from .helpers import ConfirmView, _title_case, escape, smart_embed
 from .menus import BaseMenu, SimpleSource

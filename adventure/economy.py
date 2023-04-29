@@ -2,20 +2,20 @@
 import logging
 import re
 import time
-from typing import Union, Literal
+from typing import Literal, Union
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
 from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_number, humanize_list
+from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number
 
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
+from .constants import ANSI_CLOSE, ANSI_ESCAPE, ANSITextColours, Rarities
 from .converters import Stats
-from .constants import ANSI_ESCAPE, ANSI_CLOSE, Rarities, ANSITextColours
 from .helpers import escape, has_separated_economy, smart_embed
 from .menus import BaseMenu, SimpleSource
 

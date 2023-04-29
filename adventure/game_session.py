@@ -8,7 +8,7 @@ from typing import List, Mapping, MutableMapping, Optional, Set, Tuple
 import discord
 from redbot.core.commands import Context, commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import humanize_number, box
+from redbot.core.utils.chat_formatting import box, humanize_number
 
 from .charsheet import Character, has_funds
 from .helpers import escape, smart_embed

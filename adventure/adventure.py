@@ -31,7 +31,7 @@ from .cart import Trader
 from .character import CharacterCommands
 from .charsheet import Character, calculate_sp, has_funds
 from .class_abilities import ClassAbilities
-from .constants import ANSI_ESCAPE, ANSI_CLOSE, ANSITextColours
+from .constants import ANSI_CLOSE, ANSI_ESCAPE, ANSITextColours
 from .converters import ArgParserFailure, ChallengeConverter
 from .defaults import default_global, default_guild, default_user
 from .dev import DevCommands

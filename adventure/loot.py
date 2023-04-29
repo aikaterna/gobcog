@@ -10,12 +10,12 @@ from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import bold, box, humanize_number, humanize_list
+from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number
 
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ORDER, RARITIES, Rarities, ANSI_ESCAPE, ANSI_CLOSE, ANSITextColours
+from .constants import ANSI_CLOSE, ANSI_ESCAPE, ORDER, RARITIES, ANSITextColours, Rarities
 from .helpers import LootView, _sell, escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
@@ -61,9 +61,7 @@ class LootCommands(AdventureMixin):
                 chests = c.current_chests()
                 return await ctx.send(
                     box(
-                        _(
-                            "{author} owns {chests} chests."
-                        ).format(
+                        _("{author} owns {chests} chests.").format(
                             author=escape(ctx.author.display_name),
                             chests=chests,
                         ),
@@ -111,9 +109,7 @@ class LootCommands(AdventureMixin):
                         msg = _("{}, you've opened the following items:\n\n").format(escape(ctx.author.display_name))
                         rows = []
                         async for index, item in AsyncIter(items.values(), steps=100).enumerate(start=1):
-                            rows.append(
-                                item.row(c.lvl)
-                            )
+                            rows.append(item.row(c.lvl))
                         tables = await c.make_backpack_tables(rows, msg)
                         for t in tables:
                             msgs.append(t)

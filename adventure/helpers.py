@@ -6,7 +6,7 @@ from typing import Optional, Union
 
 import discord
 from discord.ext.commands import CheckFailure
-from redbot.core.commands import check, Context, Cog
+from redbot.core.commands import Cog, Context, check
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import escape as _escape
 from redbot.core.utils.common_filters import filter_various_mentions

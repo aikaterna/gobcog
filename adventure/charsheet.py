@@ -14,10 +14,12 @@ from discord.ext.commands import check
 from redbot.core import Config, commands
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import box, escape, humanize_number, humanize_list
+from redbot.core.utils.chat_formatting import box, escape, humanize_list, humanize_number
 
 from .bank import bank
 from .constants import (
+    ANSI_CLOSE,
+    ANSI_ESCAPE,
     ASC_OPEN,
     DEV_LIST,
     EVENT_OPEN,
@@ -30,10 +32,8 @@ from .constants import (
     SET_OPEN,
     TINKER_CLOSE,
     TINKER_OPEN,
-    ANSI_ESCAPE,
-    ANSI_CLOSE,
-    ANSITextColours,
     ANSIBackgroundColours,
+    ANSITextColours,
     HeroClasses,
     Rarities,
 )
@@ -81,7 +81,9 @@ class Item:
         elif self.rarity == "epic":
             return f"{ANSI_ESCAPE}[{ANSITextColours.blue.value}m[{self.name}]{ANSI_CLOSE}"
         elif self.rarity == "legendary":
-            return f"{ANSI_ESCAPE}[{ANSITextColours.yellow.value}m{LEGENDARY_OPEN}{self.name}{LEGENDARY_CLOSE}{ANSI_CLOSE}"
+            return (
+                f"{ANSI_ESCAPE}[{ANSITextColours.yellow.value}m{LEGENDARY_OPEN}{self.name}{LEGENDARY_CLOSE}{ANSI_CLOSE}"
+            )
         elif self.rarity == "ascended":
             return f"{ANSI_ESCAPE}[{ANSITextColours.cyan.value}m{ASC_OPEN}'{self.name}'{LEGENDARY_CLOSE}{ANSI_CLOSE}"
         elif self.rarity == "set":
@@ -113,9 +115,7 @@ class Item:
             self.luck * (1 if len(self.slot) == 1 else 2),
             f"{ANSI_ESCAPE}[{ANSITextColours.red.value}m{self.lvl}{ANSI_CLOSE}" if not can_equip else f"{self.lvl}",
             self.owned,
-            f"[{self.degrade}]"
-            if self.rarity in ["legendary", "event", "ascended"] and self.degrade >= 0
-            else "N/A",
+            f"[{self.degrade}]" if self.rarity in ["legendary", "event", "ascended"] and self.degrade >= 0 else "N/A",
             self.set or "N/A",
         )
 
@@ -558,7 +558,9 @@ class Character:
         cpmult = (self.gear_set_bonus.get("cpmult") + daymult) - 1
         rebirth_text = "\n"
         if self.lvl >= self.maxlevel:
-            rebirth_text = _("You have reached max level. To continue gaining levels and xp, you will have to rebirth.\n\n")
+            rebirth_text = _(
+                "You have reached max level. To continue gaining levels and xp, you will have to rebirth.\n\n"
+            )
         return _(
             "{user}'s Character Sheet\n\n"
             "{{Rebirths: {rebirths}, \n Max Level: {maxlevel}}}\n"
@@ -623,7 +625,9 @@ class Character:
         for i in Rarities:
             if not i.is_chest:
                 continue
-            chests.append(f"{ANSI_ESCAPE}[{i.rarity_colour.value}m {self.treasure[i.slot]} {names[i.value]}{ANSI_CLOSE}")
+            chests.append(
+                f"{ANSI_ESCAPE}[{i.rarity_colour.value}m {self.treasure[i.slot]} {names[i.value]}{ANSI_CLOSE}"
+            )
         return humanize_list(chests)
 
     def get_equipment(self):
@@ -870,7 +874,9 @@ class Character:
                         intel,
                         dex,
                         luck,
-                        f"{ANSI_ESCAPE}[{ANSITextColours.red.value}m{equip_level}{ANSI_CLOSE}" if can_equip else f"{equip_level}",
+                        f"{ANSI_ESCAPE}[{ANSITextColours.red.value}m{equip_level}{ANSI_CLOSE}"
+                        if can_equip
+                        else f"{equip_level}",
                         item.owned,
                         f"[{item.degrade}]"
                         if item.rarity in ["legendary", "event", "ascended"] and item.degrade >= 0

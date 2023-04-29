@@ -15,7 +15,7 @@ from redbot.core.utils.chat_formatting import box, humanize_number
 
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ANSI_ESCAPE, ANSI_CLOSE, ANSITextColours
+from .constants import ANSI_CLOSE, ANSI_ESCAPE, ANSITextColours
 from .helpers import _get_epoch, escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
@@ -187,7 +187,6 @@ class Trader(discord.ui.View):
         if stockcount is None:
             stockcount = random.randint(3, 9)
         self.cog._curent_trader_stock[ctx.guild.id] = (stockcount, {})
-
 
         stock = await self.generate(stockcount)
         currency_name = await bank.get_currency_name(
