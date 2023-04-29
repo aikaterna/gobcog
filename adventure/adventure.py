@@ -497,8 +497,9 @@ class Adventure(
         with contextlib.suppress(asyncio.CancelledError):
             while True:
                 async for guild_id, session in AsyncIter(self._sessions.copy().items(), steps=100):
-                    if session.start_time + delta > datetime.now():
+                    if datetime.now() > (session.start_time + delta):
                         if guild_id in self._sessions:
+                            log.debug("Removing old session from %s", guild_id)
                             del self._sessions[guild_id]
                 await asyncio.sleep(5)
 
@@ -994,7 +995,7 @@ class Adventure(
         session.message_id = adventure_msg.id
         session.message = adventure_msg
         # start_adding_reactions(adventure_msg, self._adventure_actions)
-        timer = await self._adv_countdown(ctx, session.timer, "Time remaining")
+        timer = await self._adv_countdown(ctx, 10, "Time remaining")
 
         self.tasks[adventure_msg.id] = timer
         try:
@@ -1005,8 +1006,11 @@ class Adventure(
             timer.cancel()
             log.exception("Error with the countdown timer", exc_info=exc)
         await adventure_msg.edit(view=None)
-
-        return await self._result(ctx, adventure_msg)
+        try:
+            return await self._result(ctx, adventure_msg)
+        except Exception:
+            log.exception("Error in results")
+            raise
 
     async def has_perm(self, user):
         if hasattr(self.bot, "allowed_by_whitelist_blacklist"):
@@ -1129,6 +1133,7 @@ class Adventure(
 
     async def _result(self, ctx: commands.Context, message: discord.Message):
         if ctx.guild.id not in self._sessions:
+            log.debug("Session not found for %s", ctx.guild.id)
             return
         calc_msg = await ctx.send(_("Calculating..."))
         attack = 0

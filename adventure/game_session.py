@@ -8,7 +8,7 @@ from typing import List, Mapping, MutableMapping, Optional, Set, Tuple
 import discord
 from redbot.core.commands import Context, commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import humanize_number
+from redbot.core.utils.chat_formatting import humanize_number, box
 
 from .charsheet import Character, has_funds
 from .helpers import escape, smart_embed
@@ -59,7 +59,7 @@ class AttackButton(discord.ui.Button):
         if await self.view.cog.config.guild(interaction.guild).god_name():
             god = await self.view.cog.config.guild(interaction.guild).god_name()
         choice = choice.replace("$god", god)
-        await interaction.response.send_message(choice, ephemeral=True)
+        await interaction.response.send_message(box(choice, lang="ansi"), ephemeral=True)
 
     async def callback(self, interaction: discord.Interaction):
         """Skip to previous track"""
@@ -143,7 +143,7 @@ class MagicButton(discord.ui.Button):
         if await self.view.cog.config.guild(interaction.guild).god_name():
             god = await self.view.cog.config.guild(interaction.guild).god_name()
         choice = choice.replace("$god", god)
-        await interaction.response.send_message(choice, ephemeral=True)
+        await interaction.response.send_message(box(choice, lang="ansi"), ephemeral=True)
 
     async def callback(self, interaction: discord.Interaction):
         """Skip to previous track"""
@@ -227,7 +227,7 @@ class TalkButton(discord.ui.Button):
         if await self.view.cog.config.guild(interaction.guild).god_name():
             god = await self.view.cog.config.guild(interaction.guild).god_name()
         choice = choice.replace("$god", god)
-        await interaction.response.send_message(choice, ephemeral=True)
+        await interaction.response.send_message(box(choice, lang="ansi"), ephemeral=True)
 
     async def callback(self, interaction: discord.Interaction):
         """Skip to previous track"""
@@ -311,7 +311,7 @@ class PrayButton(discord.ui.Button):
         if await self.view.cog.config.guild(interaction.guild).god_name():
             god = await self.view.cog.config.guild(interaction.guild).god_name()
         choice = choice.replace("$god", god)
-        await interaction.response.send_message(choice, ephemeral=True)
+        await interaction.response.send_message(box(choice, lang="ansi"), ephemeral=True)
 
     async def callback(self, interaction: discord.Interaction):
         """Skip to previous track"""
