@@ -79,7 +79,7 @@ class BackpackSellView(discord.ui.View):
         price += self.price
         msg = _("**{author}** sold one {item} for {price} {currency_name}.\n").format(
             author=escape(self.ctx.author.display_name),
-            item=box(self.item, lang="css"),
+            item=box(self.item, lang="ansi"),
             price=humanize_number(price),
             currency_name=currency_name,
         )
@@ -114,7 +114,7 @@ class BackpackSellView(discord.ui.View):
             count += 1
         msg = _("**{author}** sold all their {old_item} for {price} {currency_name}.\n").format(
             author=escape(self.ctx.author.display_name),
-            old_item=box(str(self.item) + " - " + str(old_owned), lang="css"),
+            old_item=box(str(self.item) + " - " + str(old_owned), lang="ansi"),
             price=humanize_number(price),
             currency_name=currency_name,
         )
@@ -148,7 +148,7 @@ class BackpackSellView(discord.ui.View):
         if price != 0:
             msg = _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
                 author=escape(self.ctx.author.display_name),
-                old_item=box(str(self.item) + " - " + str(old_owned - 1), lang="css"),
+                old_item=box(str(self.item) + " - " + str(old_owned - 1), lang="ansi"),
                 price=humanize_number(price),
                 currency_name=currency_name,
             )
@@ -265,7 +265,7 @@ class BackPackCommands(AdventureMixin):
                         _("{author} equipped {item} ({slot} slot).").format(
                             author=escape(ctx.author.display_name), item=str(equip), slot=slot
                         ),
-                        lang="css",
+                        lang="ansi",
                     )
                 else:
                     equip_msg = box(
@@ -275,7 +275,7 @@ class BackPackCommands(AdventureMixin):
                             slot=slot,
                             put=getattr(c, equip.slot[0]),
                         ),
-                        lang="css",
+                        lang="ansi",
                     )
                 await ctx.send(equip_msg)
                 c = await c.equip_item(equip, True, is_dev(ctx.author))  # FIXME:
@@ -546,7 +546,7 @@ class BackPackCommands(AdventureMixin):
             items=msg,
         )
         for page in pagify(new_msg, shorten_by=10, page_length=1900):
-            msg_list.append(box(page, lang="css"))
+            msg_list.append(box(page, lang="ansi"))
         await BaseMenu(
             source=SimpleSource(msg_list),
             delete_message_after=True,
@@ -572,7 +572,7 @@ class BackPackCommands(AdventureMixin):
                     _("\n{author}, your {device} is refusing to be sold and bit your finger for trying.").format(
                         author=escape(ctx.author.display_name), device=str(item)
                     ),
-                    lang="css",
+                    lang="ansi",
                 )
             )
         await ctx.defer()
@@ -586,7 +586,7 @@ class BackPackCommands(AdventureMixin):
             price_shown = _sell(c, item)
             message = _("**{author}**, do you want to sell this item for {price} each? {item}").format(
                 author=escape(ctx.author.display_name),
-                item=box(str(item), lang="css"),
+                item=box(str(item), lang="ansi"),
                 price=humanize_number(price_shown),
             )
             try:
@@ -674,7 +674,7 @@ class BackPackCommands(AdventureMixin):
                     _("\n{author}, your {device} does not want to leave you.").format(
                         author=escape(ctx.author.display_name), device=str(device[0])
                     ),
-                    lang="css",
+                    lang="ansi",
                 )
             )
         elif any([x for x in lookup if x.rarity == "set"]):
@@ -683,7 +683,7 @@ class BackPackCommands(AdventureMixin):
                     _("\n{character}, you cannot trade Set items as they are bound to your soul.").format(
                         character=escape(ctx.author.display_name)
                     ),
-                    lang="css",
+                    lang="ansi",
                 )
             )
         else:
@@ -717,7 +717,7 @@ class BackPackCommands(AdventureMixin):
                     asking=str(asking),
                     currency_name=currency_name,
                 ),
-                lang="css",
+                lang="ansi",
             )
             async with self.get_lock(ctx.author):
                 trade_msg = await ctx.send(f"{buyer.mention}\n{trade_talk}")
@@ -769,7 +769,7 @@ class BackPackCommands(AdventureMixin):
                                             asking=asking,
                                             currency_name=currency_name,
                                         ),
-                                        lang="css",
+                                        lang="ansi",
                                     )
                                 )
                             )
@@ -1057,7 +1057,7 @@ class BackPackCommands(AdventureMixin):
                     items=msg,
                 )
                 for page in pagify(new_msg, shorten_by=10, page_length=1900):
-                    msg_list.append(box(page, lang="css"))
+                    msg_list.append(box(page, lang="ansi"))
                 await BaseMenu(
                     source=SimpleSource(msg_list),
                     delete_message_after=True,

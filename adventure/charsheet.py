@@ -14,7 +14,7 @@ from discord.ext.commands import check
 from redbot.core import Config, commands
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import box, escape, humanize_number
+from redbot.core.utils.chat_formatting import box, escape, humanize_number, humanize_list
 
 from .bank import bank
 from .constants import (
@@ -30,6 +30,12 @@ from .constants import (
     SET_OPEN,
     TINKER_CLOSE,
     TINKER_OPEN,
+    ANSI_ESCAPE,
+    ANSI_CLOSE,
+    ANSITextColours,
+    ANSIBackgroundColours,
+    HeroClasses,
+    Rarities,
 )
 
 log = logging.getLogger("red.cogs.adventure")
@@ -43,21 +49,21 @@ class Item:
     def __init__(self, **kwargs):
         self._ctx: commands.Context = kwargs.pop("ctx")
         if kwargs.get("rarity") in ["event"]:
-            self.name: str = kwargs.get("name")
+            self.name: str = kwargs.get("name", "Default Name")
         elif kwargs.get("rarity") in ["set", "legendary", "ascended"]:
-            self.name: str = kwargs.get("name").title()
+            self.name: str = kwargs.get("name", "Default Name").title()
         else:
-            self.name: str = kwargs.get("name").lower()
-        self.slot: List[str] = kwargs.get("slot")
-        self.att: int = kwargs.get("att")
-        self.int: int = kwargs.get("int")
-        self.cha: int = kwargs.get("cha")
-        self.rarity: str = kwargs.get("rarity")
-        self.dex: int = kwargs.get("dex")
-        self.luck: int = kwargs.get("luck")
-        self.owned: int = kwargs.get("owned")
+            self.name: str = kwargs.get("name", "Default Name").lower()
+        self.slot: List[str] = kwargs.get("slot", [])
+        self.att: int = kwargs.get("att", 0)
+        self.int: int = kwargs.get("int", 0)
+        self.cha: int = kwargs.get("cha", 0)
+        self.rarity: str = kwargs.get("rarity", 0)
+        self.dex: int = kwargs.get("dex", 0)
+        self.luck: int = kwargs.get("luck", 0)
+        self.owned: int = kwargs.get("owned", 0)
         self.set: bool = kwargs.get("set", False)
-        self.parts: int = kwargs.get("parts")
+        self.parts: int = kwargs.get("parts", 0)
         self.total_stats: int = self.att + self.int + self.cha + self.dex + self.luck
         if len(self.slot) > 2:
             self.total_stats *= 2
@@ -71,21 +77,47 @@ class Item:
         if self.rarity == "normal":
             return self.name
         elif self.rarity == "rare":
-            return f".{self.name.replace(' ', '_')}"
+            return f"{ANSI_ESCAPE}[{ANSITextColours.green.value}m.{self.name.replace(' ', '_')}{ANSI_CLOSE}"
         elif self.rarity == "epic":
-            return f"[{self.name}]"
+            return f"{ANSI_ESCAPE}[{ANSITextColours.blue.value}m[{self.name}]{ANSI_CLOSE}"
         elif self.rarity == "legendary":
-            return f"{LEGENDARY_OPEN}{self.name}{LEGENDARY_CLOSE}"
+            return f"{ANSI_ESCAPE}[{ANSITextColours.yellow.value}m{LEGENDARY_OPEN}{self.name}{LEGENDARY_CLOSE}{ANSI_CLOSE}"
         elif self.rarity == "ascended":
-            return f"{ASC_OPEN}'{self.name}'{LEGENDARY_CLOSE}"
+            return f"{ANSI_ESCAPE}[{ANSITextColours.cyan.value}m{ASC_OPEN}'{self.name}'{LEGENDARY_CLOSE}{ANSI_CLOSE}"
         elif self.rarity == "set":
-            return f"{SET_OPEN}'{self.name}'{LEGENDARY_CLOSE}"
+            return f"{ANSI_ESCAPE}[{ANSITextColours.red.value}m{SET_OPEN}'{self.name}'{LEGENDARY_CLOSE}{ANSI_CLOSE}"
         elif self.rarity == "forged":
             name = self.name.replace("'", "’")
-            return f"{TINKER_OPEN}{name}{TINKER_CLOSE}"
+            return f"{ANSI_ESCAPE}[{ANSITextColours.pink.value}m{TINKER_OPEN}{name}{TINKER_CLOSE}{ANSI_CLOSE}"
         elif self.rarity == "event":
             return f"{EVENT_OPEN}'{self.name}'{LEGENDARY_CLOSE}"
         return self.name
+
+    def row(self, player_level: int) -> Tuple[Any, ...]:
+        """
+        Return a tuple of relevant data for use in tables for this item.
+
+        Parameters
+        ----------
+            player_level: int
+                The players current level to know whether or not to make the item level red.
+        """
+        can_equip = self.lvl <= player_level
+        return (
+            str(self),
+            self.slot[0] if len(self.slot) == 1 else "two handed",
+            self.att * (1 if len(self.slot) == 1 else 2),
+            self.cha * (1 if len(self.slot) == 1 else 2),
+            self.int * (1 if len(self.slot) == 1 else 2),
+            self.dex * (1 if len(self.slot) == 1 else 2),
+            self.luck * (1 if len(self.slot) == 1 else 2),
+            f"{ANSI_ESCAPE}[{ANSITextColours.red.value}m{self.lvl}{ANSI_CLOSE}" if not can_equip else f"{self.lvl}",
+            self.owned,
+            f"[{self.degrade}]"
+            if self.rarity in ["legendary", "event", "ascended"] and self.degrade >= 0
+            else "N/A",
+            self.set or "N/A",
+        )
 
     @property
     def formatted_name(self):
@@ -497,9 +529,11 @@ class Character:
         """Define str to be our default look for the character sheet :thinkies:"""
         next_lvl = int((self.lvl + 1) ** 3.5)
         max_level_xp = int((self.maxlevel + 1) ** 3.5)
-
+        hc = None
         if self.heroclass != {} and "name" in self.heroclass:
-            class_desc = self.heroclass["name"] + "\n\n" + self.heroclass["desc"]
+            hc = HeroClasses(self.heroclass["name"].lower())
+            class_desc = f"{ANSI_ESCAPE}[{hc.class_colour.value}m"
+            class_desc += self.heroclass["name"] + "\n\n" + self.heroclass["desc"]
             if self.heroclass["name"] == "Ranger":
                 if not self.heroclass["pet"]:
                     class_desc += _("\n\n- Current pet: [None]")
@@ -514,6 +548,7 @@ class Character:
                         class_desc += _("\n\n- Current servant: [{}]").format(self.heroclass["pet"]["name"])
                     else:
                         class_desc += _("\n\n- Current pet: [{}]").format(self.heroclass["pet"]["name"])
+            class_desc += ANSI_CLOSE
         else:
             class_desc = _("Hero.")
 
@@ -521,6 +556,9 @@ class Character:
         statmult = self.gear_set_bonus.get("statmult") - 1
         xpmult = (self.gear_set_bonus.get("xpmult") + daymult) - 1
         cpmult = (self.gear_set_bonus.get("cpmult") + daymult) - 1
+        rebirth_text = "\n"
+        if self.lvl >= self.maxlevel:
+            rebirth_text = _("You have reached max level. To continue gaining levels and xp, you will have to rebirth.\n\n")
         return _(
             "{user}'s Character Sheet\n\n"
             "{{Rebirths: {rebirths}, \n Max Level: {maxlevel}}}\n"
@@ -541,9 +579,7 @@ class Character:
             user=self.user.display_name,
             rebirths=self.rebirths,
             lvl=self.lvl if self.lvl < self.maxlevel else self.maxlevel,
-            rebirth_text="\n"
-            if self.lvl < self.maxlevel
-            else _("You have reached max level. To continue gaining levels and xp, you will have to rebirth.\n\n"),
+            rebirth_text=rebirth_text,
             maxlevel=self.maxlevel,
             class_desc=class_desc,
             att=humanize_number(self.att),
@@ -572,6 +608,23 @@ class Character:
             bp=len(self.backpack),
             bptotal=self.get_backpack_slots(),
         )
+
+    def current_chests(self) -> str:
+        """Get an ANSI formatted string showing the users current chests."""
+        chests = []
+        names = {
+            "normal": _("normal"),
+            "rare": _("rare"),
+            "epic": _("epic"),
+            "legendary": _("legendary"),
+            "ascended": _("ascended"),
+            "set": _("set"),
+        }
+        for i in Rarities:
+            if not i.is_chest:
+                continue
+            chests.append(f"{ANSI_ESCAPE}[{i.rarity_colour.value}m {self.treasure[i.slot]} {names[i.value]}{ANSI_CLOSE}")
+        return humanize_list(chests)
 
     def get_equipment(self):
         """Define a secondary like __str__ to show our equipment."""
@@ -720,29 +773,11 @@ class Character:
                 self.backpack[item.name] = item
         return looted
 
-    async def get_backpack(
-        self,
-        forging: bool = False,
-        consumed=None,
-        rarity=None,
-        slot=None,
-        show_delta=False,
-        equippable=False,
-        set_name: str = None,
-        clean: bool = False,
-    ):
-        if consumed is None:
-            consumed = []
-        bkpk = await self.get_sorted_backpack(self.backpack, slot=slot, rarity=rarity)
-        if not forging:
-            msg = _("{author}'s backpack\n\n").format(author=escape(self.user.display_name, formatting=True))
-        else:
-            msg = _("{author}'s forgeables\n\n").format(author=escape(self.user.display_name, formatting=True))
-        msg_len = len(msg)
+    async def make_backpack_tables(self, items: List[List[str]], title: str = "") -> List[str]:
         table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
         table.set_style(BeautifulTable.STYLE_RST)
         tables = []
-        table.columns.header = [
+        headers = [
             "Name",
             "Slot",
             "ATT",
@@ -755,8 +790,43 @@ class Character:
             "DEG",
             "SET",
         ]
+        table.columns.header = headers
+
+        footer = _("\nPage {page_num}").format(page_num=len(tables) + 1)
+        for item_index in range(len(items)):
+            footer = _("\nPage {page_num}").format(page_num=len(tables) + 1)
+            item = items[item_index]
+            table.rows.append(item)
+            if len(title + str(table) + footer) > 1900:
+                table.rows.pop()
+                tables.append(box(f"{title} {table} {footer}", lang="ansi"))
+                table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
+                table.set_style(BeautifulTable.STYLE_RST)
+                table.columns.header = headers
+                table.rows.append(item)
+        tables.append(box(f"{title} {table} {footer}", lang="ansi"))
+        return tables
+
+    async def get_backpack(
+        self,
+        forging: bool = False,
+        consumed=None,
+        rarity=None,
+        slot=None,
+        show_delta=False,
+        equippable=False,
+        set_name: Optional[str] = None,
+        clean: bool = False,
+    ):
+        if consumed is None:
+            consumed = []
+        bkpk = await self.get_sorted_backpack(self.backpack, slot=slot, rarity=rarity)
         consumed_list = consumed
-        remainder = False
+        rows = []
+        if not forging:
+            msg = _("{author}'s backpack\n\n").format(author=escape(self.user.display_name, formatting=True))
+        else:
+            msg = _("{author}'s forgeables\n\n").format(author=escape(self.user.display_name, formatting=True))
         async for slot_group in AsyncIter(bkpk, steps=100):
             slot_name_org = slot_group[0][1].slot
             slot_name = slot_name_org[0] if len(slot_name_org) < 2 else "two handed"
@@ -777,47 +847,30 @@ class Character:
                     continue
                 if set_name is not None and set_name != item.set:
                     continue
-                if len(str(table)) > 1500:
-                    remainder = False
-                    tables.append(box(msg + str(table) + f"\nPage {len(tables) + 1}", lang="css"))
-                    table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
-                    table.set_style(BeautifulTable.STYLE_RST)
-                    table.columns.header = [
-                        "Name",
-                        "Slot",
-                        "ATT",
-                        "CHA",
-                        "INT",
-                        "DEX",
-                        "LUC",
-                        "LVL",
-                        "QTY",
-                        "DEG",
-                        "SET",
-                    ]
                 if show_delta:
                     att = self.get_equipped_delta(current_equipped, item, "att")
                     cha = self.get_equipped_delta(current_equipped, item, "cha")
-                    int = self.get_equipped_delta(current_equipped, item, "int")
+                    intel = self.get_equipped_delta(current_equipped, item, "int")
                     dex = self.get_equipped_delta(current_equipped, item, "dex")
                     luck = self.get_equipped_delta(current_equipped, item, "luck")
                 else:
                     att = item.att if len(slot_name_org) < 2 else item.att * 2
                     cha = item.cha if len(slot_name_org) < 2 else item.cha * 2
-                    int = item.int if len(slot_name_org) < 2 else item.int * 2
+                    intel = item.int if len(slot_name_org) < 2 else item.int * 2
                     dex = item.dex if len(slot_name_org) < 2 else item.dex * 2
                     luck = item.luck if len(slot_name_org) < 2 else item.luck * 2
-                remainder = True
-                table.rows.append(
+                equip_level = self.equip_level(item)
+                can_equip = equip_level is not None and self.equip_level(item) > self.lvl
+                rows.append(
                     (
                         str(item),
                         slot_name,
                         att,
                         cha,
-                        int,
+                        intel,
                         dex,
                         luck,
-                        f"[{r}]" if (r := self.equip_level(item)) is not None and r > self.lvl else f"{r}",
+                        f"{ANSI_ESCAPE}[{ANSITextColours.red.value}m{equip_level}{ANSI_CLOSE}" if can_equip else f"{equip_level}",
                         item.owned,
                         f"[{item.degrade}]"
                         if item.rarity in ["legendary", "event", "ascended"] and item.degrade >= 0
@@ -825,9 +878,7 @@ class Character:
                         item.set or "N/A",
                     )
                 )
-        if remainder:
-            tables.append(box(msg + str(table) + f"\nPage {len(tables) + 1}", lang="css"))
-        return tables
+        return await self.make_backpack_tables(rows, msg)
 
     async def get_sorted_backpack_arg_parse(
         self,
@@ -1089,7 +1140,7 @@ class Character:
             current_equipped = getattr(self, slot_name if slot_name != "two handed" else "left", None)
             async for item_name, item in AsyncIter(slot_group, steps=100):
                 if len(str(table)) > 1500:
-                    tables.append(box(msg + str(table) + f"\nPage {len(tables) + 1}", lang="css"))
+                    tables.append(box(msg + str(table) + f"\nPage {len(tables) + 1}", lang="ansi"))
                     table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
                     table.set_style(BeautifulTable.STYLE_RST)
                     table.columns.header = headers
@@ -1130,7 +1181,7 @@ class Character:
                 table.rows.append(data)
                 remainder = True
         if remainder:
-            tables.append(box(msg + str(table) + f"\nPage {len(tables) + 1}", lang="css"))
+            tables.append(box(msg + str(table) + f"\nPage {len(tables) + 1}", lang="ansi"))
         return tables
 
     async def get_argparse_backpack_items(

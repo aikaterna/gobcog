@@ -10,12 +10,12 @@ from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import bold, box, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_number, humanize_list
 
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ORDER, RARITIES
+from .constants import ORDER, RARITIES, Rarities, ANSI_ESCAPE, ANSI_CLOSE, ANSITextColours
 from .helpers import LootView, _sell, escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
@@ -58,21 +58,16 @@ class LootCommands(AdventureMixin):
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
             if not box_type:
+                chests = c.current_chests()
                 return await ctx.send(
                     box(
                         _(
-                            "{author} owns {normal} normal, "
-                            "{rare} rare, {epic} epic, {leg} legendary, {asc} ascended and {set} set chests."
+                            "{author} owns {chests} chests."
                         ).format(
                             author=escape(ctx.author.display_name),
-                            normal=str(c.treasure[0]),
-                            rare=str(c.treasure[1]),
-                            epic=str(c.treasure[2]),
-                            leg=str(c.treasure[3]),
-                            asc=str(c.treasure[4]),
-                            set=str(c.treasure[5]),
+                            chests=chests,
                         ),
-                        lang="css",
+                        lang="ansi",
                     )
                 )
             if c.is_backpack_full(is_dev=is_dev(ctx.author)):
@@ -114,63 +109,14 @@ class LootCommands(AdventureMixin):
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         items = await self._open_chests(ctx, box_type, number, character=c)
                         msg = _("{}, you've opened the following items:\n\n").format(escape(ctx.author.display_name))
-                        msg_len = len(msg)
-                        table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
-                        table.set_style(BeautifulTable.STYLE_RST)
-                        msgs = []
-                        total = len(items.values())
-                        table.columns.header = [
-                            "Name",
-                            "Slot",
-                            "ATT",
-                            "CHA",
-                            "INT",
-                            "DEX",
-                            "LUC",
-                            "LVL",
-                            "QTY",
-                            "DEG",
-                            "SET",
-                        ]
+                        rows = []
                         async for index, item in AsyncIter(items.values(), steps=100).enumerate(start=1):
-                            if len(str(table)) > 1500:
-                                table.rows.sort("LVL", reverse=True)
-                                msgs.append(box(msg + str(table) + f"\nPage {len(msgs) + 1}", lang="css"))
-                                table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
-                                table.set_style(BeautifulTable.STYLE_RST)
-                                table.columns.header = [
-                                    "Name",
-                                    "Slot",
-                                    "ATT",
-                                    "CHA",
-                                    "INT",
-                                    "DEX",
-                                    "LUC",
-                                    "LVL",
-                                    "QTY",
-                                    "DEG",
-                                    "SET",
-                                ]
-                            table.rows.append(
-                                (
-                                    str(item),
-                                    item.slot[0] if len(item.slot) == 1 else "two handed",
-                                    item.att,
-                                    item.cha,
-                                    item.int,
-                                    item.dex,
-                                    item.luck,
-                                    f"[{r}]" if (r := c.equip_level(item)) is not None and r > c.lvl else f"{r}",
-                                    item.owned,
-                                    f"[{item.degrade}]"
-                                    if item.rarity in ["legendary", "event", "ascended"] and item.degrade >= 0
-                                    else "N/A",
-                                    item.set or "N/A",
-                                )
+                            rows.append(
+                                item.row(c.lvl)
                             )
-                            if index == total:
-                                table.rows.sort("LVL", reverse=True)
-                                msgs.append(box(msg + str(table) + f"\nPage {len(msgs) + 1}", lang="css"))
+                        tables = await c.make_backpack_tables(rows, msg)
+                        for t in tables:
+                            msgs.append(t)
                 else:
                     # atomically save reduced loot count then lock again when saving inside
                     # open chests
@@ -344,7 +290,7 @@ class LootCommands(AdventureMixin):
                                 asc=c.treasure[4],
                                 set=c.treasure[5],
                             ),
-                            lang="css",
+                            lang="ansi",
                         )
                     )
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
@@ -379,7 +325,7 @@ class LootCommands(AdventureMixin):
                                 asc=c.treasure[4],
                                 set=c.treasure[5],
                             ),
-                            lang="css",
+                            lang="ansi",
                         )
                     )
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
@@ -413,7 +359,7 @@ class LootCommands(AdventureMixin):
                                 asc=c.treasure[4],
                                 set=c.treasure[5],
                             ),
-                            lang="css",
+                            lang="ansi",
                         )
                     )
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
@@ -459,7 +405,7 @@ class LootCommands(AdventureMixin):
             chest_msg = _("{user}'s {f} is foraging for treasure. What will it find?").format(
                 user=escape(ctx.author.display_name), f=(user[:1] + user[1:])
             )
-        open_msg = await ctx.send(box(chest_msg, lang="css"))
+        open_msg = await ctx.send(box(chest_msg, lang="ansi"))
         await asyncio.sleep(2)
         item = await self._roll_chest(chest_type, character)
         if chest_type == "pet" and not item:
@@ -468,7 +414,7 @@ class LootCommands(AdventureMixin):
                     _("{c_msg}\nThe {user} found nothing of value.").format(
                         c_msg=chest_msg, user=(user[:1] + user[1:])
                     ),
-                    lang="css",
+                    lang="ansi",
                 )
             )
             return None
@@ -542,7 +488,7 @@ class LootCommands(AdventureMixin):
                         "this item, put in your backpack, or sell this item?\n\n"
                         "{old_stats}"
                     ).format(c_msg=chest_msg, c_msg_2=chest_msg2, old_stats=old_stats),
-                    lang="css",
+                    lang="ansi",
                 ),
                 view=view,
             )
@@ -563,7 +509,7 @@ class LootCommands(AdventureMixin):
                         "{c_msg}\n{c_msg_2}\nDo you want to equip "
                         "this item, put in your backpack, or sell this item?\n\n{old_stats}"
                     ).format(c_msg=chest_msg, c_msg_2=chest_msg2, old_stats=old_stats),
-                    lang="css",
+                    lang="ansi",
                 ),
                 view=view,
             )
@@ -577,7 +523,7 @@ class LootCommands(AdventureMixin):
                         _("{user} put the {item} into their backpack.").format(
                             user=escape(ctx.author.display_name), item=item
                         ),
-                        lang="css",
+                        lang="ansi",
                     )
                 ),
                 view=None,
@@ -607,7 +553,7 @@ class LootCommands(AdventureMixin):
                             price=humanize_number(price),
                             currency_name=currency_name,
                         ),
-                        lang="css",
+                        lang="ansi",
                     )
                 ),
                 view=None,
@@ -633,7 +579,7 @@ class LootCommands(AdventureMixin):
                     _("{user} equipped {item} ({slot} slot).").format(
                         user=escape(ctx.author.display_name), item=item, slot=slot
                     ),
-                    lang="css",
+                    lang="ansi",
                 )
             else:
                 equip_msg = box(
@@ -643,7 +589,7 @@ class LootCommands(AdventureMixin):
                         slot=slot,
                         old_item=getattr(character, item.slot[0]),
                     ),
-                    lang="css",
+                    lang="ansi",
                 )
             await open_msg.edit(content=equip_msg, view=None)
             character = await character.equip_item(item, False, is_dev(ctx.author))

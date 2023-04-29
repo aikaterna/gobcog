@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 from typing import Literal, MutableMapping, Optional, Union
 
-
 import discord
 from discord.ext.commands import CheckFailure
 from redbot import VersionInfo, version_info
@@ -32,6 +31,7 @@ from .cart import Trader
 from .character import CharacterCommands
 from .charsheet import Character, calculate_sp, has_funds
 from .class_abilities import ClassAbilities
+from .constants import ANSI_ESCAPE, ANSI_CLOSE, ANSITextColours
 from .converters import ArgParserFailure, ChallengeConverter
 from .defaults import default_global, default_guild, default_user
 from .dev import DevCommands
@@ -256,7 +256,7 @@ class Adventure(
                 "set_bonuses": set_bonuses,
                 "action_response": action_response,
             }
-            for (name, file) in files.items():
+            for name, file in files.items():
                 if not file.exists():
                     files[name] = bundled_data_path(self) / "default" / f"{file.name}"
 
@@ -322,7 +322,7 @@ class Adventure(
         await self._ready_event.wait()
         while self is self.bot.get_cog("Adventure"):
             to_delete = []
-            for (msg_id, task) in self.tasks.items():
+            for msg_id, task in self.tasks.items():
                 if task.done():
                     to_delete.append(msg_id)
             for task in to_delete:
@@ -344,23 +344,22 @@ class Adventure(
                     user_equipped_items = adventurers_data[user]["items"]
                     for slot in user_equipped_items.keys():
                         if user_equipped_items[slot]:
-                            for (slot_item_name, slot_item) in list(user_equipped_items[slot].items())[:1]:
+                            for slot_item_name, slot_item in list(user_equipped_items[slot].items())[:1]:
                                 new_name, slot_item = self._convert_item_migration(slot_item_name, slot_item)
                                 adventurers_data[user]["items"][slot] = {new_name: slot_item}
                     if "backpack" not in adventurers_data[user]:
                         adventurers_data[user]["backpack"] = {}
-                    for (backpack_item_name, backpack_item) in adventurers_data[user]["backpack"].items():
+                    for backpack_item_name, backpack_item in adventurers_data[user]["backpack"].items():
                         new_name, backpack_item = self._convert_item_migration(backpack_item_name, backpack_item)
                         new_backpack[new_name] = backpack_item
                     adventurers_data[user]["backpack"] = new_backpack
                     if "loadouts" not in adventurers_data[user]:
                         adventurers_data[user]["loadouts"] = {}
                     try:
-                        for (loadout_name, loadout) in adventurers_data[user]["loadouts"].items():
-                            for (slot, equipped_loadout) in loadout.items():
+                        for loadout_name, loadout in adventurers_data[user]["loadouts"].items():
+                            for slot, equipped_loadout in loadout.items():
                                 new_loadout[slot] = {}
-                                for (loadout_item_name, loadout_item) in equipped_loadout.items():
-
+                                for loadout_item_name, loadout_item in equipped_loadout.items():
                                     new_name, loadout_item = self._convert_item_migration(
                                         loadout_item_name, loadout_item
                                     )
@@ -380,7 +379,7 @@ class Adventure(
                     if "loadouts" not in adventurers_data[user]:
                         adventurers_data[user]["loadouts"] = {}
                     try:
-                        for (loadout_name, loadout) in adventurers_data[user]["loadouts"].items():
+                        for loadout_name, loadout in adventurers_data[user]["loadouts"].items():
                             if loadout_name in {
                                 "head",
                                 "neck",
@@ -578,7 +577,7 @@ class Adventure(
             return
         reward_copy = reward.copy()
         send_message = ""
-        for (userid, rewards) in reward_copy.items():
+        for userid, rewards in reward_copy.items():
             if rewards:
                 user = ctx.guild.get_member(userid)  # bot.get_user breaks sometimes :ablobsweats:
                 if user is None:
@@ -797,7 +796,6 @@ class Adventure(
         return choice
 
     async def update_monster_roster(self, ctx: commands.Context):
-
         try:
             c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
             failed = False
@@ -855,7 +853,8 @@ class Adventure(
             if monster_roster[challenge]["boss"]:
                 timer = 60 * 5
                 self.bot.dispatch("adventure_boss", ctx)
-                text = box(_("\n [{} Alarm!]").format(new_challenge), lang="css")
+                challenge_str = _("[{challenge} Alarm!]").format(challenge=new_challenge)
+                text = box(f"{ANSI_ESCAPE}[{ANSITextColours.red.value}m{challenge_str}{ANSI_CLOSE}", lang="ansi")
             elif monster_roster[challenge]["miniboss"]:
                 timer = 60 * 3
                 self.bot.dispatch("adventure_miniboss", ctx)
@@ -1101,7 +1100,7 @@ class Adventure(
                 return
             if restricted:
                 all_users = []
-                for (guild_id, guild_session) in self._sessions.items():
+                for guild_id, guild_session in self._sessions.items():
                     guild_users_in_game = (
                         guild_session.fight
                         + guild_session.magic
@@ -1213,7 +1212,7 @@ class Adventure(
                 treasure,
             )
             parsed_users = []
-            for (action_name, action) in participants.items():
+            for action_name, action in participants.items():
                 for user in action:
                     try:
                         c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
@@ -1457,7 +1456,7 @@ class Adventure(
             result_msg += session.miniboss["defeat"]
             if len(repair_list) > 0:
                 temp_repair = []
-                for (user, loss) in repair_list:
+                for user, loss in repair_list:
                     if user not in temp_repair:
                         loss_list.append(
                             _("\n{user} used {loss} {currency_name}").format(
@@ -1501,7 +1500,7 @@ class Adventure(
             loss_list = []
             if len(repair_list) > 0:
                 temp_repair = []
-                for (user, loss) in repair_list:
+                for user, loss in repair_list:
                     if user not in temp_repair:
                         loss_list.append(
                             _("\n{user} used {loss} {currency_name}").format(
@@ -1579,7 +1578,7 @@ class Adventure(
                 loss_list = []
                 if len(repair_list) > 0:
                     temp_repair = []
-                    for (user, loss) in repair_list:
+                    for user, loss in repair_list:
                         if user not in temp_repair:
                             loss_list.append(
                                 _("\n{user} used {loss} {currency_name}").format(
@@ -1757,7 +1756,7 @@ class Adventure(
         loss_list = []
         if len(repair_list) > 0:
             temp_repair = []
-            for (user, loss) in repair_list:
+            for user, loss in repair_list:
                 if user not in temp_repair:
                     loss_list.append(
                         _("\n{user} used {loss} {currency_name}").format(
@@ -1788,7 +1787,7 @@ class Adventure(
             "fumbles": fumblelist,
         }
         parsed_users = []
-        for (action_name, action) in participants.items():
+        for action_name, action in participants.items():
             for user in action:
                 try:
                     c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
@@ -2601,7 +2600,7 @@ class Adventure(
         if self.gb_task:
             self.gb_task.cancel()
 
-        for (msg_id, task) in self.tasks.items():
+        for msg_id, task in self.tasks.items():
             task.cancel()
 
         for lock in self.locks.values():

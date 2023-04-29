@@ -98,7 +98,7 @@ class RebirthCommands(AdventureMixin):
                 await open_msg.edit(
                     content=box(
                         _("{c} decided not to rebirth.").format(c=escape(ctx.author.display_name)),
-                        lang="css",
+                        lang="ansi",
                     ),
                     embed=None,
                     view=None,
@@ -114,7 +114,7 @@ class RebirthCommands(AdventureMixin):
                 await open_msg.edit(
                     content=box(
                         _("You need to be level `{c}` to rebirth.").format(c=c.maxlevel),
-                        lang="css",
+                        lang="ansi",
                     ),
                     embed=None,
                     view=None,
@@ -134,7 +134,7 @@ class RebirthCommands(AdventureMixin):
                         c=escape(ctx.author.display_name),
                         bal=humanize_number(withdraw),
                     ),
-                    lang="css",
+                    lang="ansi",
                 ),
                 embed=None,
                 view=None,

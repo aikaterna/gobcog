@@ -2,19 +2,20 @@
 import logging
 import re
 import time
-from typing import Union
+from typing import Union, Literal
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
 from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_number
+from redbot.core.utils.chat_formatting import box, humanize_number, humanize_list
 
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
 from .converters import Stats
+from .constants import ANSI_ESCAPE, ANSI_CLOSE, Rarities, ANSITextColours
 from .helpers import escape, has_separated_economy, smart_embed
 from .menus import BaseMenu, SimpleSource
 
@@ -253,7 +254,7 @@ class EconomyCommands(AdventureMixin):
         for k, v in sets.items():
             if len(str(table)) > 1500:
                 table.rows.sort("Name", reverse=False)
-                msgs.append(box(str(table) + f"\nPage {len(msgs) + 1}", lang="css"))
+                msgs.append(box(str(table) + f"\nPage {len(msgs) + 1}", lang="ansi"))
                 table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
                 table.set_style(BeautifulTable.STYLE_RST)
                 table.columns.header = [
@@ -261,9 +262,15 @@ class EconomyCommands(AdventureMixin):
                     "Unique Pieces",
                     "Unique Owned",
                 ]
-            table.rows.append((k, f"{v[0]}", f" {v[1]}" if v[1] == v[0] else f"[{v[1]}]"))
+            table.rows.append(
+                (
+                    k,
+                    f"{v[0]}",
+                    f" {v[1]}" if v[1] == v[0] else f"{ANSI_ESCAPE}[{ANSITextColours.red.value}m[{v[1]}]{ANSI_CLOSE}",
+                )
+            )
         table.rows.sort("Name", reverse=False)
-        msgs.append(box(str(table) + f"\nPage {len(msgs) + 1}", lang="css"))
+        msgs.append(box(str(table) + f"\nPage {len(msgs) + 1}", lang="ansi"))
         await BaseMenu(
             source=SimpleSource(msgs),
             delete_message_after=True,
@@ -363,7 +370,7 @@ class EconomyCommands(AdventureMixin):
                 _("An item named {item} has been created and placed in {author}'s backpack.").format(
                     item=item, author=escape(user.display_name)
                 ),
-                lang="css",
+                lang="ansi",
             )
         )
 
@@ -371,7 +378,7 @@ class EconomyCommands(AdventureMixin):
     async def _give_loot(
         self,
         ctx: commands.Context,
-        loot_type: str,
+        loot_type: Literal["normal", "rare", "epic", "legendary", "ascended", "set"],
         users: commands.Greedy[Union[discord.Member, discord.User]] = None,
         number: int = 1,
     ):
@@ -409,21 +416,13 @@ class EconomyCommands(AdventureMixin):
                 else:
                     c.treasure[0] += number
                 await self.config.user(user).set(await c.to_json(ctx, self.config))
+                chests = c.current_chests()
                 await ctx.send(
                     box(
-                        _(
-                            "{author} now owns {normal} normal, "
-                            "{rare} rare, {epic} epic, "
-                            "{leg} legendary, {asc} ascended and {set} set treasure chests."
-                        ).format(
+                        _("{author} now owns {chests} chests.").format(
                             author=escape(user.display_name),
-                            normal=str(c.treasure[0]),
-                            rare=str(c.treasure[1]),
-                            epic=str(c.treasure[2]),
-                            leg=str(c.treasure[3]),
-                            asc=str(c.treasure[4]),
-                            set=str(c.treasure[5]),
+                            chests=chests,
                         ),
-                        lang="css",
+                        lang="ansi",
                     )
                 )

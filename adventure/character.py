@@ -16,7 +16,7 @@ from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ORDER
+from .constants import ORDER, ANSI_ESCAPE, ANSI_CLOSE, ANSITextColours
 from .converters import EquipableItemConverter, EquipmentConverter, SkillConverter
 from .helpers import ConfirmView, _title_case, escape, smart_embed
 from .menus import BaseMenu, SimpleSource
@@ -266,7 +266,7 @@ class CharacterCommands(AdventureMixin):
         loadout_display = await self._build_loadout_display(ctx, {"items": d}, loadout=False, rebirths=c.rebirths)
         set_msg = _("{set_name} Set Pieces\n\n").format(set_name=title_cased_set_name)
         set_msg += loadout_display
-        msg_list.append(box(set_msg, lang="css"))
+        msg_list.append(box(set_msg, lang="ansi"))
         backpack_contents = await c.get_backpack(set_name=title_cased_set_name, clean=True)
         if backpack_contents:
             msg_list.extend(backpack_contents)
@@ -308,69 +308,23 @@ class CharacterCommands(AdventureMixin):
         msg = _("{}'s Character Sheet\n\n").format(escape(user.display_name))
         msg_len = len(msg)
         items_names = set()
-        table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
-        table.set_style(BeautifulTable.STYLE_RST)
+        rows = []
         msgs = []
-        total = len(items)
-        table.columns.header = [
-            "Name",
-            "Slot",
-            "ATT",
-            "CHA",
-            "INT",
-            "DEX",
-            "LUC",
-            "LVL",
-            "QTY",
-            "DEG",
-            "SET",
-        ]
         async for index, item in AsyncIter(items, steps=100).enumerate(start=1):
-            if len(str(table)) > 1500:
-                msgs.append(box(msg + str(table) + f"\nPage {len(msgs) + 1}", lang="css"))
-                table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
-                table.set_style(BeautifulTable.STYLE_RST)
-                table.columns.header = [
-                    "Name",
-                    "Slot",
-                    "ATT",
-                    "CHA",
-                    "INT",
-                    "DEX",
-                    "LUC",
-                    "LVL",
-                    "QTY",
-                    "DEG",
-                    "SET",
-                ]
             item_name = str(item)
             slots = len(item.slot)
             slot_name = item.slot[0] if slots == 1 else "two handed"
             if (item_name, slots, slot_name) in items_names:
                 continue
             items_names.add((item_name, slots, slot_name))
-            data = (
-                item_name,
-                slot_name,
-                item.att * (1 if slots == 1 else 2),
-                item.cha * (1 if slots == 1 else 2),
-                item.int * (1 if slots == 1 else 2),
-                item.dex * (1 if slots == 1 else 2),
-                item.luck * (1 if slots == 1 else 2),
-                f"[{r}]" if (r := c.equip_level(item)) is not None and r > c.lvl else f"{r}",
-                item.owned,
-                f"[{item.degrade}]"
-                if item.rarity in ["legendary", "event", "ascended"] and item.degrade >= 0
-                else "N/A",
-                item.set or "N/A",
-            )
-            if data not in table.rows:
-                table.rows.append(data)
-            if index == total:
-                table.set_style(BeautifulTable.STYLE_RST)
-                msgs.append(box(msg + str(table) + f"\nPage {len(msgs) + 1}", lang="css"))
+            equip_level = c.equip_level(item)
+            can_equip = equip_level is not None and c.equip_level(item) > c.lvl
+            rows.append(item.row(c.lvl))
+        tables = await c.make_backpack_tables(rows, msg)
+        for t in tables:
+            msgs.append(t)
         await BaseMenu(
-            source=SimpleSource([box(c, lang="css"), *msgs]),
+            source=SimpleSource([box(c, lang="ansi"), *msgs]),
             delete_message_after=True,
             clear_reactions_after=True,
             timeout=180,
@@ -498,7 +452,7 @@ class CharacterCommands(AdventureMixin):
                     msg = _("{author}, you do not have an item equipped in the {item} slot.").format(
                         author=escape(ctx.author.display_name), item=item
                     )
-                    return await ctx.send(box(msg, lang="css"))
+                    return await ctx.send(box(msg, lang="ansi"))
                 await c.unequip_item(current_item)
                 msg = _("{author} removed the {current_item} and put it into their backpack.").format(
                     author=escape(ctx.author.display_name), current_item=current_item
@@ -514,7 +468,7 @@ class CharacterCommands(AdventureMixin):
                         # will autmatically remove multiple items
                         break
             if msg:
-                await ctx.send(box(msg, lang="css"))
+                await ctx.send(box(msg, lang="ansi"))
                 await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
             else:
                 await smart_embed(

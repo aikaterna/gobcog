@@ -135,7 +135,7 @@ class Stats(Converter):
             result["rarity"] = RARITY.search(argument).group(0)
         except AttributeError:
             raise BadArgument(_("No rarity was provided."))
-        for (key, value) in possible_stats.items():
+        for key, value in possible_stats.items():
             try:
                 stat = int(value.group(1))
                 if (
@@ -204,12 +204,12 @@ class ItemsConverter(Converter):
                     _("You have too many items matching the name `{}`, please be more specific.").format(argument)
                 )
             items = ""
-            for (number, item) in enumerate(lookup):
+            for number, item in enumerate(lookup):
                 items += f"{number}. {str(item)} (owned {item.owned})\n"
 
             msg = await ctx.send(
                 _("Multiple items share that name, which one would you like?\n{items}").format(
-                    items=box(items, lang="css")
+                    items=box(items, lang="ansi")
                 )
             )
             emojis = ReactionPredicate.NUMBER_EMOJIS[: len(lookup)]
@@ -290,12 +290,12 @@ class ItemConverter(Transformer):
                 )
             items = ""
             view = ConfirmItemView(60, lookup, ctx.author)
-            for (number, item) in enumerate(lookup):
+            for number, item in enumerate(lookup):
                 items += f"{number}. {str(item)} (owned {item.owned})\n"
 
             await ctx.send(
                 _("Multiple items share that name, which one would you like?\n{items}").format(
-                    items=box(items, lang="css")
+                    items=box(items, lang="ansi")
                 ),
                 view=view,
             )
@@ -388,12 +388,12 @@ class EquipableItemConverter(Transformer):
                     _("You have too many items matching the name `{}`, please be more specific.").format(argument)
                 )
             items = ""
-            for (number, item) in enumerate(lookup):
+            for number, item in enumerate(lookup):
                 items += f"{number}. {str(item)} (owned {item.owned})\n"
 
             msg = await ctx.send(
                 _("Multiple items share that name, which one would you like?\n{items}").format(
-                    items=box(items, lang="css")
+                    items=box(items, lang="ansi")
                 )
             )
             emojis = ReactionPredicate.NUMBER_EMOJIS[: len(lookup)]
@@ -500,12 +500,12 @@ class EquipmentConverter(Transformer):
                     _("You have too many items matching the name `{}`, please be more specific").format(argument)
                 )
             items = ""
-            for (number, item) in enumerate(lookup):
+            for number, item in enumerate(lookup):
                 items += f"{number}. {str(item)} (owned {item.owned})\n"
 
             msg = await ctx.send(
                 _("Multiple items share that name, which one would you like?\n{items}").format(
-                    items=box(items, lang="css")
+                    items=box(items, lang="ansi")
                 )
             )
             emojis = ReactionPredicate.NUMBER_EMOJIS[: len(lookup)]
@@ -713,7 +713,7 @@ class HeroClassConverter(Transformer):
             HeroClasses(argument.lower())
         except ValueError:
             await smart_embed(ctx, _("{} may be a class somewhere, but not on my watch.").format(argument))
-            raise BadArgument
+            return None
         return argument.lower()
 
     @classmethod

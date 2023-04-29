@@ -181,7 +181,7 @@ class Negaverse(AdventureMixin):
                 )
                 if items:
                     item_string = "\n".join([f"{v} x{i}" for v, i in items])
-                    looted = box(f"{item_string}", lang="css")
+                    looted = box(f"{item_string}", lang="ansi")
                     await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                 loss_msg = _(", losing {loss} {currency_name} as {negachar} rifled through their belongings.").format(
                     loss=loss_string, currency_name=currency_name, negachar=bold(negachar)
@@ -219,7 +219,7 @@ class Negaverse(AdventureMixin):
                     )
                     if items:
                         item_string = "\n".join([f"{v} {i}" for v, i in items])
-                        looted = box(f"{item_string}", lang="css")
+                        looted = box(f"{item_string}", lang="ansi")
                         await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                 loss_msg = _(", losing {loss} {currency_name} as {negachar} rifled through their belongings.").format(
                     loss=loss_string, currency_name=currency_name, negachar=bold(negachar)
@@ -319,7 +319,7 @@ class Negaverse(AdventureMixin):
                     )
                     if items:
                         item_string = "\n".join([f"{i}  - {v}" for v, i in items])
-                        looted = box(f"{item_string}", lang="css")
+                        looted = box(f"{item_string}", lang="ansi")
                         await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                 loss_msg = _(", losing {loss} {currency_name} as {negachar} looted their backpack.").format(
                     loss=loss_string,

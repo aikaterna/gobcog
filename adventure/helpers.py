@@ -6,7 +6,7 @@ from typing import Optional, Union
 
 import discord
 from discord.ext.commands import CheckFailure
-from redbot.core.commands import check
+from redbot.core.commands import check, Context, Cog
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import escape as _escape
 from redbot.core.utils.common_filters import filter_various_mentions
@@ -28,12 +28,12 @@ def escape(t: str) -> str:
 
 
 async def smart_embed(
-    ctx: Optional[commands.Context] = None,
+    ctx: Optional[Context] = None,
     message: Optional[str] = None,
     success: Optional[bool] = None,
     image: Optional[str] = None,
     ephemeral: bool = False,
-    cog: Optional[commands.Cog] = None,
+    cog: Optional[Cog] = None,
     interaction: Optional[discord.Interaction] = None,
     view: Optional[discord.ui.View] = discord.utils.MISSING,
 ) -> discord.Message:

@@ -202,7 +202,7 @@ class AdventureSetCommands(AdventureMixin):
             ctx,
             box(
                 str(table),
-                lang="css",
+                lang="ansi",
             ),
         )
 
@@ -388,7 +388,7 @@ class AdventureSetCommands(AdventureMixin):
             with contextlib.suppress(KeyError):
                 del c.backpack[item.name]
             await self.config.user(user).set(await c.to_json(self.config))
-        await ctx.send(_("{item} removed from {user}.").format(item=box(str(item), lang="css"), user=bold(user)))
+        await ctx.send(_("{item} removed from {user}.").format(item=box(str(item), lang="ansi"), user=bold(user)))
 
     @adventureset.command()
     @commands.is_owner()

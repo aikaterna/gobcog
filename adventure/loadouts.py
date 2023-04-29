@@ -123,7 +123,7 @@ class LoadoutCommands(AdventureMixin):
                 msg = _("{name} Loadout for {author}\n\n{stats}").format(
                     name=l_name, author=escape(ctx.author.display_name), stats=stats
                 )
-                msg_list.append(box(msg, lang="css"))
+                msg_list.append(box(msg, lang="ansi"))
                 count += 1
             if msg_list:
                 await BaseMenu(
@@ -190,6 +190,6 @@ class LoadoutCommands(AdventureMixin):
                         stat_dex=c.get_stat_value("dex")[0],
                         stat_luck=c.get_stat_value("luck")[0],
                     ),
-                    lang="css",
+                    lang="ansi",
                 )
                 await ctx.send(current_stats)

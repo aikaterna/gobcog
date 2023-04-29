@@ -15,6 +15,7 @@ from redbot.core.utils.chat_formatting import box, humanize_number
 
 from .bank import bank
 from .charsheet import Character, Item
+from .constants import ANSI_ESCAPE, ANSI_CLOSE, ANSITextColours
 from .helpers import _get_epoch, escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
@@ -100,7 +101,7 @@ class TraderModal(discord.ui.Modal):
                             item_price=humanize_number(price),
                             currency_name=currency_name,
                         ),
-                        lang="css",
+                        lang="ansi",
                     )
                 )
         else:
@@ -164,7 +165,8 @@ class Trader(discord.ui.View):
         if await self.cog.config.guild(ctx.guild).cart_name():
             cart = await self.cog.config.guild(ctx.guild).cart_name()
         self.cart_name = cart
-        text = box(_("[{} is bringing the cart around!]").format(cart), lang="css")
+        cart_header = _("[{cart_name} is bringing the cart around!]").format(cart_name=cart)
+        text = box(f"{ANSI_ESCAPE}[{ANSITextColours.blue.value}m{cart_header}{ANSI_CLOSE}", lang="ansi")
         if ctx.guild.id not in self.cog._last_trade:
             self.cog._last_trade[ctx.guild.id] = 0
 
@@ -234,7 +236,7 @@ class Trader(discord.ui.View):
                     item_price=humanize_number(item["price"]),
                     currency_name=currency_name,
                 ),
-                lang="css",
+                lang="ansi",
             )
         self.stock_str = text
         timestamp = f"<t:{int(self.end_time.timestamp())}:R>"

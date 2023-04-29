@@ -116,7 +116,7 @@ Going from least to most powerful, generally the progression is normal < rare < 
 Forged items are a Tinker's specialty.
 Event items can be created by a bot owner as a special reward to hand out to specific users for bot events or other incentive-based rewards.
 
-```css
+```ansi
 {Event:''Event items look like this''}
 {.:'Forged items look like this':.}
 {Set:''Set items look like this''}

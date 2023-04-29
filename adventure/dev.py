@@ -158,7 +158,7 @@ class DevCommands(AdventureMixin):
                         _("{c}, congratulations on your rebirth.\nYou paid {bal}.").format(
                             c=escape(target.display_name), bal=humanize_number(withdraw)
                         ),
-                        lang="css",
+                        lang="ansi",
                     )
                 )
             await self._add_rewards(ctx, target, int((character_level) ** 3.5) + 1, 0, False)
