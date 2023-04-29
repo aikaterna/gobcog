@@ -16,7 +16,7 @@ from discord.ext.commands.converter import Converter
 from discord.ext.commands.errors import BadArgument
 from redbot.core import commands
 from redbot.core.commands import UserFeedbackCheckFailure
-from redbot.core.i18n import Translator
+from redbot.core.i18n import Translator, set_contextual_locales_from_guild
 from redbot.core.utils.chat_formatting import box
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
@@ -708,21 +708,27 @@ class ChallengeConverter(Transformer):
 
 class HeroClassConverter(Transformer):
     @classmethod
-    async def convert(cls, ctx: commands.Context, argument: str) -> str:
+    async def convert(cls, ctx: commands.Context, argument: str) -> Optional[HeroClasses]:
+        available_classes = HeroClasses.class_names()
+        names = list(available_classes.keys()) + list(available_classes.values())
+        if argument.lower() not in names:
+            return None
         try:
-            HeroClasses(argument.lower())
+            hc = HeroClasses.from_name(argument)
         except ValueError:
             await smart_embed(ctx, _("{} may be a class somewhere, but not on my watch.").format(argument))
             return None
-        return argument.lower()
+        return hc
 
     @classmethod
-    async def transform(cls, interaction: discord.Interaction, argument: str) -> str:
+    async def transform(cls, interaction: discord.Interaction, argument: str) -> Optional[HeroClasses]:
         ctx = await interaction.client.get_context(interaction)
         return await cls.convert(ctx, argument)
 
     async def autocomplete(self, interaction: discord.Interaction, current: str) -> List[Choice]:
-        return [Choice(name=c.value.title(), value=c.value) for c in HeroClasses if current.lower() in c.value]
+        if interaction.guild is not None:
+            await set_contextual_locales_from_guild(interaction.client, interaction.guild)
+        return [Choice(name=c.class_name, value=c.value) for c in HeroClasses if current.lower() in c.class_name]
 
 
 class DayConverter(Converter):

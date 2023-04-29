@@ -379,6 +379,10 @@ class Character:
             "daily_bonus_mapping", {"1": 0, "2": 0, "3": 0.5, "4": 0, "5": 0.5, "6": 1.0, "7": 1.0}
         )
 
+    @property
+    def hc(self) -> HeroClasses:
+        return HeroClasses.from_name(self.heroclass["name"])
+
     def remove_restrictions(self):
         if self.heroclass["name"] == "Ranger" and self.heroclass["pet"]:
             requirements = self._ctx.cog.PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})

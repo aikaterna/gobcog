@@ -8,9 +8,10 @@ from typing import List, Mapping, MutableMapping, Optional, Set, Tuple
 import discord
 from redbot.core.commands import Context, commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_number
+from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number
 
 from .charsheet import Character, has_funds
+from .constants import HeroClasses
 from .helpers import escape, smart_embed
 
 # This is split into its own file for future buttons usage
@@ -71,7 +72,7 @@ class AttackButton(discord.ui.Button):
         if user not in self.view.fight:
             if restricted:
                 all_users = []
-                for (guild_id, guild_session) in self.view.cog._sessions.items():
+                for guild_id, guild_session in self.view.cog._sessions.items():
                     guild_users_in_game = (
                         guild_session.fight
                         + guild_session.magic
@@ -155,7 +156,7 @@ class MagicButton(discord.ui.Button):
         if user not in self.view.magic:
             if restricted:
                 all_users = []
-                for (guild_id, guild_session) in self.view.cog._sessions.items():
+                for guild_id, guild_session in self.view.cog._sessions.items():
                     guild_users_in_game = (
                         guild_session.fight
                         + guild_session.magic
@@ -239,7 +240,7 @@ class TalkButton(discord.ui.Button):
         if user not in self.view.talk:
             if restricted:
                 all_users = []
-                for (guild_id, guild_session) in self.view.cog._sessions.items():
+                for guild_id, guild_session in self.view.cog._sessions.items():
                     guild_users_in_game = (
                         guild_session.fight
                         + guild_session.magic
@@ -323,7 +324,7 @@ class PrayButton(discord.ui.Button):
         if user not in self.view.pray:
             if restricted:
                 all_users = []
-                for (guild_id, guild_session) in self.view.cog._sessions.items():
+                for guild_id, guild_session in self.view.cog._sessions.items():
                     guild_users_in_game = (
                         guild_session.fight
                         + guild_session.magic
@@ -409,7 +410,7 @@ class RunButton(discord.ui.Button):
         if user not in self.view.run:
             if restricted:
                 all_users = []
-                for (guild_id, guild_session) in self.view.cog._sessions.items():
+                for guild_id, guild_session in self.view.cog._sessions.items():
                     guild_users_in_game = (
                         guild_session.fight
                         + guild_session.magic
@@ -736,23 +737,24 @@ class SpecialActionButton(discord.ui.Button):
                 c = await Character.from_json(self.view.ctx, self.view.cog.config, user, self.view.cog._daily_bonus)
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
-                pass
-            heroclasses = ["Cleric", "Psychic", "Berserker", "Wizard", "Bard"]
-            if c.heroclass["name"] not in heroclasses:
-                msg = _(
-                    "**{user}**, you need to be a Bard, Berserker, Cleric, Psychic, or Wizard to use this ability."
-                ).format(user=interaction.user.display_name)
+                await interaction.response.send_message(_("There was an error loading your character."), ephemeral=True)
+                return
+            if not c.hc.has_action:
+                available_classes = humanize_list([c.class_name for c in HeroClasses if c.has_action], style="or")
+                msg = _("**{user}**, you need to be a {available_classes} to use this ability.").format(
+                    user=interaction.user.display_name, available_classes=available_classes
+                )
                 await smart_embed(None, msg, ephemeral=True, cog=self.view.cog, interaction=interaction)
                 return
-            if c.heroclass["name"] == "Cleric":
+            if c.hc is HeroClasses.cleric:
                 await self.send_cleric(interaction, c)
-            if c.heroclass["name"] == "Psychic":
+            if c.hc is HeroClasses.psychic:
                 await self.send_insight(interaction, c)
-            if c.heroclass["name"] == "Berserker":
+            if c.hc is HeroClasses.berserker:
                 await self.send_rage(interaction, c)
-            if c.heroclass["name"] == "Wizard":
+            if c.hc is HeroClasses.wizard:
                 await self.send_focus(interaction, c)
-            if c.heroclass["name"] == "Bard":
+            if c.hc is HeroClasses.bard:
                 await self.send_music(interaction, c)
 
 
@@ -788,7 +790,6 @@ class GameSession(discord.ui.View):
     finished: bool = False
 
     def __init__(self, **kwargs):
-
         self.ctx: Context = kwargs.pop("ctx")
         self.cog: commands.Cog = kwargs.pop("cog")
         self.challenge: str = kwargs.pop("challenge")

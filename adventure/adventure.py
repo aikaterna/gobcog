@@ -31,7 +31,7 @@ from .cart import Trader
 from .character import CharacterCommands
 from .charsheet import Character, calculate_sp, has_funds
 from .class_abilities import ClassAbilities
-from .constants import ANSI_CLOSE, ANSI_ESCAPE, ANSITextColours
+from .constants import ANSI_CLOSE, ANSI_ESCAPE, ANSITextColours, HeroClasses
 from .converters import ArgParserFailure, ChallengeConverter
 from .defaults import default_global, default_guild, default_user
 from .dev import DevCommands
@@ -599,7 +599,7 @@ class Adventure(
                     except Exception as exc:
                         log.exception("Error with the new character sheet", exc_info=exc)
                         continue
-                    if c.heroclass["name"] != "Ranger" and c.heroclass["ability"]:
+                    if c.hc is not HeroClasses.ranger and c.heroclass["ability"]:
                         c.heroclass["ability"] = False
                     if c.last_currency_check + 600 < time.time() or c.bal > c.last_known_currency:
                         c.last_known_currency = await bank.get_balance(user)
@@ -1870,9 +1870,9 @@ class Adventure(
                     roll = random.randint(roll, max_roll)
             roll_perc = roll / max_roll
             att_value = c.total_att
-            rebirths = c.rebirths * (3 if c.heroclass["name"] == "Berserker" else 1)
+            rebirths = c.rebirths * (3 if c.hc is not HeroClasses.berserker else 1)
             if roll_perc < 0.10:
-                if c.heroclass["name"] == "Berserker" and c.heroclass["ability"]:
+                if c.hc is HeroClasses.berserker and c.heroclass["ability"]:
                     bonus_roll = random.randint(5, 15)
                     bonus_multi = random.choice([0.2, 0.3, 0.4, 0.5])
                     bonus = max(bonus_roll, int((roll + att_value + rebirths) * bonus_multi))
@@ -1887,7 +1887,7 @@ class Adventure(
                     msg += _("{user} fumbled the attack.\n").format(user=bold(user.display_name))
                     fumblelist.append(user)
                     fumble_count += 1
-            elif roll_perc > 0.95 or c.heroclass["name"] == "Berserker":
+            elif roll_perc > 0.95 or c.hc is HeroClasses.berserker:
                 crit_str = ""
                 crit_bonus = 0
                 base_bonus = random.randint(5, 10) + rebirths
@@ -1896,7 +1896,7 @@ class Adventure(
                     critlist.append(user)
                     crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
-                if c.heroclass["name"] == "Berserker" and c.heroclass["ability"]:
+                if c.hc is HeroClasses.berserker and c.heroclass["ability"]:
                     base_bonus = (random.randint(1, 10) + 5) * (rebirths // 2)
                 base_str = f"{self.emojis.crit}️ {humanize_number(base_bonus)}"
                 attack += int((roll + base_bonus + crit_bonus + att_value) / pdef)
@@ -1944,12 +1944,12 @@ class Adventure(
                     roll = random.randint(roll, max_roll)
             roll_perc = roll / max_roll
             int_value = c.total_int
-            rebirths = c.rebirths * (3 if c.heroclass["name"] == "Wizard" else 1)
+            rebirths = c.rebirths * (3 if c.hc is HeroClasses.wizard else 1)
             if roll_perc < 0.10:
                 msg += _("{}{} almost set themselves on fire.\n").format(failed_emoji, bold(user.display_name))
                 fumblelist.append(user)
                 fumble_count += 1
-                if c.heroclass["name"] == "Wizard" and c.heroclass["ability"]:
+                if c.hc is HeroClasses.wizard and c.heroclass["ability"]:
                     bonus_roll = random.randint(5, 15)
                     bonus_multi = random.choice([0.2, 0.3, 0.4, 0.5])
                     bonus = max(bonus_roll, int((roll + int_value + rebirths) * bonus_multi))
@@ -1960,7 +1960,7 @@ class Adventure(
                         f"{self.emojis.magic_crit}{humanize_number(bonus)} + "
                         f"{self.emojis.magic}{str(humanize_number(int_value))}\n"
                     )
-            elif roll_perc > 0.95 or (c.heroclass["name"] == "Wizard"):
+            elif roll_perc > 0.95 or (c.hc is HeroClasses.wizard):
                 crit_str = ""
                 crit_bonus = 0
                 base_bonus = random.randint(5, 10) + rebirths
@@ -1970,7 +1970,7 @@ class Adventure(
                     critlist.append(user)
                     crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
-                if c.heroclass["name"] == "Wizard" and c.heroclass["ability"]:
+                if c.hc is HeroClasses.wizard and c.heroclass["ability"]:
                     base_bonus = (random.randint(1, 10) + 5) * (rebirths // 2)
                     base_str = f"{self.emojis.magic_crit}️ {humanize_number(base_bonus)}"
                 magic += int((roll + base_bonus + crit_bonus + int_value) / mdef)
@@ -2023,8 +2023,8 @@ class Adventure(
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 continue
-            rebirths = c.rebirths * (2 if c.heroclass["name"] == "Cleric" else 1)
-            if c.heroclass["name"] == "Cleric":
+            rebirths = c.rebirths * (2 if c.hc is HeroClasses.cleric else 1)
+            if c.hc is HeroClasses.cleric:
                 crit_mod = max(max(c.dex, c.luck // 2) + (c.total_int // 20), 0)
                 mod = 0
                 max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 15 else 20
@@ -2185,10 +2185,10 @@ class Adventure(
                 mod = 45
             roll = max(random.randint((1 + mod), max_roll), 1)
             dipl_value = c.total_cha
-            rebirths = c.rebirths * (3 if c.heroclass["name"] == "Bard" else 1)
+            rebirths = c.rebirths * (3 if c.hc is HeroClasses.bard else 1)
             roll_perc = roll / max_roll
             if roll_perc < 0.10:
-                if c.heroclass["name"] == "Bard" and c.heroclass["ability"]:
+                if c.hc is HeroClasses.bard and c.heroclass["ability"]:
                     bonus = random.randint(5, 15)
                     diplomacy += int((roll - bonus + dipl_value + rebirths) / cdef)
                     report += f"{bold(user.display_name)} " f"🎲({roll}) +💥{bonus} +🗨{humanize_number(dipl_value)} | "
@@ -2196,7 +2196,7 @@ class Adventure(
                     msg += _("{}{} accidentally offended the enemy.\n").format(failed_emoji, bold(user.display_name))
                     fumblelist.append(user)
                     fumble_count += 1
-            elif roll_perc > 0.95 or c.heroclass["name"] == "Bard":
+            elif roll_perc > 0.95 or c.hc is HeroClasses.bard:
                 crit_str = ""
                 crit_bonus = 0
                 base_bonus = random.randint(5, 10) + rebirths
@@ -2206,7 +2206,7 @@ class Adventure(
                     crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {crit_bonus}"
 
-                if c.heroclass["name"] == "Bard" and c.heroclass["ability"]:
+                if c.hc is HeroClasses.bard and c.heroclass["ability"]:
                     base_bonus = (random.randint(1, 10) + 5) * (rebirths // 2)
                 base_str = f"🎵 {humanize_number(base_bonus)}"
                 diplomacy += int((roll + base_bonus + crit_bonus + dipl_value) / cdef)
@@ -2516,7 +2516,7 @@ class Adventure(
             roll = random.randint(1, 5)
             if c.heroclass.get("pet", {}).get("bonuses", {}).get("always", False):
                 roll = 5
-            if roll == 5 and c.heroclass["name"] == "Ranger" and c.heroclass["pet"]:
+            if roll == 5 and c.hc is HeroClasses.ranger and c.heroclass["pet"]:
                 petxp = int(userxp * c.heroclass["pet"]["bonus"])
                 newxp += petxp
                 userxp += petxp
