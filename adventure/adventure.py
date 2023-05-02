@@ -875,8 +875,8 @@ class Adventure(
                 new_challenge = challenge.replace("Ascended", "")
             timer = 60 * 3
             no_monster = random.randint(0, 100) == 25
-        if ctx.author.id in DEV_LIST:
-            timer = 20
+        # if ctx.author.id in DEV_LIST:
+            # timer = 20
         self._sessions[ctx.guild.id] = GameSession(
             ctx=ctx,
             cog=self,
