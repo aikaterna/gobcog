@@ -51,10 +51,10 @@ async def smart_embed(
         colour = discord.Colour.dark_green()
     elif success is False:
         colour = discord.Colour.dark_red()
-    elif embed_colour is None:
+    elif embed_colour is not None:
         try:
             colour = discord.Colour.from_str(embed_colour)
-        except ValueError:
+        except (ValueError, TypeError):
             colour = await bot.get_embed_colour(channel)
     else:
         colour = await bot.get_embed_colour(channel)
