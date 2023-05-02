@@ -14,7 +14,7 @@ from redbot.core.utils.chat_formatting import box, humanize_list, humanize_numbe
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ANSI_CLOSE, ANSI_ESCAPE, ANSITextColours, Rarities
+from .constants import ANSITextColours, Rarities
 from .converters import Stats
 from .helpers import escape, has_separated_economy, smart_embed
 from .menus import BaseMenu, SimpleSource
@@ -266,7 +266,7 @@ class EconomyCommands(AdventureMixin):
                 (
                     k,
                     f"{v[0]}",
-                    f" {v[1]}" if v[1] == v[0] else f"{ANSI_ESCAPE}[{ANSITextColours.red.value}m[{v[1]}]{ANSI_CLOSE}",
+                    f" {v[1]}" if v[1] == v[0] else ANSITextColours.red.as_str(v[1]),
                 )
             )
         table.rows.sort("Name", reverse=False)
@@ -404,19 +404,19 @@ class EconomyCommands(AdventureMixin):
                     log.exception("Error with the new character sheet", exc_info=exc)
                     continue
                 if loot_type == "rare":
-                    c.treasure[1] += number
+                    c.treasure.rare += number
                 elif loot_type == "epic":
-                    c.treasure[2] += number
+                    c.treasure.epic += number
                 elif loot_type == "legendary":
-                    c.treasure[3] += number
+                    c.treasure.legendary += number
                 elif loot_type == "ascended":
-                    c.treasure[4] += number
+                    c.treasure.ascended += number
                 elif loot_type == "set":
-                    c.treasure[5] += number
+                    c.treasure.set += number
                 else:
-                    c.treasure[0] += number
+                    c.treasure.normal += number
                 await self.config.user(user).set(await c.to_json(ctx, self.config))
-                chests = c.current_chests()
+                chests = c.treasure.ansi
                 await ctx.send(
                     box(
                         _("{author} now owns {chests} chests.").format(

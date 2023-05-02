@@ -67,6 +67,10 @@ class AdventureMixin(ABC):
     #######################################################################
 
     @abstractmethod
+    def get_lock(self, member: discord.User) -> asyncio.Lock:
+        raise NotImplementedError()
+
+    @abstractmethod
     async def _clear_react(self, msg: discord.Message):
         raise NotImplementedError()
 

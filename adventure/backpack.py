@@ -18,7 +18,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ORDER, RARITIES
+from .constants import ORDER, RARITIES, HeroClasses, Rarities
 from .converters import (
     BackpackFilterParser,
     EquipableItemConverter,
@@ -373,11 +373,11 @@ class BackPackCommands(AdventureMixin):
                     continue
                 if item.name in disassembled:
                     continue
-                if item.rarity in ["forged"]:
+                if item.rarity in [Rarities.forged]:
                     continue
-                index = min(RARITIES.index(item.rarity), 4)
+                index = min(item.rarity.value, 4)
                 if op == "single":
-                    if character.heroclass["name"] != "Tinkerer":
+                    if character.hc is not HeroClasses.tinkerer:
                         roll = random.randint(0, 5)
                         chests = 1
                     else:
@@ -408,7 +408,7 @@ class BackPackCommands(AdventureMixin):
                     disassembled.add(item.name)
                     owned = item.owned
                     async for _loop_counter in AsyncIter(range(0, owned), steps=100):
-                        if character.heroclass["name"] != "Tinkerer":
+                        if character.hc is not HeroClasses.tinkerer:
                             roll = random.randint(0, 5)
                             chests = 1
                         else:
@@ -507,10 +507,10 @@ class BackPackCommands(AdventureMixin):
                 return
             total_price = 0
             async with ctx.typing():
-                items = [i for n, i in c.backpack.items() if i.rarity not in ["forged"]]
+                items = [i for n, i in c.backpack.items() if i.rarity not in [Rarities.forged]]
                 count = 0
                 async for item in AsyncIter(items, steps=100):
-                    if rarity and item.rarity != rarity:
+                    if rarity and item.rarity.name != rarity:
                         continue
                     if slot:
                         if len(item.slot) == 1 and slot != item.slot[0]:
@@ -565,7 +565,7 @@ class BackPackCommands(AdventureMixin):
                 _("You tried to go sell your items but the monster ahead is not allowing you to leave."),
                 ephemeral=True,
             )
-        if item.rarity in ["forged"]:
+        if item.rarity in [Rarities.forged]:
             ctx.command.reset_cooldown(ctx)
             return await ctx.send(
                 box(
@@ -667,8 +667,8 @@ class BackPackCommands(AdventureMixin):
                 ),
             )
             return
-        if any([x for x in lookup if x.rarity == "forged"]):
-            device = [x for x in lookup if x.rarity == "forged"]
+        if any([x for x in lookup if x.rarity is Rarities.forged]):
+            device = [x for x in lookup if x.rarity is Rarities.forged]
             return await ctx.send(
                 box(
                     _("\n{author}, your {device} does not want to leave you.").format(
@@ -677,7 +677,7 @@ class BackPackCommands(AdventureMixin):
                     lang="ansi",
                 )
             )
-        elif any([x for x in lookup if x.rarity == "set"]):
+        elif any([x for x in lookup if x.rarity is Rarities.set]):
             return await ctx.send(
                 box(
                     _("\n{character}, you cannot trade Set items as they are bound to your soul.").format(
@@ -938,10 +938,10 @@ class BackPackCommands(AdventureMixin):
                     continue
                 if item.name in disassembled:
                     continue
-                if item.rarity in ["forged"]:
+                if item.rarity in [Rarities.forged]:
                     failed += 1
                     continue
-                index = min(RARITIES.index(item.rarity), 4)
+                index = min(item.rarity.value, 4)
                 disassembled.add(item.name)
                 owned = item.owned
                 async for _loop_counter in AsyncIter(range(0, owned), steps=100):

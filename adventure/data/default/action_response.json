@@ -1,52 +1,139 @@
 {
-  "fight": {
-    "tinkerer": ["You flail your $weapon at the $monster."],
-    "bard": ["You flail your $weapon at the $monster."],
-    "berserker": ["You flail your $weapon at the $monster."],
-    "cleric": ["You flail your $weapon at the $monster."],
-    "ranger": ["You flail your $weapon at the $monster."],
-    "psychic": ["You flail your $weapon at the $monster."],
-    "hero": ["You flail your $weapon at the $monster."],
-    "wizard": ["You flail your $weapon at the $monster."]
-  },
-  "magic": {
-    "tinkerer": ["You cast a spell at the $monster."],
-    "bard": ["You cast a spell at the $monster."],
-    "berserker": ["You cast a spell at the $monster."],
-    "cleric": ["You cast a spell at the $monster."],
-    "ranger": ["You cast a spell at the $monster."],
-    "psychic": ["You cast a spell at the $monster."],
-    "hero": ["You cast a spell at the $monster."],
-    "wizard": ["You cast a spell at the $monster."]
-  },
-  "talk": {
-    "tinkerer": ["You tell stories about $monster kind."],
-    "bard": ["You tell stories about $monster kind."],
-    "berserker": ["You tell stories about $monster kind."],
-    "cleric": ["You tell stories about $monster kind."],
-    "ranger": ["You tell stories about $monster kind."],
-    "psychic": ["You tell stories about $monster kind."],
-    "hero": ["You tell stories about $monster kind."],
-    "wizard": ["You tell stories about $monster kind."]
-  },
-  "pray": {
-    "tinkerer": ["You pray to $god for help against the $monster."],
-    "bard": ["You pray to $god for help against the $monster."],
-    "berserker": ["You pray to $god for help against the $monster."],
-    "cleric": ["You pray to $god for help against the $monster."],
-    "ranger": ["You pray to $god for help against the $monster."],
-    "psychic": ["You pray to $god for help against the $monster."],
-    "hero": ["You pray to $god for help against the $monster."],
-    "wizard": ["You pray to $god for help against the $monster."]
-  },
-  "run": {
-    "tinkerer": ["You run away from $monster."],
-    "bard": ["You run away from $monster."],
-    "berserker": ["You run away from $monster."],
-    "cleric": ["You run away from $monster."],
-    "ranger": ["You run away from $monster."],
-    "psychic": ["You run away from $monster."],
-    "hero": ["You run away from $monster."],
-    "wizard": ["You run away from $monster."]
-  }
+    "fight":
+    {
+        "tinkerer":
+        [],
+        "bard":
+        [
+            "Feeling rather uncreative, you decide to instead bash your $weapon at the $monster."
+        ],
+        "berserker":
+        [
+            "With great might you swing your $weapon at the $monster."
+        ],
+        "cleric":
+        [
+            "You pray to $god under your breath and swing your $weapon at the $monster."
+        ],
+        "ranger":
+        [
+            "You swing your $weapon at the $monster while your $pet pecks at its eyes."
+        ],
+        "psychic":
+        [],
+        "hero":
+        [
+            "You flail your $weapon at the $monster.",
+            "You swing your $weapon at the $monster.",
+            "You bash your $weapon at the $monster."
+        ],
+        "wizard":
+        [
+            "You wanted to use magic but felt like a good old fashioned bashing was in order."
+        ]
+    },
+    "magic":
+    {
+        "tinkerer":
+        [],
+        "bard":
+        [
+            "You attempt to use the spell of song to attack the $monster."
+        ],
+        "berserker":
+        [
+            "Somehow, through pure luck, you managed to cast a fireball at the $monster."
+        ],
+        "cleric":
+        [],
+        "ranger":
+        [],
+        "psychic":
+        [],
+        "hero":
+        [
+            "You use your $weapon to cast a spell at the $monster."
+        ],
+        "wizard":
+        []
+    },
+    "talk":
+    {
+        "tinkerer":
+        [],
+        "bard":
+        [
+            "You start announcing a beautiful poem about the $monster."
+        ],
+        "berserker":
+        [
+            "You're not so good with words but make some strange gestures that sort of look like compassion?"
+        ],
+        "cleric":
+        [
+            "You attempt to sway the $monster about the ways of $god."
+        ],
+        "ranger":
+        [
+            "You attempt to calm the $monster while your $pet runs around your feet."
+        ],
+        "psychic":
+        [],
+        "hero":
+        [
+            "With your trusty $weapon you tell stories about $monster kind."
+        ],
+        "wizard":
+        [
+            "You remembered a strange magical incantation that's allegedly strong against $monster and speak it aloud."
+        ]
+    },
+    "pray":
+    {
+        "tinkerer":
+        [],
+        "bard":
+        [],
+        "berserker":
+        [],
+        "cleric":
+        [],
+        "ranger":
+        [
+            "You kneel down in prayer to $god while your $pet huddles with you."
+        ],
+        "psychic":
+        [],
+        "hero":
+        [
+            "You pray to $god for help against the $monster."
+        ],
+        "wizard":
+        []
+    },
+    "run":
+    {
+        "tinkerer":
+        [],
+        "bard":
+        [],
+        "berserker":
+        [],
+        "cleric":
+        [],
+        "ranger":
+        [
+            "You and your $pet flee from the $monster."
+        ],
+        "psychic":
+        [],
+        "hero":
+        [
+            "You ready your $weapon then decide to run away from the $monster."
+        ],
+        "wizard":
+        [
+            "You attempt to use an invisibility spell and run from the $monster."
+        ]
+    }
 }

@@ -42,19 +42,15 @@ class AttackButton(discord.ui.Button):
             log.exception("Error with the new character sheet", exc_info=exc)
             pass
         choices = self.view.cog.ACTION_RESPONSE.get(self.action_type, {})
-        heroclass = getattr(c, "heroclass", {"name": "default"})["name"].lower()
-        choice = random.choice(choices[heroclass])
+        heroclass = c.hc.name
+        pet = ""
+        if c.hc is HeroClasses.ranger:
+            pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
+
+        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge)
-        left = getattr(c, "left")
-        right = getattr(c, "right")
-        if left and right:
-            weapon = str(left) + str(right)
-        if left and not right:
-            weapon = str(left)
-        if right and not left:
-            weapon = str(right)
-        if not left and not right:
-            weapon = "fists"
+        weapon = c.get_weapons()
         choice = choice.replace("$weapon", weapon)
         god = await self.view.cog.config.god_name()
         if await self.view.cog.config.guild(interaction.guild).god_name():
@@ -126,19 +122,15 @@ class MagicButton(discord.ui.Button):
             log.exception("Error with the new character sheet", exc_info=exc)
             pass
         choices = self.view.cog.ACTION_RESPONSE.get(self.action_type, {})
-        heroclass = getattr(c, "heroclass", {"name": "default"})["name"].lower()
-        choice = random.choice(choices[heroclass])
+        heroclass = c.hc.name
+        pet = ""
+        if c.hc is HeroClasses.ranger:
+            pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
+
+        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge)
-        left = getattr(c, "left")
-        right = getattr(c, "right")
-        if left and right:
-            weapon = str(left) + str(right)
-        if left and not right:
-            weapon = str(left)
-        if right and not left:
-            weapon = str(right)
-        if not left and not right:
-            weapon = "fists"
+        weapon = c.get_weapons()
         choice = choice.replace("$weapon", weapon)
         god = await self.view.cog.config.god_name()
         if await self.view.cog.config.guild(interaction.guild).god_name():
@@ -210,19 +202,15 @@ class TalkButton(discord.ui.Button):
             log.exception("Error with the new character sheet", exc_info=exc)
             pass
         choices = self.view.cog.ACTION_RESPONSE.get(self.action_type, {})
-        heroclass = getattr(c, "heroclass", {"name": "default"})["name"].lower()
-        choice = random.choice(choices[heroclass])
+        heroclass = c.hc.name
+        pet = ""
+        if c.hc is HeroClasses.ranger:
+            pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
+
+        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge)
-        left = getattr(c, "left")
-        right = getattr(c, "right")
-        if left and right:
-            weapon = str(left) + str(right)
-        if left and not right:
-            weapon = str(left)
-        if right and not left:
-            weapon = str(right)
-        if not left and not right:
-            weapon = "fists"
+        weapon = c.get_weapons()
         choice = choice.replace("$weapon", weapon)
         god = await self.view.cog.config.god_name()
         if await self.view.cog.config.guild(interaction.guild).god_name():
@@ -294,19 +282,15 @@ class PrayButton(discord.ui.Button):
             log.exception("Error with the new character sheet", exc_info=exc)
             pass
         choices = self.view.cog.ACTION_RESPONSE.get(self.action_type, {})
-        heroclass = getattr(c, "heroclass", {"name": "default"})["name"].lower()
-        choice = random.choice(choices[heroclass])
+        heroclass = c.hc.name
+        pet = ""
+        if c.hc is HeroClasses.ranger:
+            pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
+
+        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge)
-        left = getattr(c, "left")
-        right = getattr(c, "right")
-        if left and right:
-            weapon = str(left) + str(right)
-        if left and not right:
-            weapon = str(left)
-        if right and not left:
-            weapon = str(right)
-        if not left and not right:
-            weapon = "fists"
+        weapon = c.get_weapons()
         choice = choice.replace("$weapon", weapon)
         god = await self.view.cog.config.god_name()
         if await self.view.cog.config.guild(interaction.guild).god_name():
@@ -380,19 +364,15 @@ class RunButton(discord.ui.Button):
             log.exception("Error with the new character sheet", exc_info=exc)
             pass
         choices = self.view.cog.ACTION_RESPONSE.get(self.action_type, {})
-        heroclass = getattr(c, "heroclass", {"name": "default"})["name"].lower()
-        choice = random.choice(choices[heroclass])
+        heroclass = c.hc.name
+        pet = ""
+        if c.hc is HeroClasses.ranger:
+            pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
+
+        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge)
-        left = getattr(c, "left")
-        right = getattr(c, "right")
-        if left and right:
-            weapon = str(left) + str(right)
-        if left and not right:
-            weapon = str(left)
-        if right and not left:
-            weapon = str(right)
-        if not left and not right:
-            weapon = "fists"
+        weapon = c.get_weapons()
         choice = choice.replace("$weapon", weapon)
         god = await self.view.cog.config.god_name()
         if await self.view.cog.config.guild(interaction.guild).god_name():

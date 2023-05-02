@@ -10,12 +10,12 @@ from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_number
 
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ANSI_CLOSE, ANSI_ESCAPE, ORDER, RARITIES, ANSITextColours, Rarities
+from .constants import ORDER, RARITIES, Rarities
 from .helpers import LootView, _sell, escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
@@ -58,7 +58,7 @@ class LootCommands(AdventureMixin):
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
             if not box_type:
-                chests = c.current_chests()
+                chests = c.treasure.ansi
                 return await ctx.send(
                     box(
                         _("{author} owns {chests} chests.").format(
@@ -224,6 +224,18 @@ class LootCommands(AdventureMixin):
                     "but the monster ahead is commanding your attention."
                 ),
             )
+        if box_rarity.lower() not in ["normal", "rare", "epic"]:
+            await smart_embed(
+                ctx,
+                _("{user}, please select between normal, rare, or epic treasure chests to convert.").format(
+                    user=bold(ctx.author.display_name)
+                ),
+            )
+        costs = {
+            Rarities.normal: 25,
+            Rarities.rare: 25,
+            Rarities.epic: 25,
+        }
         normalcost = 25
         rarecost = 25
         epiccost = 25
@@ -262,118 +274,68 @@ class LootCommands(AdventureMixin):
                     ctx,
                     _("{c}, you need to 3 rebirths to use this.").format(c=bold(ctx.author.display_name)),
                 )
-
+            msg = ""
+            success_msg = _(
+                "Successfully converted {converted} treasure "
+                "chests to {to} treasure chest{plur}.\n{author} "
+                "now owns {chests} treasure chests."
+            )
+            failed_msg = _("{author}, you do not have {amount} treasure chests to convert.")
             if box_rarity.lower() == "normal" and c.rebirths >= rebirth_normal:
-                if c.treasure[0] >= (normalcost * amount):
-                    c.treasure[0] -= normalcost * amount
-                    c.treasure[1] += 1 * amount
-                    await ctx.send(
-                        box(
-                            _(
-                                "Successfully converted {converted} normal treasure "
-                                "chests to {to} rare treasure chest{plur}.\n{author} "
-                                "now owns {normal} normal, {rare} rare, {epic} epic, "
-                                "{leg} legendary, {asc} ascended and {set} set treasure chests."
-                            ).format(
-                                converted=humanize_number(normalcost * amount),
-                                to=humanize_number(1 * amount),
-                                plur=plural,
-                                author=escape(ctx.author.display_name),
-                                normal=c.treasure[0],
-                                rare=c.treasure[1],
-                                epic=c.treasure[2],
-                                leg=c.treasure[3],
-                                asc=c.treasure[4],
-                                set=c.treasure[5],
-                            ),
-                            lang="ansi",
-                        )
+                rarity = Rarities.normal
+                to_rarity = Rarities.rare
+                converted = rarity.rarity_colour.as_str(f"{humanize_number(costs[rarity] * amount)} {rarity}")
+                if c.treasure.normal >= (costs[rarity] * amount):
+                    c.treasure.normal -= costs[rarity] * amount
+                    c.treasure.rare += 1 * amount
+                    to = to_rarity.rarity_colour.as_str(f"{humanize_number(1 * amount)} {to_rarity}")
+                    msg = success_msg.format(
+                        converted=converted,
+                        to=to,
+                        plur=plural,
+                        author=escape(ctx.author.display_name),
+                        chests=c.treasure.ansi,
                     )
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 else:
-                    await smart_embed(
-                        ctx,
-                        _("{author}, you do not have {amount} normal treasure chests to convert.").format(
-                            author=bold(ctx.author.display_name),
-                            amount=humanize_number(normalcost * amount),
-                        ),
-                    )
+                    msg = failed_msg.format(author=escape(ctx.author.display_name), amount=converted)
             elif box_rarity.lower() == "rare" and c.rebirths >= rebirth_rare:
-                if c.treasure[1] >= (rarecost * amount):
-                    c.treasure[1] -= rarecost * amount
-                    c.treasure[2] += 1 * amount
-                    await ctx.send(
-                        box(
-                            _(
-                                "Successfully converted {converted} rare treasure "
-                                "chests to {to} epic treasure chest{plur}. \n{author} "
-                                "now owns {normal} normal, {rare} rare, {epic} epic, "
-                                "{leg} legendary, {asc} ascended and {set} set treasure chests."
-                            ).format(
-                                converted=humanize_number(rarecost * amount),
-                                to=humanize_number(1 * amount),
-                                plur=plural,
-                                author=escape(ctx.author.display_name),
-                                normal=c.treasure[0],
-                                rare=c.treasure[1],
-                                epic=c.treasure[2],
-                                leg=c.treasure[3],
-                                asc=c.treasure[4],
-                                set=c.treasure[5],
-                            ),
-                            lang="ansi",
-                        )
+                rarity = Rarities.rare
+                to_rarity = Rarities.epic
+                converted = rarity.rarity_colour.as_str(f"{humanize_number(costs[rarity] * amount)} {rarity}")
+                if c.treasure.rare >= (costs[rarity] * amount):
+                    c.treasure.rare -= costs[rarity] * amount
+                    c.treasure.epic += 1 * amount
+                    to = to_rarity.rarity_colour.as_str(f"{humanize_number(1 * amount)} {to_rarity}")
+                    msg = success_msg.format(
+                        converted=converted,
+                        to=to,
+                        plur=plural,
+                        author=escape(ctx.author.display_name),
+                        chests=c.treasure.ansi,
                     )
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 else:
-                    await smart_embed(
-                        ctx,
-                        _("{author}, you do not have {amount} rare treasure chests to convert.").format(
-                            author=ctx.author.mention, amount=humanize_number(rarecost * amount)
-                        ),
-                    )
+                    msg = failed_msg.format(author=escape(ctx.author.display_name), amount=converted)
             elif box_rarity.lower() == "epic" and c.rebirths >= rebirth_epic:
-                if c.treasure[2] >= (epiccost * amount):
-                    c.treasure[2] -= epiccost * amount
-                    c.treasure[3] += 1 * amount
-                    await ctx.send(
-                        box(
-                            _(
-                                "Successfully converted {converted} epic treasure "
-                                "chests to {to} legendary treasure chest{plur}. \n{author} "
-                                "now owns {normal} normal, {rare} rare, {epic} epic, "
-                                "{leg} legendary, {asc} ascended and {set} set treasure chests."
-                            ).format(
-                                converted=humanize_number(epiccost * amount),
-                                to=humanize_number(1 * amount),
-                                plur=plural,
-                                author=escape(ctx.author.display_name),
-                                normal=c.treasure[0],
-                                rare=c.treasure[1],
-                                epic=c.treasure[2],
-                                leg=c.treasure[3],
-                                asc=c.treasure[4],
-                                set=c.treasure[5],
-                            ),
-                            lang="ansi",
-                        )
+                rarity = Rarities.epic
+                to_rarity = Rarities.legendary
+                converted = rarity.rarity_colour.as_str(f"{humanize_number(costs[rarity] * amount)} {rarity}")
+                if c.treasure.epic >= (costs[rarity] * amount):
+                    c.treasure.epic -= costs[rarity] * amount
+                    c.treasure.legendary += 1 * amount
+                    to = to_rarity.rarity_colour.as_str(f"{humanize_number(1 * amount)} {to_rarity}")
+                    msg = success_msg.format(
+                        converted=converted,
+                        to=to,
+                        plur=plural,
+                        author=escape(ctx.author.display_name),
+                        chests=c.treasure.ansi,
                     )
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 else:
-                    await smart_embed(
-                        ctx,
-                        _("{author}, you do not have {amount} epic treasure chests to convert.").format(
-                            author=bold(ctx.author.display_name),
-                            amount=humanize_number(epiccost * amount),
-                        ),
-                    )
-            else:
-                await smart_embed(
-                    ctx,
-                    _("{user}, please select between normal, rare, or epic treasure chests to convert.").format(
-                        user=bold(ctx.author.display_name)
-                    ),
-                )
+                    msg = failed_msg.format(author=escape(ctx.author.display_name), amount=converted)
+            await ctx.send(box(msg, lang="ansi"))
 
     async def _open_chests(
         self,

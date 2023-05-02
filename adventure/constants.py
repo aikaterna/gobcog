@@ -3,12 +3,314 @@ from __future__ import annotations
 import logging
 import time
 from enum import Enum
+from typing import Dict, Union
 
 from redbot.core.i18n import Translator
+from redbot.core.utils.chat_formatting import humanize_list
 
 _ = Translator("Adventure", __file__)
 
 log = logging.getLogger("red.cogs.adventure")
+
+ANSI_ESCAPE = "\u001b"
+ANSI_CLOSE = "\u001b[0m"
+
+class Rarities(Enum):
+    # Our standard rarities
+    normal = 0
+    rare = 1
+    epic = 2
+    legendary = 3
+    ascended = 4
+    set = 5
+    # Special rarities so we leave room for more in between
+    forged = 16
+    event = 32
+
+    def __str__(self):
+        return self.name.title()
+
+    @classmethod
+    def get_from_name(cls, name: str) -> Rarities:
+        for i in cls:
+            if i.name == name:
+                return i
+            elif name == i.get_name():
+                return i
+        return Rarities.normal
+
+    @staticmethod
+    def names():
+        return {
+            "normal": _("Normal"),
+            "rare": _("Rare"),
+            "epic": _("Epic"),
+            "legendary": _("Legendary"),
+            "ascended": _("Ascended"),
+            "set": _("Set"),
+            "forged": _("Forged"),
+            "event": _("Event"),
+        }
+
+    def get_name(self) -> str:
+        return self.names().get(self.name, _("Normal"))
+
+    @property
+    def ansi(self) -> str:
+        return f"{ANSI_ESCAPE}[{self.rarity_colour.value}m{self.get_name()}{ANSI_CLOSE}"
+
+    def as_ansi(self, name: str) -> str:
+        return f"{ANSI_ESCAPE}[{self.rarity_colour.value}m{self.as_str(name)}{ANSI_CLOSE}"
+
+    @staticmethod
+    def open_strings() -> Dict[Rarities, str]:
+        return {
+            Rarities.normal: "",
+            Rarities.rare: ".",
+            Rarities.epic: "",
+            Rarities.legendary: r"{Legendary:'",
+            Rarities.ascended: r"{Ascended:'",
+            Rarities.set: r"{Set:'",
+            Rarities.forged: r"{.:'",
+            Rarities.event: r"{Event:''"
+        }
+
+    @staticmethod
+    def close_strings() -> Dict[Rarities, str]:
+        return {
+            Rarities.normal: "",
+            Rarities.rare: "",
+            Rarities.epic: "",
+            Rarities.legendary: r"'}",
+            Rarities.ascended: r"'}",
+            Rarities.set: r"'}",
+            Rarities.forged: r"':.}",
+            Rarities.event: r"''}"
+        }
+
+    def get_open_str(self) -> str:
+        return self.open_strings().get(self, "")
+
+    def get_close_str(self) -> str:
+        return self.close_strings().get(self, "")
+
+    def as_str(self, name: str) -> str:
+        open_str = self.get_open_str()
+        close_str = self.get_close_str()
+        if self is Rarities.rare:
+            name = name.replace(" ", "_")
+        if self is Rarities.forged:
+            name = name.replace("'", "’")
+        return f"{open_str}{name}{close_str}"
+
+    @property
+    def is_chest(self) -> bool:
+        return self.value < Rarities.forged.value
+
+    @property
+    def slot(self) -> int:
+        """Returns the index of rarity for players chests"""
+        return {
+            "normal": 0,
+            "rare": 1,
+            "epic": 2,
+            "legendary": 3,
+            "ascended": 4,
+            "set": 5,
+        }[self.name]
+
+    @property
+    def rarity_colour(self) -> ANSITextColours:
+        return {
+            "normal": ANSITextColours.normal,
+            "rare": ANSITextColours.green,
+            "epic": ANSITextColours.blue,
+            "legendary": ANSITextColours.yellow,
+            "ascended": ANSITextColours.cyan,
+            "set": ANSITextColours.red,
+            "event": ANSITextColours.normal,
+            "forged": ANSITextColours.pink,
+        }.get(self.name, ANSITextColours.normal)
+
+
+class TreasureChest:
+    def __init__(self, number: int, rarity: Rarities):
+        self.number = number
+        if not rarity.is_chest:
+            raise TypeError("Rarity of type %s cannot be made into a chest", rarity)
+        self.rarity = rarity
+
+    def __repr__(self):
+        return f"<{self.rarity.get_name()} Chest number={self.number}>"
+
+    def __int__(self):
+        return self.number
+
+    def __str__(self):
+        return f"{self.number} {self.rarity.get_name()}"
+
+    def __add__(self, chest: Union[TreasureChest, int]) -> TreasureChest:
+        if isinstance(chest, int):
+            self.number += chest
+            print(f"adding {chest}")
+            return self
+        if chest.rarity is not self.rarity:
+            raise TypeError(
+                "Treasure Chest of rarity %s cannot add Treasure Chest of rarity %s", self.rarity, chest.rarity
+            )
+        self.number += chest.number
+        return self
+
+    def __sub__(self, chest: Union[TreasureChest, int]) -> TreasureChest:
+        if isinstance(chest, int):
+            self.number -= chest
+            return self
+        if chest.rarity is not self.rarity:
+            raise TypeError(
+                "Treasure Chest of rarity %s cannot add Treasure Chest of rarity %s", self.rarity, chest.rarity
+            )
+        self.number -= chest.number
+        return self
+
+    def __eq__(self, other: Union[TreasureChest, int]) -> bool:
+        if isinstance(other, int):
+            return other == self.number
+        return other.number == self.number and other.rarity is self.rarity
+
+    def __ne__(self, other: Union[TreasureChest, int]) -> bool:
+        if isinstance(other, int):
+            return other != self.number
+        return other.number != self.number and other.rarity is not self.rarity
+
+    def __lt__(self, other: Union[TreasureChest, int]) -> bool:
+        if isinstance(other, int):
+            return self.number < other
+        if self.rarity is not other.rarity:
+            raise TypeError("Cannot compare Treasure chests of different rarities.")
+        return self.number < other.number
+
+    def __le__(self, other: Union[TreasureChest, int]) -> bool:
+        if isinstance(other, int):
+            return self.number <= other
+        if self.rarity is not other.rarity:
+            raise TypeError("Cannot compare Treasure chests of different rarities.")
+        return self.number <= other.number
+
+    def __gt__(self, other: Union[TreasureChest, int]) -> bool:
+        if isinstance(other, int):
+            return self.number > other
+        if self.rarity is not other.rarity:
+            raise TypeError("Cannot compare Treasure chests of different rarities.")
+        return self.number > other.number
+
+    def __ge__(self, other: Union[TreasureChest, int]) -> bool:
+        if isinstance(other, int):
+            return self.number >= other
+        if self.rarity is not other.rarity:
+            raise TypeError("Cannot compare Treasure chests of different rarities.")
+        return self.number >= other.number
+
+    @property
+    def ansi(self) -> str:
+        return f"{ANSI_ESCAPE}[{self.rarity.rarity_colour}m{self.number} {self.rarity.get_name()}{ANSI_CLOSE}"
+
+
+class Treasure:
+    def __init__(
+        self, normal: int = 0, rare: int = 0, epic: int = 0, legendary: int = 0, ascended: int = 0, _set: int = 0
+    ):
+        self.normal: TreasureChest = TreasureChest(normal, Rarities.normal)
+        self.rare: TreasureChest = TreasureChest(rare, Rarities.rare)
+        self.epic: TreasureChest = TreasureChest(epic, Rarities.epic)
+        self.legendary: TreasureChest = TreasureChest(legendary, Rarities.legendary)
+        self.ascended: TreasureChest = TreasureChest(ascended, Rarities.ascended)
+        self.set: TreasureChest = TreasureChest(_set, Rarities.set)
+
+    def __repr__(self):
+        return (
+            "<Treasure "
+            f"normal={self.normal} "
+            f"rare={self.rare} "
+            f"epic={self.epic} "
+            f"legendary={self.legendary} "
+            f"ascended={self.ascended} "
+            f"set={self.set}"
+            ">"
+        )
+
+    def __len__(self):
+        return sum(getattr(self, i).number for i in self.list)
+
+    def get_ansi(self):
+        """Returns ansi formatted list of all chests only if the number
+        of chests is greater than zero
+        """
+        return humanize_list([i.ansi for i in self if i.number > 0])
+
+    @property
+    def list(self):
+        return (
+            "normal",
+            "rare",
+            "epic",
+            "legendary",
+            "ascended",
+            "set",
+        )
+
+    def __str__(self) -> str:
+        """
+        Returns a list of all chests available.
+        """
+        return humanize_list([str(i) for i in self])
+
+    @property
+    def ansi(self) -> str:
+        """
+        Returns a list of all chests available ansi formatted
+        """
+        return humanize_list([i.ansi for i in self])
+
+    def __iter__(self):
+        for x in self.list:
+            yield getattr(self, x)
+
+    def __getitem__(self, item: Union[int, str]) -> TreasureChest:
+        if isinstance(item, int):
+            return getattr(self, self.list[item])
+        elif isinstance(item, str):
+            if item.lower() not in [i.name for i in Rarities]:
+                raise KeyError
+            return getattr(self, item.lower())
+
+    def __setitem__(self, key: Union[int, str], newvalue: Union[int, TreasureChest]):
+        if isinstance(key, int):
+            return getattr(self, self.list[key])
+        elif isinstance(key, str):
+            if key.lower() not in [i.name for i in Rarities]:
+                raise KeyError
+            return getattr(self, key.lower())
+
+    def __add__(self, treasure: Treasure) -> Treasure:
+        self.normal += treasure.normal
+        self.rare += treasure.rare
+        self.epic += treasure.epic
+        self.legendary += treasure.legendary
+        self.ascended += treasure.ascended
+        self.set += treasure.set
+        return self
+
+    def __sub__(self, treasure: Treasure) -> Treasure:
+        self.normal -= treasure.normal
+        self.rare -= treasure.rare
+        self.epic -= treasure.epic
+        self.legendary -= treasure.legendary
+        self.ascended -= treasure.ascended
+        self.set -= treasure.set
+        return self
+
+    def to_json(self):
+        return [i.number for i in self]
 
 
 class Skills(Enum):
@@ -30,6 +332,12 @@ class ANSITextColours(Enum):
     cyan = 36
     white = 37
 
+    def __str__(self):
+        return str(self.value)
+
+    def as_str(self, value: str) -> str:
+        return f"{ANSI_ESCAPE}[{self.value}m{value}{ANSI_CLOSE}"
+
 
 class ANSIBackgroundColours(Enum):
     dark_blue = 40
@@ -41,49 +349,8 @@ class ANSIBackgroundColours(Enum):
     light_gray = 46
     white = 47
 
-
-class Rarities(Enum):
-    normal = "normal"
-    rare = "rare"
-    epic = "epic"
-    legendary = "legendary"
-    ascended = "ascended"
-    set = "set"
-    event = "event"
-    forged = "forged"
-
-    @property
-    def ansi(self) -> str:
-        return f"{ANSI_ESCAPE}[{self.rarity_colour.value}m{self.value.title()}{ANSI_CLOSE}"
-
-    @property
-    def is_chest(self) -> bool:
-        return self.value in ("normal", "rare", "epic", "legendary", "ascended", "set")
-
-    @property
-    def slot(self) -> int:
-        """Returns the index of rarity for players chests"""
-        return {
-            "normal": 0,
-            "rare": 1,
-            "epic": 2,
-            "legendary": 3,
-            "ascended": 4,
-            "set": 5,
-        }[self.value]
-
-    @property
-    def rarity_colour(self) -> ANSITextColours:
-        return {
-            "normal": ANSITextColours.normal,
-            "rare": ANSITextColours.green,
-            "epic": ANSITextColours.blue,
-            "legendary": ANSITextColours.yellow,
-            "ascended": ANSITextColours.cyan,
-            "set": ANSITextColours.red,
-            "event": ANSITextColours.normal,
-            "forged": ANSITextColours.pink,
-        }[self.value]
+    def __str__(self):
+        return str(self.value)
 
 
 class Slots(Enum):
@@ -238,5 +505,4 @@ RARITIES = ("normal", "rare", "epic", "legendary", "ascended", "set", "event", "
 REBIRTH_LVL = 20
 REBIRTH_STEP = 10
 
-ANSI_ESCAPE = "\u001b"
-ANSI_CLOSE = "\u001b[0m"
+

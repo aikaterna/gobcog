@@ -14,7 +14,7 @@ from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ANSI_CLOSE, ANSI_ESCAPE, ORDER, ANSITextColours
+from .constants import ORDER, Rarities
 from .converters import EquipableItemConverter, EquipmentConverter, SkillConverter
 from .helpers import ConfirmView, _title_case, escape, smart_embed
 from .menus import BaseMenu, SimpleSource
@@ -383,7 +383,7 @@ class CharacterCommands(AdventureMixin):
                 item.int * (1 if slots == 1 else 2),
                 item.dex * (1 if slots == 1 else 2),
                 item.luck * (1 if slots == 1 else 2),
-                item.lvl if item.rarity == "event" else max(item.lvl - min(max(rebirths // 2 - 1, 0), 50), 1),
+                item.lvl if item.rarity is Rarities.event else max(item.lvl - min(max(rebirths // 2 - 1, 0), 50), 1),
                 item.set or "N/A",
             )
             if data not in table.rows:

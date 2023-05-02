@@ -585,7 +585,7 @@ class BaseMenu(discord.ui.View):
         await self.update()
         if ctx is None and interaction is not None:
             await interaction.response.send_message(**kwargs, view=self)
-            return await interaction.original_message()
+            return await interaction.original_response()
         else:
             return await ctx.send(**kwargs, view=self)
 

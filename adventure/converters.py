@@ -22,7 +22,7 @@ from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
 from .charsheet import Character, Item
-from .constants import DEV_LIST, ORDER, RARITIES, HeroClasses, Skills
+from .constants import DEV_LIST, ORDER, RARITIES, HeroClasses, Skills, Rarities
 from .helpers import smart_embed
 
 log = logging.getLogger("red.cogs.adventure")
@@ -161,7 +161,10 @@ class ItemsConverter(Converter):
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
         try:
-            rarity = RARITY.match(argument.lower()).group(0)
+            rarity_match = RARITY.match(argument.lower()).group(0)
+            for r in Rarities:
+                if rarity_match.lower() in r:
+                    rarity = r
         except AttributeError:
             rarity = None
 
@@ -184,7 +187,7 @@ class ItemsConverter(Converter):
             lookup = list(i for x, i in c.backpack.items())
             return "all", lookup
         else:
-            lookup = list(i for x, i in c.backpack.items() if i.rarity == rarity)
+            lookup = list(i for x, i in c.backpack.items() if i.rarity is rarity)
             if lookup:
                 return "all", lookup
             raise BadArgument(_("You don't own any `{}` items.").format(argument))

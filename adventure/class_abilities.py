@@ -17,7 +17,7 @@ from redbot.core.utils.predicates import MessagePredicate
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ANSI_CLOSE, ANSI_ESCAPE, ORDER, HeroClasses
+from .constants import ORDER, HeroClasses, Rarities
 from .converters import HeroClassConverter, ItemConverter
 from .helpers import ConfirmView, escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
@@ -51,7 +51,7 @@ class ClassAbilities(AdventureMixin):
         if clz is None:
             ctx.command.reset_cooldown(ctx)
             classes = box(
-                "\n".join(f"{ANSI_ESCAPE}[{c.class_colour.value}m{c.class_name}{ANSI_CLOSE}" for c in HeroClasses),
+                "\n".join(c.class_colour.as_str(c.class_name) for c in HeroClasses),
                 lang="ansi",
             )
             await smart_embed(
@@ -67,7 +67,7 @@ class ClassAbilities(AdventureMixin):
             if action == "info":
                 ctx.command.reset_cooldown(ctx)
                 class_desc = clz.desc()
-                msg = box(f"{ANSI_ESCAPE}[{clz.class_colour.value}m{class_desc}{ANSI_CLOSE}", lang="ansi")
+                msg = box(clz.class_colour.as_str(class_desc), lang="ansi")
                 return await smart_embed(ctx, msg)
             async with self.get_lock(ctx.author):
                 bal = await bank.get_balance(ctx.author)
@@ -169,10 +169,10 @@ class ClassAbilities(AdventureMixin):
                         if view.confirmed:  # user reacted with Yes.
                             tinker_wep = []
                             for item in c.get_current_equipment():
-                                if item.rarity == "forged":
+                                if item.rarity is Rarities.forged:
                                     c = await c.unequip_item(item)
                             for name, item in c.backpack.items():
-                                if item.rarity == "forged":
+                                if item.rarity is Rarities.forged:
                                     tinker_wep.append(item)
                             for item in tinker_wep:
                                 del c.backpack[item.name]
@@ -907,9 +907,9 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 ascended_forge_msg = ""
-                ignored_rarities = ["forged", "set", "event"]
+                ignored_rarities = [Rarities.forged, Rarities.set, Rarities.event]
                 if c.rebirths < 30:
-                    ignored_rarities.append("ascended")
+                    ignored_rarities.append(Rarities.ascended)
                     ascended_forge_msg += _("\n\nAscended items will be forgeable after 30 rebirths.")
                 consumed = []
                 forgeables_items = [str(i) for n, i in c.backpack.items() if i.rarity not in ignored_rarities]
@@ -978,7 +978,7 @@ class ClassAbilities(AdventureMixin):
                 except asyncio.TimeoutError:
                     timeout_msg = _("I don't have all day you know, {}.").format(bold(ctx.author.display_name))
                     return await smart_embed(ctx, timeout_msg)
-                if item.rarity in ["forged", "set"]:
+                if item.rarity in [Rarities.forged, Rarities.set]:
                     return await smart_embed(
                         ctx,
                         _("{c}, {item.rarity} items cannot be reforged.").format(
@@ -1034,7 +1034,7 @@ class ClassAbilities(AdventureMixin):
                 except asyncio.TimeoutError:
                     timeout_msg = _("I don't have all day you know, {}.").format(bold(ctx.author.display_name))
                     return await smart_embed(ctx, timeout_msg)
-                if item.rarity in ["forged", "set"]:
+                if item.rarity in [Rarities.forged, Rarities.set]:
                     return await smart_embed(
                         ctx,
                         _("{c}, {item.rarity} items cannot be reforged.").format(
@@ -1049,9 +1049,9 @@ class ClassAbilities(AdventureMixin):
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 # save so the items are eaten up already
                 for item in c.get_current_equipment():
-                    if item.rarity == "forged":
+                    if item.rarity is Rarities.forged:
                         c = await c.unequip_item(item)
-                lookup = list(i for n, i in c.backpack.items() if i.rarity == "forged")
+                lookup = list(i for n, i in c.backpack.items() if i.rarity is Rarities.forged)
                 if len(lookup) > 0:
                     forge_str = box(
                         _("{author}, you already have a device. Do you want to replace {replace}?").format(

@@ -12,7 +12,7 @@ from redbot.core.utils.chat_formatting import escape as _escape
 from redbot.core.utils.common_filters import filter_various_mentions
 
 from .charsheet import Character, Item
-from .constants import DEV_LIST
+from .constants import DEV_LIST, Rarities
 
 _ = Translator("Adventure", __file__)
 
@@ -36,6 +36,7 @@ async def smart_embed(
     cog: Optional[Cog] = None,
     interaction: Optional[discord.Interaction] = None,
     view: Optional[discord.ui.View] = discord.utils.MISSING,
+    embed_colour: Optional[str] = None,
 ) -> discord.Message:
     interaction_only = interaction is not None and ctx is None
     if interaction_only:
@@ -50,6 +51,11 @@ async def smart_embed(
         colour = discord.Colour.dark_green()
     elif success is False:
         colour = discord.Colour.dark_red()
+    elif embed_colour is None:
+        try:
+            colour = discord.Colour.from_str(embed_colour)
+        except ValueError:
+            colour = await bot.get_embed_colour(channel)
     else:
         colour = await bot.get_embed_colour(channel)
 
@@ -120,13 +126,13 @@ async def _remaining(epoch):
 
 
 def _sell(c: Character, item: Item, *, amount: int = 1):
-    if item.rarity == "ascended":
+    if item.rarity is Rarities.ascended:
         base = (5000, 10000)
-    elif item.rarity == "legendary":
+    elif item.rarity is Rarities.legendary:
         base = (1000, 2000)
-    elif item.rarity == "epic":
+    elif item.rarity is Rarities.epic:
         base = (500, 750)
-    elif item.rarity == "rare":
+    elif item.rarity is Rarities.rare:
         base = (250, 500)
     else:
         base = (10, 100)
