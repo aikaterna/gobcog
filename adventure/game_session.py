@@ -443,12 +443,12 @@ class SpecialActionButton(discord.ui.Button):
             "they used this skill or they have just changed their heroclass. "
             "Try again in {cooldown}."
         ).format(cooldown=f"<t:{cooldown_time}:R>")
-        await smart_embed(interaction, msg, success=False, ephemeral=True, cog=self.view.cog)
+        await smart_embed(interaction=interaction, message=msg, success=False, ephemeral=True, cog=self.view.cog)
 
     async def send_in_use(self, interaction: discord.Interaction):
         user = interaction.user
         msg = _("**{}**, ability already in use.").format(escape(user.display_name))
-        await smart_embed(interaction, msg, success=False, ephemeral=True, cog=self.view.cog)
+        await smart_embed(interaction=interaction, message=msg, success=False, ephemeral=True, cog=self.view.cog)
 
     async def send_cleric(self, interaction: discord.Interaction, c: Character):
         user = interaction.user
@@ -466,7 +466,7 @@ class SpecialActionButton(discord.ui.Button):
                 msg = _("{bless} **{c}** is starting an inspiring sermon. {bless}").format(
                     c=escape(user.display_name), bless=self.view.cog.emojis.skills.bless
                 )
-                await smart_embed(interaction, msg, cog=self.view.cog)
+                await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
             else:
                 await self.send_cooldown(interaction, c, cooldown_time)
 
@@ -502,7 +502,7 @@ class SpecialActionButton(discord.ui.Button):
                         c=escape(user.display_name),
                         skill=self.view.cog.emojis.skills.psychic,
                     )
-                    await smart_embed(interaction, msg, cog=self.view.cog)
+                    await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
             if good:
                 session = self.view
                 if roll <= 0.4:
