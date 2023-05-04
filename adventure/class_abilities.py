@@ -104,7 +104,7 @@ class ClassAbilities(AdventureMixin):
                 )
                 broke = box(
                     _("You don't have enough {currency_name} to train to be a {clz}.").format(
-                        currency_name=currency_name, clz=clz.ansi(classes[clz.class_name]["name"])
+                        currency_name=currency_name, clz=clz.ansi
                     ),
                     lang="ansi",
                 )
