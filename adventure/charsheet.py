@@ -364,11 +364,11 @@ class Character:
             return str(self.left)
         elif self.right and len(self.right.slot) > 1:
             return str(self.right)
-        elif self.left == self.right:
+        elif self.left == self.right and self.left is not None:
             return str(self.left)
-        elif self.left and self.right is None:
+        elif self.left is not None and self.right is None:
             return str(self.left)
-        elif self.right and self.left is None:
+        elif self.right is not None and self.left is None:
             return str(self.right)
         elif self.left is not None and self.right is not None:
             return humanize_list([str(self.left), str(self.right)])
