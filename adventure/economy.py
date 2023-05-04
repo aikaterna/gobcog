@@ -339,14 +339,19 @@ class EconomyCommands(AdventureMixin):
         Item names containing spaces must be enclosed in double quotes. `[p]give item @locastan
         "fine dagger" 1 att 1 charisma rare twohanded` will give a two handed .fine_dagger with 1
         attack and 1 charisma to locastan. if a stat is not specified it will default to 0, order
-        does not matter. available stats are attack(att), charisma(diplo) or charisma(cha),
-        intelligence(int), dexterity(dex), and luck.
-
-        Item rarity is one of normal, rare, epic, legendary, set, forged, event.
-
-        Event items can have their level requirement and degrade number set via:
-        N degrade - (Set to -1 to never degrade on rebirths)
-        N level
+        does not matter.
+        available stats are:
+         - `attack` or `att`
+         - `charisma` or `diplo`
+         - `charisma` or `cha`
+         - `intelligence` or `int`
+         - `dexterity` or `dex`
+         - `luck`
+         - `rarity` (one of normal, rare, epic, legendary, set, forged, or event)
+         - `degrade` (Set to -1 to never degrade on rebirths)
+         - `level` (lvl)
+         - `slot` (one of `head`, `neck`, `chest`, `gloves`, `belt`, `legs`, `boots`, `left`, `right`
+         `ring`, `charm`, `twohanded`)
 
         `[p]give item @locastan "fine dagger" 1 att 1 charisma -1 degrade 100 level rare twohanded`
         """
