@@ -187,7 +187,7 @@ class BackPackCommands(AdventureMixin):
         Note: An item **degrade** level is how many rebirths it will last, before it is broken down.
         """
 
-        assert isinstance(rarity, str) or rarity is None
+        assert isinstance(rarity, Rarities) or rarity is None
         assert isinstance(slot, str) or slot is None
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -197,14 +197,6 @@ class BackPackCommands(AdventureMixin):
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
-            if rarity:
-                rarity = rarity.lower()
-                if rarity not in RARITIES:
-                    return await smart_embed(
-                        ctx,
-                        _("{} is not a valid rarity, select one of {}").format(rarity, humanize_list(RARITIES)),
-                        ephemeral=True,
-                    )
             if slot:
                 slot = slot.lower()
                 if slot not in ORDER:
@@ -442,7 +434,7 @@ class BackPackCommands(AdventureMixin):
         slot: Optional[SlotConverter] = None,
     ):
         """Sell all items in your backpack. Optionally specify rarity or slot."""
-        assert isinstance(rarity, str) or rarity is None
+        assert isinstance(rarity, Rarities) or rarity is None
         assert isinstance(slot, str) or slot is None
         if self.in_adventure(ctx):
             return await smart_embed(
@@ -451,14 +443,7 @@ class BackPackCommands(AdventureMixin):
                 ephemeral=True,
             )
         if rarity:
-            rarity = rarity.lower()
-            if rarity not in RARITIES:
-                return await smart_embed(
-                    ctx,
-                    _("{} is not a valid rarity, select one of {}").format(rarity, humanize_list(RARITIES)),
-                    ephemeral=True,
-                )
-            if rarity.lower() in ["forged"]:
+            if rarity.name.lower() in ["forged"]:
                 return await smart_embed(
                     ctx, _("You cannot sell `{rarity}` rarity items.").format(rarity=rarity), ephemeral=True
                 )
@@ -801,7 +786,7 @@ class BackPackCommands(AdventureMixin):
 
         Note: An item **degrade** level is how many rebirths it will last, before it is broken down.
         """
-        assert isinstance(rarity, str) or rarity is None
+        assert isinstance(rarity, Rarities) or rarity is None
         assert isinstance(slot, str) or slot is None
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
@@ -811,13 +796,6 @@ class BackPackCommands(AdventureMixin):
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
-            if rarity:
-                rarity = rarity.lower()
-                if rarity not in RARITIES:
-                    return await smart_embed(
-                        ctx,
-                        _("{} is not a valid rarity, select one of {}").format(rarity, humanize_list(RARITIES)),
-                    )
             if slot:
                 slot = slot.lower()
                 if slot not in ORDER:

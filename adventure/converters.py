@@ -17,7 +17,7 @@ from discord.ext.commands.errors import BadArgument
 from redbot.core import commands
 from redbot.core.commands import UserFeedbackCheckFailure
 from redbot.core.i18n import Translator, set_contextual_locales_from_guild
-from redbot.core.utils.chat_formatting import box
+from redbot.core.utils.chat_formatting import box, humanize_list
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
@@ -639,20 +639,24 @@ class SlotConverter(Transformer):
 
 class RarityConverter(Transformer):
     @classmethod
-    async def convert(cls, ctx: commands.Context, argument: str) -> Optional[str]:
-        if argument:
-            rarity = argument.lower()
-            if rarity not in RARITIES:
-                raise BadArgument
-        return argument
+    async def convert(cls, ctx: commands.Context, argument: str) -> Optional[Rarities]:
+        try:
+            rarity = Rarities.get_from_name(argument)
+        except KeyError:
+            raise BadArgument(
+                _("{rarity} is not a valid rarity, select one of {rarities}").format(
+                    rarity=argument, rarities=humanize_list([i.get_name() for i in Rarities if i.is_chest])
+                )
+            )
+        return rarity
 
     @classmethod
-    async def transform(cls, interaction: discord.Interaction, argument: str) -> Optional[str]:
+    async def transform(cls, interaction: discord.Interaction, argument: str) -> Optional[Rarities]:
         ctx = await interaction.client.get_context(interaction)
-        return cls.convert(ctx, argument)
+        return await cls.convert(ctx, argument)
 
     async def autocomplete(self, interaction: discord.Interaction, current: str) -> List[Choice]:
-        return [Choice(name=i, value=i) for i in RARITIES if current.lower() in i]
+        return [Choice(name=i.get_name(), value=i.name) for i in Rarities if current.lower() in i.get_name().lower()]
 
 
 class SkillConverter(Transformer):

@@ -10,12 +10,13 @@ from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import bold, box, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_number, humanize_list
 
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
 from .constants import ORDER, RARITIES, Rarities
+from .converters import RarityConverter
 from .helpers import LootView, _sell, escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
@@ -33,7 +34,7 @@ class LootCommands(AdventureMixin):
     async def loot(
         self,
         ctx: commands.Context,
-        box_type: Optional[Literal["normal", "rare", "epic", "legendary", "ascended", "set"]] = None,
+        box_type: RarityConverter = None,
         number: int = 1,
     ):
         """This opens one of your precious treasure chests.
@@ -73,23 +74,12 @@ class LootCommands(AdventureMixin):
                     _("{author}, your backpack is currently full.").format(author=bold(ctx.author.display_name))
                 )
                 return
-            if box_type == "normal":
-                redux = 0
-            elif box_type == "rare":
-                redux = 1
-            elif box_type == "epic":
-                redux = 2
-            elif box_type == "legendary":
-                redux = 3
-            elif box_type == "ascended":
-                redux = 4
-            elif box_type == "set":
-                redux = 5
-            else:
+            if not box_type.is_chest:
                 return await smart_embed(
                     ctx,
-                    _("There is talk of a {} treasure chest but nobody ever saw one.").format(box_type),
+                    _("There is talk of a {} treasure chest but nobody ever saw one.").format(box_type.get_name()),
                 )
+            redux = box_type.value
             treasure = c.treasure[redux]
             if treasure < 1 or treasure < number:
                 await smart_embed(
@@ -205,7 +195,7 @@ class LootCommands(AdventureMixin):
     async def convert(
         self,
         ctx: commands.Context,
-        box_rarity: Literal["normal", "rare", "epic", "legendary", "ascended", "set"],
+        box_rarity: RarityConverter,
         amount: int = 1,
     ):
         """Convert normal, rare or epic chests.
@@ -224,21 +214,20 @@ class LootCommands(AdventureMixin):
                     "but the monster ahead is commanding your attention."
                 ),
             )
-        if box_rarity.lower() not in ["normal", "rare", "epic"]:
-            await smart_embed(
-                ctx,
-                _("{user}, please select between normal, rare, or epic treasure chests to convert.").format(
-                    user=bold(ctx.author.display_name)
-                ),
-            )
         costs = {
             Rarities.normal: 25,
             Rarities.rare: 25,
             Rarities.epic: 25,
         }
-        normalcost = 25
-        rarecost = 25
-        epiccost = 25
+        if box_rarity not in costs.keys():
+            await smart_embed(
+                ctx,
+                _("{user}, please select between {boxes} treasure chests to convert.").format(
+                    user=bold(ctx.author.display_name),
+                    boxes=humanize_list([i.get_name() for i in costs.keys()]),
+                ),
+            )
+
         rebirth_normal = 2
         rebirth_rare = 8
         rebirth_epic = 10

@@ -15,7 +15,7 @@ from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
 from .constants import ANSITextColours, Rarities
-from .converters import Stats
+from .converters import Stats, RarityConverter
 from .helpers import escape, has_separated_economy, smart_embed
 from .menus import BaseMenu, SimpleSource
 
@@ -378,7 +378,7 @@ class EconomyCommands(AdventureMixin):
     async def _give_loot(
         self,
         ctx: commands.Context,
-        loot_type: Literal["normal", "rare", "epic", "legendary", "ascended", "set"],
+        loot_type: RarityConverter,
         users: commands.Greedy[Union[discord.Member, discord.User]] = None,
         number: int = 1,
     ):

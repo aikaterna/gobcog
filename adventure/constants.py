@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import time
 from enum import Enum
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import humanize_list
@@ -38,7 +38,11 @@ class Rarities(Enum):
                 return i
             elif name == i.get_name():
                 return i
-        return Rarities.normal
+        raise KeyError(
+            _("{rarity} is not a valid rarity, select one of {rarities}").format(
+                rarity=name, rarities=humanize_list([i.get_name() for i in Rarities])
+            )
+        )
 
     @staticmethod
     def names():
