@@ -31,7 +31,7 @@ from .cart import Trader
 from .character import CharacterCommands
 from .charsheet import Character, calculate_sp, has_funds
 from .class_abilities import ClassAbilities
-from .constants import ANSITextColours, DEV_LIST, HeroClasses, Treasure, Rarities
+from .constants import DEV_LIST, ANSITextColours, HeroClasses, Rarities, Treasure
 from .converters import ArgParserFailure, ChallengeConverter
 from .defaults import default_global, default_guild, default_user
 from .dev import DevCommands
@@ -876,7 +876,7 @@ class Adventure(
             timer = 60 * 3
             no_monster = random.randint(0, 100) == 25
         # if ctx.author.id in DEV_LIST:
-            # timer = 20
+        # timer = 20
         self._sessions[ctx.guild.id] = GameSession(
             ctx=ctx,
             cog=self,

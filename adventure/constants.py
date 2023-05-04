@@ -15,6 +15,7 @@ log = logging.getLogger("red.cogs.adventure")
 ANSI_ESCAPE = "\u001b"
 ANSI_CLOSE = "\u001b[0m"
 
+
 class Rarities(Enum):
     # Our standard rarities
     normal = 0
@@ -72,7 +73,7 @@ class Rarities(Enum):
             Rarities.ascended: r"{Ascended:'",
             Rarities.set: r"{Set:'",
             Rarities.forged: r"{.:'",
-            Rarities.event: r"{Event:''"
+            Rarities.event: r"{Event:''",
         }
 
     @staticmethod
@@ -85,7 +86,7 @@ class Rarities(Enum):
             Rarities.ascended: r"'}",
             Rarities.set: r"'}",
             Rarities.forged: r"':.}",
-            Rarities.event: r"''}"
+            Rarities.event: r"''}",
         }
 
     def get_open_str(self) -> str:
@@ -504,5 +505,3 @@ EVENT_OPEN = r"{Event:'"
 RARITIES = ("normal", "rare", "epic", "legendary", "ascended", "set", "event", "forged")
 REBIRTH_LVL = 20
 REBIRTH_STEP = 10
-
-

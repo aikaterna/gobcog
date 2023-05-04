@@ -846,9 +846,7 @@ class Character:
                         intel,
                         dex,
                         luck,
-                        f"{ANSITextColours.red.as_str(str(equip_level))}"
-                        if can_equip
-                        else f"{equip_level}",
+                        f"{ANSITextColours.red.as_str(str(equip_level))}" if can_equip else f"{equip_level}",
                         item.owned,
                         f"[{item.degrade}]"
                         if item.rarity in [Rarities.legendary, Rarities.event, Rarities.ascended] and item.degrade >= 0

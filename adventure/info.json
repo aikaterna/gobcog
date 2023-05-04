@@ -8,7 +8,7 @@
 	"description": "An RPG for Discord.",
     "install_msg": "Thank you for installing the Adventure cog, based on the GoblinsComic Adventure Party cog by locastan. Use `[p]load adventure` to get started and check out `[p]help Adventure`.",
     "min_python_version": [3, 8, 1],
-	"min_bot_version": "3.3.12",
+	"min_bot_version": "3.5.0",
     "permissions" : [
 		"add_reactions",
 		"manage_messages"

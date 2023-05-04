@@ -22,7 +22,7 @@ from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
 from .charsheet import Character, Item
-from .constants import DEV_LIST, ORDER, RARITIES, HeroClasses, Skills, Rarities
+from .constants import DEV_LIST, ORDER, RARITIES, HeroClasses, Rarities, Skills
 from .helpers import smart_embed
 
 log = logging.getLogger("red.cogs.adventure")
