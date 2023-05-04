@@ -2,6 +2,8 @@
 
 In this RPG cog originally by locastan - TrustyJAID, Draper, and myself have crafted a fun idle game you can play with the members of your servers.
 
+### >>> This repo branch is compatible with Red 3.4.x and will not be receiving updates. <<< ###
+
 
 ## Basic Usage
 
