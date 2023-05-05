@@ -923,7 +923,7 @@ class BackPackCommands(AdventureMixin):
                 disassembled.add(item.name)
                 owned = item.owned
                 async for _loop_counter in AsyncIter(range(0, owned), steps=100):
-                    if character.heroclass["name"] != "Tinkerer":
+                    if character.hc is not HeroClasses.tinkerer:
                         roll = random.randint(0, 5)
                         chests = 1
                     else:
