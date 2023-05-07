@@ -64,7 +64,7 @@ class Item:
             self.total_stats *= 2
         self.max_main_stat = max(self.att, self.int, self.cha, 1)
         self.lvl: int = (
-            (kwargs.get("lvl") or self.get_equip_level()) if self.rarity == "event" else self.get_equip_level()
+            (kwargs.get("lvl") or self.get_equip_level()) if self.rarity is Rarities.event else self.get_equip_level()
         )
         self.degrade = kwargs.get("degrade", 5)
 
