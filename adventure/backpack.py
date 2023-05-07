@@ -335,7 +335,7 @@ class BackPackCommands(AdventureMixin):
                     "Are you sure you want to disassemble {count} unique items and their duplicates?".format(
                         count=humanize_number(len(backpack_items[1]))
                     ),
-                    view=view
+                    view=view,
                 )
                 await view.wait()
                 await msg.edit(view=None)
@@ -453,12 +453,12 @@ class BackPackCommands(AdventureMixin):
             async with self.get_lock(ctx.author):
                 if rarity and slot:
                     msg = _("Are you sure you want to sell all {rarity} {slot} items in your inventory?").format(
-                            rarity=rarity, slot=slot
-                        )
+                        rarity=rarity, slot=slot
+                    )
                 elif rarity or slot:
-                    msg =  _("Are you sure you want to sell all{rarity}{slot} items in your inventory?").format(
-                            rarity=f" {rarity}" if rarity else "", slot=f" {slot}" if slot else ""
-                        )
+                    msg = _("Are you sure you want to sell all{rarity}{slot} items in your inventory?").format(
+                        rarity=f" {rarity}" if rarity else "", slot=f" {slot}" if slot else ""
+                    )
                 else:
                     msg = _("Are you sure you want to sell **ALL ITEMS** in your inventory?")
                 view = ConfirmView(60, ctx.author)
@@ -874,7 +874,7 @@ class BackPackCommands(AdventureMixin):
                     "Are you sure you want to disassemble {count} unique items and their duplicates?".format(
                         count=humanize_number(total_items)
                     ),
-                    view=view
+                    view=view,
                 )
                 await msg.edit(view=None)
                 await view.wait()
@@ -923,7 +923,6 @@ class BackPackCommands(AdventureMixin):
                 _("No items matched your query.").format(),
             )
         else:
-
             await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
             return await smart_embed(
                 ctx,
@@ -961,7 +960,7 @@ class BackPackCommands(AdventureMixin):
                     "Are you sure you want to sell {count} items in your inventory that match this query?".format(
                         count=humanize_number(total_items)
                     ),
-                    view=view
+                    view=view,
                 )
                 await msg.edit(view=None)
                 await view.wait()
