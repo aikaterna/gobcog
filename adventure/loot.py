@@ -244,14 +244,14 @@ class LootCommands(AdventureMixin):
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
 
-            if box_rarity.lower() == "rare" and c.rebirths < rebirth_rare:
+            if box_rarity is Rarities.rare and c.rebirths < rebirth_rare:
                 return await smart_embed(
                     ctx,
                     ("{user}, you need to have {rebirth} or more rebirths to convert rare treasure chests.").format(
                         user=bold(ctx.author.display_name), rebirth=rebirth_rare
                     ),
                 )
-            elif box_rarity.lower() == "epic" and c.rebirths < rebirth_epic:
+            elif box_rarity is Rarities.epic and c.rebirths < rebirth_epic:
                 return await smart_embed(
                     ctx,
                     ("{user}, you need to have {rebirth} or more rebirths to convert epic treasure chests.").format(
@@ -270,7 +270,7 @@ class LootCommands(AdventureMixin):
                 "now owns {chests} treasure chests."
             )
             failed_msg = _("{author}, you do not have {amount} treasure chests to convert.")
-            if box_rarity.lower() == "normal" and c.rebirths >= rebirth_normal:
+            if box_rarity is Rarities.normal and c.rebirths >= rebirth_normal:
                 rarity = Rarities.normal
                 to_rarity = Rarities.rare
                 converted = rarity.rarity_colour.as_str(f"{humanize_number(costs[rarity] * amount)} {rarity}")
@@ -288,7 +288,7 @@ class LootCommands(AdventureMixin):
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 else:
                     msg = failed_msg.format(author=escape(ctx.author.display_name), amount=converted)
-            elif box_rarity.lower() == "rare" and c.rebirths >= rebirth_rare:
+            elif box_rarity is Rarities.rare and c.rebirths >= rebirth_rare:
                 rarity = Rarities.rare
                 to_rarity = Rarities.epic
                 converted = rarity.rarity_colour.as_str(f"{humanize_number(costs[rarity] * amount)} {rarity}")
@@ -306,7 +306,7 @@ class LootCommands(AdventureMixin):
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                 else:
                     msg = failed_msg.format(author=escape(ctx.author.display_name), amount=converted)
-            elif box_rarity.lower() == "epic" and c.rebirths >= rebirth_epic:
+            elif box_rarity is Rarities.epic and c.rebirths >= rebirth_epic:
                 rarity = Rarities.epic
                 to_rarity = Rarities.legendary
                 converted = rarity.rarity_colour.as_str(f"{humanize_number(costs[rarity] * amount)} {rarity}")
