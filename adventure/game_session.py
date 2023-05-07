@@ -462,7 +462,7 @@ class SpecialActionButton(discord.ui.Button):
             if c.heroclass["cooldown"] <= time.time():
                 c.heroclass["ability"] = True
                 c.heroclass["cooldown"] = time.time() + cooldown_time
-                await self.view.config.user(user).set(await c.to_json(self.view.ctx, self.view.config))
+                await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
                 msg = _("{bless} **{c}** is starting an inspiring sermon. {bless}").format(
                     c=escape(user.display_name), bless=self.view.cog.emojis.skills.bless
                 )
