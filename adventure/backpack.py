@@ -12,13 +12,11 @@ from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number, pagify
-from redbot.core.utils.menus import menu, start_adding_reactions
-from redbot.core.utils.predicates import ReactionPredicate
 
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ORDER, RARITIES, HeroClasses, Rarities
+from .constants import ORDER, HeroClasses, Rarities
 from .converters import (
     BackpackFilterParser,
     EquipableItemConverter,
@@ -27,7 +25,7 @@ from .converters import (
     RarityConverter,
     SlotConverter,
 )
-from .helpers import _sell, escape, is_dev, smart_embed
+from .helpers import _sell, escape, is_dev, smart_embed, ConfirmView
 from .menus import BackpackMenu, BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -332,20 +330,16 @@ class BackPackCommands(AdventureMixin):
         await ctx.defer()
         async with self.get_lock(ctx.author):
             if len(backpack_items[1]) > 2:
+                view = ConfirmView(60, ctx.author)
                 msg = await ctx.send(
                     "Are you sure you want to disassemble {count} unique items and their duplicates?".format(
                         count=humanize_number(len(backpack_items[1]))
-                    )
+                    ),
+                    view=view
                 )
-                start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
-                pred = ReactionPredicate.yes_or_no(msg, ctx.author)
-                try:
-                    await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
-                except asyncio.TimeoutError:
-                    await self._clear_react(msg)
-                    return
-
-                if not pred.result:
+                await view.wait()
+                await msg.edit(view=None)
+                if not view.confirmed:
                     await ctx.send("Not disassembling those items.")
                     return
 
@@ -455,43 +449,34 @@ class BackPackCommands(AdventureMixin):
                     _("{} is not a valid slot, select one of {}").format(slot, humanize_list(ORDER)),
                     ephemeral=True,
                 )
-        await ctx.defer()
-        async with self.get_lock(ctx.author):
-            if rarity and slot:
-                msg = await ctx.send(
-                    "Are you sure you want to sell all {rarity} {slot} items in your inventory?".format(
-                        rarity=rarity, slot=slot
-                    )
-                )
-            elif rarity or slot:
-                msg = await ctx.send(
-                    "Are you sure you want to sell all{rarity}{slot} items in your inventory?".format(
-                        rarity=f" {rarity}" if rarity else "", slot=f" {slot}" if slot else ""
-                    )
-                )
-            else:
-                msg = await ctx.send(_("Are you sure you want to sell **ALL ITEMS** in your inventory?"))
+        async with ctx.typing():
+            async with self.get_lock(ctx.author):
+                if rarity and slot:
+                    msg = _("Are you sure you want to sell all {rarity} {slot} items in your inventory?").format(
+                            rarity=rarity, slot=slot
+                        )
+                elif rarity or slot:
+                    msg =  _("Are you sure you want to sell all{rarity}{slot} items in your inventory?").format(
+                            rarity=f" {rarity}" if rarity else "", slot=f" {slot}" if slot else ""
+                        )
+                else:
+                    msg = _("Are you sure you want to sell **ALL ITEMS** in your inventory?")
+                view = ConfirmView(60, ctx.author)
+                sent_msg = await ctx.send(msg, view=view)
+                await view.wait()
+                await sent_msg.edit(view=None)
+                if not view.confirmed:
+                    await ctx.send("Not selling those items.")
+                    return
 
-            start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
-            pred = ReactionPredicate.yes_or_no(msg, ctx.author)
-            try:
-                await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
-            except asyncio.TimeoutError:
-                await self._clear_react(msg)
-                return
+                msg = ""
+                try:
+                    c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
+                except Exception as exc:
+                    log.exception("Error with the new character sheet", exc_info=exc)
+                    return
+                total_price = 0
 
-            if not pred.result:
-                await ctx.send("Not selling those items.")
-                return
-
-            msg = ""
-            try:
-                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
-            except Exception as exc:
-                log.exception("Error with the new character sheet", exc_info=exc)
-                return
-            total_price = 0
-            async with ctx.typing():
                 items = [i for n, i in c.backpack.items() if i.rarity not in [Rarities.forged]]
                 count = 0
                 async for item in AsyncIter(items, steps=100):
@@ -705,17 +690,14 @@ class BackPackCommands(AdventureMixin):
                 lang="ansi",
             )
             async with self.get_lock(ctx.author):
-                trade_msg = await ctx.send(f"{buyer.mention}\n{trade_talk}")
-                start_adding_reactions(trade_msg, ReactionPredicate.YES_OR_NO_EMOJIS)
-                pred = ReactionPredicate.yes_or_no(trade_msg, buyer)
-                try:
-                    await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
-                except asyncio.TimeoutError:
-                    await self._clear_react(trade_msg)
-                    return
-                if pred.result:  # buyer reacted with Yes.
+                view = ConfirmView(60, ctx.author)
+                trade_msg = await ctx.send(f"{buyer.mention}\n{trade_talk}", view=view)
+
+                await view.wait()
+                await trade_msg.edit(view=None)
+                if view.confirmed:  # buyer reacted with Yes.
                     with contextlib.suppress(discord.errors.NotFound):
-                        if await bank.can_spend(buyer, asking):
+                        if await bank.can_spend(buyer, asking or 1000):
                             if buy_user.rebirths + 1 < c.rebirths:
                                 return await smart_embed(
                                     ctx,
@@ -726,9 +708,9 @@ class BackPackCommands(AdventureMixin):
                                     ),
                                 )
                             try:
-                                await bank.transfer_credits(buyer, ctx.author, asking)
+                                await bank.transfer_credits(buyer, ctx.author, asking or 1000)
                             except BalanceTooHigh as e:
-                                await bank.withdraw_credits(buyer, asking)
+                                await bank.withdraw_credits(buyer, asking or 1000)
                                 await bank.set_balance(ctx.author, e.max_balance)
                             c.backpack[item.name].owned -= 1
                             newly_owned = c.backpack[item.name].owned
@@ -887,21 +869,16 @@ class BackPackCommands(AdventureMixin):
                 return
             slots = await character.get_argparse_backpack_items(query, rarity_exclude=["forged"])
             if (total_items := sum(len(i) for s, i in slots)) > 2:
-
+                view = ConfirmView(60, ctx.author)
                 msg = await ctx.send(
                     "Are you sure you want to disassemble {count} unique items and their duplicates?".format(
                         count=humanize_number(total_items)
-                    )
+                    ),
+                    view=view
                 )
-                start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
-                pred = ReactionPredicate.yes_or_no(msg, ctx.author)
-                try:
-                    await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
-                except asyncio.TimeoutError:
-                    await self._clear_react(msg)
-                    return
-
-                if not pred.result:
+                await msg.edit(view=None)
+                await view.wait()
+                if not view.confirmed:
                     await ctx.send("Not disassembling those items.")
                     return
         failed = 0
@@ -979,20 +956,16 @@ class BackPackCommands(AdventureMixin):
                 return
             slots = await character.get_argparse_backpack_items(query, rarity_exclude=["forged"])
             if (total_items := sum(len(i) for s, i in slots)) > 2:
+                view = ConfirmView(60, ctx.author)
                 msg = await ctx.send(
                     "Are you sure you want to sell {count} items in your inventory that match this query?".format(
                         count=humanize_number(total_items)
-                    )
+                    ),
+                    view=view
                 )
-                start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
-                pred = ReactionPredicate.yes_or_no(msg, ctx.author)
-                try:
-                    await ctx.bot.wait_for("reaction_add", check=pred, timeout=60)
-                except asyncio.TimeoutError:
-                    await self._clear_react(msg)
-                    return
-
-                if not pred.result:
+                await msg.edit(view=None)
+                await view.wait()
+                if not view.confirmed:
                     await ctx.send("Not selling those items.")
                     return
             total_price = 0
