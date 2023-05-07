@@ -460,25 +460,19 @@ class Adventure(
                 del item_dict["set"]
         return (new_name, item_dict)
 
-    def in_adventure(self, ctx=None, user=None):
+    def in_adventure(self, ctx: Optional[commands.Context] = None, user: Optional[discord.Member] = None) -> bool:
+        """
+        Returns `True` if the user is in an adventure or otherwise engaged
+        with something requiring their attention.
+        """
         author = user or ctx.author
         sessions = self._sessions
         if not sessions:
-            return False
-        participants_ids = set(
-            [
-                p.id
-                for _loop, session in self._sessions.items()
-                for p in [
-                    *session.fight,
-                    *session.magic,
-                    *session.pray,
-                    *session.talk,
-                    *session.run,
-                ]
-            ]
-        )
-        return bool(author.id in participants_ids)
+            return False or self.get_lock(author).locked()
+        for session in self._sessions.values():
+            if session.in_adventure(author):
+                return True
+        return False or self.get_lock(author).locked()
 
     async def allow_in_dm(self, ctx):
         """Checks if the bank is global and allows the command in dm."""

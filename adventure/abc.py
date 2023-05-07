@@ -71,6 +71,10 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def in_adventure(self, ctx: Optional[commands.Context] = None, user: Optional[discord.Member] = None) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
     async def _clear_react(self, msg: discord.Message):
         raise NotImplementedError()
 
