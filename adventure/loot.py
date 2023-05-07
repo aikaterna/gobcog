@@ -10,7 +10,7 @@ from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import bold, box, humanize_number, humanize_list
+from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number
 
 from .abc import AdventureMixin
 from .bank import bank

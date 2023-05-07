@@ -15,7 +15,7 @@ from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
 from .constants import ANSITextColours, Rarities
-from .converters import Stats, RarityConverter
+from .converters import RarityConverter, Stats
 from .helpers import escape, has_separated_economy, smart_embed
 from .menus import BaseMenu, SimpleSource
 
