@@ -42,10 +42,11 @@ class BackpackSellView(discord.ui.View):
         self.item = item
         self.price = price
 
-    async def final_message(self, msg: str, interaction: discord.Interaction):
-        self.character.last_known_currency = await bank.get_balance(self.ctx.author)
-        self.character.last_currency_check = time.time()
-        await self.ctx.cog.config.user(self.ctx.author).set(await self.character.to_json(self.ctx, self.ctx.cog.config))
+    async def final_message(self, msg: str, interaction: discord.Interaction, character: Character):
+        character.last_known_currency = await bank.get_balance(self.ctx.author)
+        character.last_currency_check = time.time()
+        await self.ctx.cog.config.user(self.ctx.author).set(character.to_json(self.ctx, self.ctx.cog.config))
+        self.stop()
         pages = [page for page in pagify(msg, delims=["\n"], page_length=1900)]
         await BaseMenu(
             source=SimpleSource(pages),
@@ -58,7 +59,7 @@ class BackpackSellView(discord.ui.View):
     async def stop_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.stop()
         await interaction.response.edit_message(
-            content=_("You decide not to sell {item}").format(item=str(self.item)), view=None
+            content=box(_("You decide not to sell {item}").format(item=str(self.item)), lang="ansi"), view=None
         )
 
     @discord.ui.button(
@@ -69,27 +70,34 @@ class BackpackSellView(discord.ui.View):
     async def sell_one_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.ctx.command.reset_cooldown(self.ctx)
         # sell one of the item
-        currency_name = await bank.get_currency_name(
-            self.ctx.guild,
-        )
-        price = 0
-        self.item.owned -= 1
-        price += self.price
-        msg = _("**{author}** sold one {item} for {price} {currency_name}.\n").format(
-            author=escape(self.ctx.author.display_name),
-            item=box(self.item, lang="ansi"),
-            price=humanize_number(price),
-            currency_name=currency_name,
-        )
-        if self.item.owned <= 0:
-            del self.character.backpack[self.item.name]
-        price = max(price, 0)
-        if price > 0:
+        async with self.ctx.cog.get_lock(self.author):
             try:
-                await bank.deposit_credits(self.ctx.author, price)
-            except BalanceTooHigh as e:
-                await bank.set_balance(self.ctx.author, e.max_balance)
-        await self.final_message(msg, interaction)
+                character = await Character.from_json(self.ctx, self.ctx.cog.config, self.author, self._daily_bonus)
+            except Exception as exc:
+                self.ctx.command.reset_cooldown(self.ctx)
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+            currency_name = await bank.get_currency_name(
+                self.ctx.guild,
+            )
+            price = 0
+            self.item.owned -= 1
+            price += self.price
+            msg = _("**{author}** sold one {item} for {price} {currency_name}.\n").format(
+                author=escape(self.ctx.author.display_name),
+                item=box(self.item, lang="ansi"),
+                price=humanize_number(price),
+                currency_name=currency_name,
+            )
+            if self.item.owned <= 0:
+                del character.backpack[self.item.name]
+            price = max(price, 0)
+            if price > 0:
+                try:
+                    await bank.deposit_credits(self.ctx.author, price)
+                except BalanceTooHigh as e:
+                    await bank.set_balance(self.ctx.author, e.max_balance)
+            await self.final_message(msg, interaction, character)
 
     @discord.ui.button(
         label=_("Sell all"),
@@ -98,31 +106,38 @@ class BackpackSellView(discord.ui.View):
     )
     async def sell_all_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.ctx.command.reset_cooldown(self.ctx)
-        currency_name = await bank.get_currency_name(
-            self.ctx.guild,
-        )
-        price = 0
-        old_owned = self.item.owned
-        count = 0
-        async for _loop_counter in AsyncIter(range(0, self.item.owned), steps=50):
-            self.item.owned -= 1
-            price += self.price
-            if self.item.owned <= 0:
-                del self.character.backpack[self.item.name]
-            count += 1
-        msg = _("**{author}** sold all their {old_item} for {price} {currency_name}.\n").format(
-            author=escape(self.ctx.author.display_name),
-            old_item=box(str(self.item) + " - " + str(old_owned), lang="ansi"),
-            price=humanize_number(price),
-            currency_name=currency_name,
-        )
-        price = max(price, 0)
-        if price > 0:
+        async with self.ctx.cog.get_lock(self.author):
             try:
-                await bank.deposit_credits(self.ctx.author, price)
-            except BalanceTooHigh as e:
-                await bank.set_balance(self.ctx.author, e.max_balance)
-        await self.final_message(msg, interaction)
+                character = await Character.from_json(self.ctx, self.ctx.cog.config, self.author, self._daily_bonus)
+            except Exception as exc:
+                self.ctx.command.reset_cooldown(self.ctx)
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+            currency_name = await bank.get_currency_name(
+                self.ctx.guild,
+            )
+            price = 0
+            old_owned = self.item.owned
+            count = 0
+            async for _loop_counter in AsyncIter(range(0, self.item.owned), steps=50):
+                self.item.owned -= 1
+                price += self.price
+                if self.item.owned <= 0:
+                    del character.backpack[self.item.name]
+                count += 1
+            msg = _("**{author}** sold all their {old_item} for {price} {currency_name}.\n").format(
+                author=escape(self.ctx.author.display_name),
+                old_item=box(str(self.item) + " - " + str(old_owned), lang="ansi"),
+                price=humanize_number(price),
+                currency_name=currency_name,
+            )
+            price = max(price, 0)
+            if price > 0:
+                try:
+                    await bank.deposit_credits(self.ctx.author, price)
+                except BalanceTooHigh as e:
+                    await bank.set_balance(self.ctx.author, e.max_balance)
+            await self.final_message(msg, interaction, character)
 
     @discord.ui.button(
         label=_("Sell all but one"),
@@ -136,27 +151,35 @@ class BackpackSellView(discord.ui.View):
         currency_name = await bank.get_currency_name(
             self.ctx.guild,
         )
-        price = 0
-        old_owned = self.item.owned
-        count = 0
-        async for _loop_counter in AsyncIter(range(1, self.item.owned), steps=50):
-            self.item.owned -= 1
-            price += self.price
-        count += 1
-        if price != 0:
-            msg = _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
-                author=escape(self.ctx.author.display_name),
-                old_item=box(str(self.item) + " - " + str(old_owned - 1), lang="ansi"),
-                price=humanize_number(price),
-                currency_name=currency_name,
-            )
-            price = max(price, 0)
-            if price > 0:
-                try:
-                    await bank.deposit_credits(self.ctx.author, price)
-                except BalanceTooHigh as e:
-                    await bank.set_balance(self.ctx.author, e.max_balance)
-            await self.final_message(msg, interaction)
+        async with self.ctx.cog.get_lock(self.author):
+            try:
+                character = await Character.from_json(self.ctx, self.ctx.cog.config, self.author, self._daily_bonus)
+            except Exception as exc:
+                self.ctx.command.reset_cooldown(self.ctx)
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+            price = 0
+            old_owned = self.item.owned
+            count = 0
+            async for _loop_counter in AsyncIter(range(1, self.item.owned), steps=50):
+                self.item.owned -= 1
+                price += self.price
+            character.backpack[self.item.name].owned = self.item.owned
+            count += 1
+            if price != 0:
+                msg = _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
+                    author=escape(self.ctx.author.display_name),
+                    old_item=box(str(self.item) + " - " + str(old_owned - 1), lang="ansi"),
+                    price=humanize_number(price),
+                    currency_name=currency_name,
+                )
+                price = max(price, 0)
+                if price > 0:
+                    try:
+                        await bank.deposit_credits(self.ctx.author, price)
+                    except BalanceTooHigh as e:
+                        await bank.set_balance(self.ctx.author, e.max_balance)
+                await self.final_message(msg, interaction, character)
 
 
 class BackPackCommands(AdventureMixin):
@@ -450,25 +473,24 @@ class BackPackCommands(AdventureMixin):
                     ephemeral=True,
                 )
         async with ctx.typing():
+            if rarity and slot:
+                msg = _("Are you sure you want to sell all {rarity} {slot} items in your inventory?").format(
+                    rarity=rarity, slot=slot
+                )
+            elif rarity or slot:
+                msg = _("Are you sure you want to sell all{rarity}{slot} items in your inventory?").format(
+                    rarity=f" {rarity}" if rarity else "", slot=f" {slot}" if slot else ""
+                )
+            else:
+                msg = _("Are you sure you want to sell **ALL ITEMS** in your inventory?")
+            view = ConfirmView(60, ctx.author)
+            sent_msg = await ctx.send(msg, view=view)
+            await view.wait()
+            await sent_msg.edit(view=None)
+            if not view.confirmed:
+                await ctx.send("Not selling those items.")
+                return
             async with self.get_lock(ctx.author):
-                if rarity and slot:
-                    msg = _("Are you sure you want to sell all {rarity} {slot} items in your inventory?").format(
-                        rarity=rarity, slot=slot
-                    )
-                elif rarity or slot:
-                    msg = _("Are you sure you want to sell all{rarity}{slot} items in your inventory?").format(
-                        rarity=f" {rarity}" if rarity else "", slot=f" {slot}" if slot else ""
-                    )
-                else:
-                    msg = _("Are you sure you want to sell **ALL ITEMS** in your inventory?")
-                view = ConfirmView(60, ctx.author)
-                sent_msg = await ctx.send(msg, view=view)
-                await view.wait()
-                await sent_msg.edit(view=None)
-                if not view.confirmed:
-                    await ctx.send("Not selling those items.")
-                    return
-
                 msg = ""
                 try:
                     c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
@@ -546,28 +568,27 @@ class BackPackCommands(AdventureMixin):
                 )
             )
         await ctx.defer()
-        async with self.get_lock(ctx.author):
-            try:
-                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
-            except Exception as exc:
-                ctx.command.reset_cooldown(ctx)
-                log.exception("Error with the new character sheet", exc_info=exc)
-                return
-            price_shown = _sell(c, item)
-            message = _("**{author}**, do you want to sell this item for {price} each? {item}").format(
-                author=escape(ctx.author.display_name),
-                item=box(str(item), lang="ansi"),
-                price=humanize_number(price_shown),
-            )
-            try:
-                item = c.backpack[item.name]
-            except KeyError:
-                return
+        try:
+            c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
+        except Exception as exc:
+            ctx.command.reset_cooldown(ctx)
+            log.exception("Error with the new character sheet", exc_info=exc)
+            return
+        price_shown = _sell(c, item)
+        message = _("**{author}**, do you want to sell this item for {price} each? {item}").format(
+            author=escape(ctx.author.display_name),
+            item=box(str(item), lang="ansi"),
+            price=humanize_number(price_shown),
+        )
+        try:
+            item = c.backpack[item.name]
+        except KeyError:
+            return
 
-            view = BackpackSellView(180, ctx, c, item, price_shown)
-            msg = await ctx.send(message, view=view)
-            await view.wait()
-            await msg.edit(view=None)
+        view = BackpackSellView(180, ctx, c, item, price_shown)
+        msg = await ctx.send(message, view=view)
+        await view.wait()
+        await msg.edit(view=None)
 
     @_backpack.command(name="trade")
     async def backpack_trade(
