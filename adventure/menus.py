@@ -640,13 +640,13 @@ class ScoreBoardMenu(BaseMenu):
     async def update(self):
         buttons = {
             "wins": self.wins,
-            "losses": self.losses,
+            "loses": self.losses,
             "fight": self.physical,
             "spell": self.magic,
             "talk": self.diplomacy,
             "pray": self.praying,
             "run": self.runner,
-            "fumble": self.fumble,
+            "fumbles": self.fumble,
         }
         for button in buttons.values():
             button.disabled = False

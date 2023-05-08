@@ -7,7 +7,7 @@ from typing import List, Mapping, MutableMapping, Optional, Set, Tuple
 
 import discord
 from redbot.core.commands import Context
-from redbot.core.i18n import Translator
+from redbot.core.i18n import Translator, set_contextual_locales_from_guild
 from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number
 
 from .abc import AdventureMixin
@@ -684,6 +684,8 @@ class GameSession(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction):
         """Just extends the default reaction_check to use owner_ids"""
+        if interaction.guild is not None:
+            await set_contextual_locales_from_guild(interaction.client, interaction.guild)
         log.debug("Checking interaction")
         has_fund = await has_funds(interaction.user, 250)
         if not has_fund:
