@@ -208,7 +208,7 @@ class Item:
         # This is used to preserve integrity of Set items
         # db = get_item_db(rarity)
         if rarity == "set":
-            item = ctx.cog.TR_GEAR_SET.get(name, {})
+            item = ctx.bot.get_cog("Adventure").TR_GEAR_SET.get(name, {})
             if item:
                 parts = item.get("parts", parts)
                 _set = item.get("set", _set)
@@ -243,7 +243,7 @@ class Item:
     def to_json(self) -> dict:
         # db = get_item_db(self.rarity)
         if self.rarity is Rarities.set:
-            updated_set = self._ctx.cog.TR_GEAR_SET.get(self.name)
+            updated_set = self._ctx.bot.get_cog("Adventure").TR_GEAR_SET.get(self.name)
             if updated_set:
                 self.att = updated_set.get("att", self.att)
                 self.int = updated_set.get("int", self.int)
@@ -376,7 +376,13 @@ class Character:
 
     def remove_restrictions(self):
         if self.hc is HeroClasses.ranger and self.heroclass["pet"]:
-            requirements = self._ctx.cog.PETS.get(self.heroclass["pet"]["name"], {}).get("bonuses", {}).get("req", {})
+
+            requirements = (
+                self._ctx.bot.get_cog("Adventure")
+                .PETS.get(self.heroclass["pet"]["name"], {})
+                .get("bonuses", {})
+                .get("req", {})
+            )
             if any(x in self.sets for x in ["The Supreme One", "Ainz Ooal Gown"]) and self.heroclass["pet"]["name"] in [
                 "Albedo",
                 "Rubedo",
@@ -460,10 +466,13 @@ class Character:
                 set_names[item.set] = (parts, count + 1)
         if return_items:
             return returnable_items
-        for set_name in self._ctx.cog.SET_BONUSES:
+        for set_name in self._ctx.bot.get_cog("Adventure").SET_BONUSES:
             if set_name in set_names:
                 continue
-            set_names[set_name] = (max(bonus["parts"] for bonus in self._ctx.cog.SET_BONUSES[set_name]), 0)
+            set_names[set_name] = (
+                max(bonus["parts"] for bonus in self._ctx.bot.get_cog("Adventure").SET_BONUSES[set_name]),
+                0,
+            )
         return set_names
 
     def get_set_bonus(self):
@@ -491,7 +500,9 @@ class Character:
                 continue
             if item.set and item.set not in set_names:
                 added.append(item.name)
-                set_names.update({item.set: (item.parts, 1, self._ctx.cog.SET_BONUSES.get(item.set, []))})
+                set_names.update(
+                    {item.set: (item.parts, 1, self._ctx.bot.get_cog("Adventure").SET_BONUSES.get(item.set, []))}
+                )
             elif item.set and item.set in set_names:
                 added.append(item.name)
                 parts, count, bonus = set_names[item.set]
@@ -500,7 +511,7 @@ class Character:
         partial_sets = [(s, v[1]) for s, v in set_names.items()]
         self.sets = [s for s, _ in full_sets if s]
         for (_set, parts) in partial_sets:
-            set_bonuses = self._ctx.cog.SET_BONUSES.get(_set, [])
+            set_bonuses = self._ctx.bot.get_cog("Adventure").SET_BONUSES.get(_set, [])
             for bonus in set_bonuses:
                 required_parts = bonus.get("parts", 100)
                 if required_parts > parts:
@@ -1378,7 +1389,7 @@ class Character:
                 theme = await config.theme()
                 extra_pets = await config.themes.all()
                 extra_pets = extra_pets.get(theme, {}).get("pets", {})
-                pet_list = {**ctx.cog.PETS, **extra_pets}
+                pet_list = {**ctx.bot.get_cog("Adventure").PETS, **extra_pets}
                 heroclass["pet"] = pet_list.get(heroclass["pet"]["name"], heroclass["pet"])
 
         if "adventures" in data:
@@ -1465,7 +1476,7 @@ class Character:
             theme = await config.theme()
             extra_pets = await config.themes.all()
             extra_pets = extra_pets.get(theme, {}).get("pets", {})
-            pet_list = {**ctx.cog.PETS, **extra_pets}
+            pet_list = {**ctx.bot.get_cog("Adventure").PETS, **extra_pets}
             self.heroclass["pet"] = pet_list.get(self.heroclass["pet"]["name"], self.heroclass["pet"])
 
         return {

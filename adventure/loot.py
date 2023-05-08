@@ -5,6 +5,7 @@ import random
 import time
 from typing import Literal, Optional
 
+import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
 from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
@@ -34,13 +35,14 @@ class LootCommands(AdventureMixin):
     async def loot(
         self,
         ctx: commands.Context,
-        box_type: RarityConverter = None,
+        box_type: Optional[RarityConverter] = None,
         number: int = 1,
     ):
         """This opens one of your precious treasure chests.
 
         Use the box rarity type with the command: normal, rare, epic, legendary, ascended or set.
         """
+        log.debug(box_type)
         await ctx.defer()
         if (not is_dev(ctx.author) and number > 100) or number < 1:
             return await smart_embed(ctx, _("Nice try :smirk:."))
@@ -58,7 +60,7 @@ class LootCommands(AdventureMixin):
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
-            if not box_type:
+            if box_type is None:
                 chests = c.treasure.ansi
                 return await ctx.send(
                     box(
@@ -117,9 +119,9 @@ class LootCommands(AdventureMixin):
                 timeout=60,
             ).start(ctx=ctx)
 
-    async def _genitem(self, ctx: commands.Context, rarity: str = None, slot: str = None):
+    async def _genitem(self, ctx: commands.Context, rarity: Optional[Rarities] = None, slot: str = None):
         """Generate an item."""
-        if rarity == "set":
+        if rarity is Rarities.set:
             items = list(self.TR_GEAR_SET.items())
             items = (
                 [
@@ -133,13 +135,8 @@ class LootCommands(AdventureMixin):
             item_name, item_data = random.choice(items)
             return Item.from_json(ctx, {item_name: item_data})
 
-        RARE_INDEX = RARITIES.index("rare")
-        EPIC_INDEX = RARITIES.index("epic")
-        PREFIX_CHANCE = {"rare": 0.5, "epic": 0.75, "legendary": 0.9, "ascended": 1.0, "set": 0}
-        SUFFIX_CHANCE = {"epic": 0.5, "legendary": 0.75, "ascended": 0.5}
-
-        if rarity not in RARITIES:
-            rarity = "normal"
+        if rarity is None:
+            rarity = Rarities.normal
         if slot is None:
             slot = random.choice(ORDER)
         name = ""
@@ -152,13 +149,14 @@ class LootCommands(AdventureMixin):
                     stats[stat] += word_stats[stat]
 
         # only rare and above should have prefix with PREFIX_CHANCE
-        if RARITIES.index(rarity) >= RARE_INDEX and random.random() <= PREFIX_CHANCE[rarity]:
+        prefix_chance = rarity.prefix_chance()
+        if prefix_chance is not None and random.random() <= prefix_chance:
             #  log.debug(f"Prefix %: {PREFIX_CHANCE[rarity]}")
             prefix, prefix_stats = random.choice(list(self.PREFIXES.items()))
             name += f"{prefix} "
             add_stats(prefix_stats)
 
-        material, material_stat = random.choice(list(self.MATERIALS[rarity].items()))
+        material, material_stat = random.choice(list(self.MATERIALS[rarity.name].items()))
         name += f"{material} "
         for stat in stats.keys():
             stats[stat] += material_stat
@@ -167,8 +165,9 @@ class LootCommands(AdventureMixin):
         name += f"{equipment}"
         add_stats(equipment_stats)
 
+        suffix_chance = rarity.suffix_chance()
         # only epic and above should have suffix with SUFFIX_CHANCE
-        if RARITIES.index(rarity) >= EPIC_INDEX and random.random() <= SUFFIX_CHANCE[rarity]:
+        if suffix_chance is not None and random.random() <= suffix_chance:
             #  log.debug(f"Suffix %: {SUFFIX_CHANCE[rarity]}")
             suffix, suffix_stats = random.choice(list(self.SUFFIXES.items()))
             of_keyword = "of" if "the" not in suffix_stats else "of the"
@@ -180,7 +179,7 @@ class LootCommands(AdventureMixin):
             ctx=ctx,
             name=name,
             slot=slot_list,
-            rarity=rarity,
+            rarity=rarity.name,
             att=stats["att"],
             int=stats["int"],
             cha=stats["cha"],
@@ -329,7 +328,7 @@ class LootCommands(AdventureMixin):
     async def _open_chests(
         self,
         ctx: commands.Context,
-        chest_type: str,
+        chest_type: Rarities,
         amount: int,
         character: Character,
     ):
@@ -345,7 +344,7 @@ class LootCommands(AdventureMixin):
         await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
         return items
 
-    async def _open_chest(self, ctx: commands.Context, user, chest_type, character):
+    async def _open_chest(self, ctx: commands.Context, user: discord.User, chest_type: Rarities, character: Character):
         if hasattr(user, "display_name"):
             chest_msg = _("{} is opening a treasure chest. What riches lay inside?").format(escape(user.display_name))
         else:

@@ -15,7 +15,7 @@ from redbot.core.utils.chat_formatting import box, humanize_number
 
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ANSITextColours
+from .constants import ANSITextColours, Rarities
 from .helpers import _get_epoch, escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
@@ -252,21 +252,21 @@ class Trader(discord.ui.View):
             #  rarity_roll = .9
             # 1% legendary
             if rarity_roll >= 0.95:
-                item = await self.ctx.cog._genitem(self.ctx, "legendary")
+                item = await self.ctx.cog._genitem(self.ctx, Rarities.legendary)
                 # min. 10 stat for legendary, want to be about 50k
                 price = random.randint(2500, 5000)
             # 20% epic
             elif rarity_roll >= 0.7:
-                item = await self.ctx.cog._genitem(self.ctx, "epic")
+                item = await self.ctx.cog._genitem(self.ctx, Rarities.epic)
                 # min. 5 stat for epic, want to be about 25k
                 price = random.randint(1000, 2000)
             # 35% rare
             elif rarity_roll >= 0.35:
-                item = await self.ctx.cog._genitem(self.ctx, "rare")
+                item = await self.ctx.cog._genitem(self.ctx, Rarities.rare)
                 # around 3 stat for rare, want to be about 3k
                 price = random.randint(500, 1000)
             else:
-                item = await self.ctx.cog._genitem(self.ctx, "normal")
+                item = await self.ctx.cog._genitem(self.ctx, Rarities.normal)
                 # 1 stat for normal, want to be <1k
                 price = random.randint(100, 500)
             # 35% normal

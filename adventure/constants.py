@@ -27,6 +27,7 @@ class Rarities(Enum):
     # Special rarities so we leave room for more in between
     forged = 16
     event = 32
+    pet = 64
 
     def __str__(self):
         return self.name.title()
@@ -56,6 +57,22 @@ class Rarities(Enum):
             "forged": _("Forged"),
             "event": _("Event"),
         }
+
+    def prefix_chance(self) -> Optional[float]:
+        return {
+            Rarities.rare: 0.5,
+            Rarities.epic: 0.75,
+            Rarities.legendary: 0.9,
+            Rarities.ascended: 1.0,
+            Rarities.set: 0.0,
+        }.get(self)
+
+    def suffix_chance(self) -> Optional[float]:
+        return {
+            Rarities.epic: 0.5,
+            Rarities.legendary: 0.75,
+            Rarities.ascended: 0.5,
+        }.get(self)
 
     def get_name(self) -> str:
         return self.names().get(self.name, _("Normal"))

@@ -15,6 +15,7 @@ from .bank import bank
 from .cart import Trader
 from .charsheet import Character
 from .constants import DEV_LIST, ORDER, RARITIES
+from .converters import RarityConverter
 from .helpers import escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
 
@@ -77,7 +78,7 @@ class DevCommands(AdventureMixin):
 
     @commands.command()
     @commands.is_owner()
-    async def genitems(self, ctx: commands.Context, rarity: str, slot: str, num: int = 1):
+    async def genitems(self, ctx: commands.Context, rarity: RarityConverter, slot: str, num: int = 1):
         """[Dev] Generate random items."""
         if not await self.no_dev_prompt(ctx):
             return

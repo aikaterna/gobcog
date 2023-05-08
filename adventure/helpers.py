@@ -164,7 +164,7 @@ def has_separated_economy():
 
 
 class ConfirmView(discord.ui.View):
-    def __init__(self, timeout: float, author: discord.User):
+    def __init__(self, timeout: float, author: Union[discord.User, discord.Member]):
         super().__init__(timeout=timeout)
         self.confirmed = None
         self.author = author

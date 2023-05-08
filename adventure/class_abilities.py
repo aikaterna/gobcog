@@ -436,7 +436,7 @@ class ClassAbilities(AdventureMixin):
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
             if c.heroclass["cooldown"] <= time.time():
-                await self._open_chest(ctx, c.heroclass["pet"]["name"], "pet", character=c)
+                await self._open_chest(ctx, c.heroclass["pet"]["name"], Rarities.pet, character=c)
                 c.heroclass["cooldown"] = time.time() + cooldown_time
                 await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
             else:

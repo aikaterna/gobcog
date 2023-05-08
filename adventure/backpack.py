@@ -41,11 +41,12 @@ class BackpackSellView(discord.ui.View):
         self.ctx = ctx
         self.item = item
         self.price = price
+        self.cog: AdventureMixin = self.ctx.bot.get_cog("Adventure")
 
     async def final_message(self, msg: str, interaction: discord.Interaction, character: Character):
         character.last_known_currency = await bank.get_balance(self.ctx.author)
         character.last_currency_check = time.time()
-        await self.ctx.cog.config.user(self.ctx.author).set(character.to_json(self.ctx, self.ctx.cog.config))
+        await self.cog.config.user(self.ctx.author).set(character.to_json(self.ctx, self.cog.config))
         self.stop()
         pages = [page for page in pagify(msg, delims=["\n"], page_length=1900)]
         await BaseMenu(
@@ -70,9 +71,9 @@ class BackpackSellView(discord.ui.View):
     async def sell_one_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.ctx.command.reset_cooldown(self.ctx)
         # sell one of the item
-        async with self.ctx.cog.get_lock(self.author):
+        async with self.cog.get_lock(self.author):
             try:
-                character = await Character.from_json(self.ctx, self.ctx.cog.config, self.author, self._daily_bonus)
+                character = await Character.from_json(self.ctx, self.cog.config, self.author, self.cog._daily_bonus)
             except Exception as exc:
                 self.ctx.command.reset_cooldown(self.ctx)
                 log.exception("Error with the new character sheet", exc_info=exc)
@@ -106,9 +107,9 @@ class BackpackSellView(discord.ui.View):
     )
     async def sell_all_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.ctx.command.reset_cooldown(self.ctx)
-        async with self.ctx.cog.get_lock(self.author):
+        async with self.cog.get_lock(self.author):
             try:
-                character = await Character.from_json(self.ctx, self.ctx.cog.config, self.author, self._daily_bonus)
+                character = await Character.from_json(self.ctx, self.cog.config, self.author, self.cog._daily_bonus)
             except Exception as exc:
                 self.ctx.command.reset_cooldown(self.ctx)
                 log.exception("Error with the new character sheet", exc_info=exc)
@@ -151,9 +152,9 @@ class BackpackSellView(discord.ui.View):
         currency_name = await bank.get_currency_name(
             self.ctx.guild,
         )
-        async with self.ctx.cog.get_lock(self.author):
+        async with self.cog.get_lock(self.author):
             try:
-                character = await Character.from_json(self.ctx, self.ctx.cog.config, self.author, self._daily_bonus)
+                character = await Character.from_json(self.ctx, self.cog.config, self.author, self.cog._daily_bonus)
             except Exception as exc:
                 self.ctx.command.reset_cooldown(self.ctx)
                 log.exception("Error with the new character sheet", exc_info=exc)
@@ -710,13 +711,14 @@ class BackPackCommands(AdventureMixin):
                 ),
                 lang="ansi",
             )
-            async with self.get_lock(ctx.author):
-                view = ConfirmView(60, ctx.author)
-                trade_msg = await ctx.send(f"{buyer.mention}\n{trade_talk}", view=view)
+            view = ConfirmView(60, buyer)
+            trade_msg = await ctx.send(f"{buyer.mention}\n{trade_talk}", view=view)
 
-                await view.wait()
-                await trade_msg.edit(view=None)
-                if view.confirmed:  # buyer reacted with Yes.
+            await view.wait()
+            await trade_msg.edit(view=None)
+
+            if view.confirmed:  # buyer reacted with Yes.
+                async with self.get_lock(ctx.author):
                     with contextlib.suppress(discord.errors.NotFound):
                         if await bank.can_spend(buyer, asking or 1000):
                             if buy_user.rebirths + 1 < c.rebirths:
@@ -769,9 +771,9 @@ class BackPackCommands(AdventureMixin):
                                     currency_name=currency_name,
                                 )
                             )
-                else:
-                    with contextlib.suppress(discord.HTTPException):
-                        await trade_msg.delete()
+            else:
+                with contextlib.suppress(discord.HTTPException):
+                    await trade_msg.delete()
 
     @commands.command(name="ebackpack")
     @commands.bot_has_permissions(add_reactions=True)

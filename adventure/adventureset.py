@@ -477,9 +477,9 @@ class AdventureSetCommands(AdventureMixin):
             await self.config.guild(ctx.guild).cart_channels.set(channel_list)
 
     @commands.guild_only()
-    @commands.command()
+    @adventureset.command()
     @commands.cooldown(rate=1, per=4, type=commands.BucketType.guild)
-    async def adventuresettings(self, ctx: commands.Context):
+    async def showsettings(self, ctx: commands.Context):
         """Display current settings."""
         global_data = await self.config.all()
         guild_data = await self.config.guild(ctx.guild).all()

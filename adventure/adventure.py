@@ -29,7 +29,7 @@ from .backpack import BackPackCommands
 from .bank import bank
 from .cart import Trader
 from .character import CharacterCommands
-from .charsheet import Character, calculate_sp, has_funds
+from .charsheet import Character, Item, calculate_sp, has_funds
 from .class_abilities import ClassAbilities
 from .constants import DEV_LIST, ANSITextColours, HeroClasses, Rarities, Treasure
 from .converters import ArgParserFailure, ChallengeConverter
@@ -206,6 +206,7 @@ class Adventure(
     async def cog_before_invoke(self, ctx: commands.Context):
         await self._ready_event.wait()
         if ctx.author.id in self.locks and self.locks[ctx.author.id].locked():
+            await ctx.send(_("You're already interacting with something that needs your attention!"), ephemeral=True)
             raise CheckFailure(f"There's an active lock for this user ({ctx.author.id})")
         return True
 
@@ -2491,11 +2492,11 @@ class Adventure(
                 trader.stop()
                 await trader.on_timeout()
 
-    async def _roll_chest(self, chest_type: str, c: Character):
+    async def _roll_chest(self, chest_type: Rarities, c: Character) -> Item:
         # set rarity to chest by default
         rarity = chest_type
-        if chest_type == "pet":
-            rarity = "normal"
+        if chest_type is Rarities.pet:
+            rarity = Rarities.normal
         INITIAL_MAX_ROLL = 400
         # max luck for best chest odds
         MAX_CHEST_LUCK = 200
@@ -2503,53 +2504,53 @@ class Adventure(
         max_roll = INITIAL_MAX_ROLL - round(c.luck) - (c.rebirths // 2)
         top_range = max(max_roll, INITIAL_MAX_ROLL - MAX_CHEST_LUCK)
         roll = max(random.randint(1, top_range), 1)
-        if chest_type == "normal":
+        if chest_type is Rarities.normal:
             if roll <= INITIAL_MAX_ROLL * 0.05:  # 5% to roll rare
-                rarity = "rare"
+                rarity = Rarities.rare
             else:
                 pass  # 95% to roll common
-        elif chest_type == "rare":
+        elif chest_type is Rarities.rare:
             if roll <= INITIAL_MAX_ROLL * 0.05:  # 5% to roll epic
-                rarity = "epic"
+                rarity = Rarities.epic
             elif roll <= INITIAL_MAX_ROLL * 0.95:  # 90% to roll rare
                 pass
             else:
-                rarity = "normal"  # 5% to roll normal
-        elif chest_type == "epic":
+                rarity = Rarities.normal  # 5% to roll normal
+        elif chest_type is Rarities.epic:
             if roll <= INITIAL_MAX_ROLL * 0.05:  # 5% to roll legendary
-                rarity = "legendary"
+                rarity = Rarities.legendary
             elif roll <= INITIAL_MAX_ROLL * 0.90:  # 85% to roll epic
                 pass
             else:  # 10% to roll rare
-                rarity = "rare"
-        elif chest_type == "legendary":
+                rarity = Rarities.rare
+        elif chest_type is Rarities.legendary:
             if roll <= INITIAL_MAX_ROLL * 0.75:  # 75% to roll legendary
                 pass
             elif roll <= INITIAL_MAX_ROLL * 0.95:  # 20% to roll epic
-                rarity = "epic"
+                rarity = Rarities.epic
             else:
-                rarity = "rare"  # 5% to roll rare
-        elif chest_type == "ascended":
+                rarity = Rarities.rare  # 5% to roll rare
+        elif chest_type is Rarities.ascended:
             if roll <= INITIAL_MAX_ROLL * 0.55:  # 55% to roll set
-                rarity = "ascended"
+                rarity = Rarities.ascended
             else:
-                rarity = "legendary"  # 45% to roll legendary
-        elif chest_type == "pet":
+                rarity = Rarities.legendary  # 45% to roll legendary
+        elif chest_type is Rarities.pet:
             if roll <= INITIAL_MAX_ROLL * 0.05:  # 5% to roll legendary
-                rarity = "legendary"
+                rarity = Rarities.legendary
             elif roll <= INITIAL_MAX_ROLL * 0.15:  # 10% to roll epic
-                rarity = "epic"
+                rarity = Rarities.epic
             elif roll <= INITIAL_MAX_ROLL * 0.57:  # 42% to roll rare
-                rarity = "rare"
+                rarity = Rarities.rare
             else:
-                rarity = "normal"  # 47% to roll common
-        elif chest_type == "set":
+                rarity = Rarities.normal  # 47% to roll common
+        elif chest_type is Rarities.set:
             if roll <= INITIAL_MAX_ROLL * 0.55:  # 55% to roll set
-                rarity = "set"
+                rarity = Rarities.set
             elif roll <= INITIAL_MAX_ROLL * 0.87:
-                rarity = "ascended"  # 45% to roll legendary
+                rarity = Rarities.ascended  # 45% to roll legendary
             else:
-                rarity = "legendary"  # 45% to roll legendary
+                rarity = Rarities.legendary  # 45% to roll legendary
 
         return await self._genitem(c._ctx, rarity)
 

@@ -390,16 +390,27 @@ class EconomyCommands(AdventureMixin):
         """[Owner] Give treasure chest(s) to all specified users."""
 
         users = users or [ctx.author]
-        loot_types = ["normal", "rare", "epic", "legendary", "ascended", "set"]
+        loot_types = [
+            Rarities.normal,
+            Rarities.rare,
+            Rarities.epic,
+            Rarities.legendary,
+            Rarities.ascended,
+            Rarities.set,
+        ]
         if loot_type not in loot_types:
             return await smart_embed(
                 ctx,
-                (
-                    "Valid loot types: `normal`, `rare`, `epic`, `legendary`, `ascended` or `set`: "
-                    "ex. `{}give loot normal @locastan` "
-                ).format(ctx.prefix),
+                box(
+                    ("Valid loot types: {loot_types}: " "ex. `{prefix}give loot normal @locastan` ").format(
+                        prefix=ctx.prefix, loot_types=humanize_list([i.ansi for i in loot_types])
+                    ),
+                    lang="ansi",
+                ),
             )
-        if loot_type in ["legendary", "set", "ascended"] and not await ctx.bot.is_owner(ctx.author):
+        if loot_type in [Rarities.legendary, Rarities.set, Rarities.ascended] and not await ctx.bot.is_owner(
+            ctx.author
+        ):
             return await smart_embed(ctx, _("You are not worthy to award legendary loot."))
         for user in users:
             async with self.get_lock(user):
@@ -408,15 +419,15 @@ class EconomyCommands(AdventureMixin):
                 except Exception as exc:
                     log.exception("Error with the new character sheet", exc_info=exc)
                     continue
-                if loot_type == "rare":
+                if loot_type is Rarities.rare:
                     c.treasure.rare += number
-                elif loot_type == "epic":
+                elif loot_type is Rarities.epic:
                     c.treasure.epic += number
-                elif loot_type == "legendary":
+                elif loot_type is Rarities.legendary:
                     c.treasure.legendary += number
-                elif loot_type == "ascended":
+                elif loot_type is Rarities.ascended:
                     c.treasure.ascended += number
-                elif loot_type == "set":
+                elif loot_type is Rarities.set:
                     c.treasure.set += number
                 else:
                     c.treasure.normal += number
