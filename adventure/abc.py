@@ -10,7 +10,7 @@ from redbot.core.bot import Red
 
 if TYPE_CHECKING:
     from .adventureset import TaxesConverter
-    from .charsheet import BackpackFilterParser, Character
+    from .charsheet import BackpackFilterParser, Character, Item
     from .constants import Rarities
     from .converters import (
         DayConverter,
