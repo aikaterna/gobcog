@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import enum
 import logging
 import re
 import shlex
@@ -774,6 +775,45 @@ class NoExitParser(argparse.ArgumentParser):
         raise commands.BadArgument(message=message)
 
 
+class RarityAction(argparse.Action):
+    """
+    Handle Enum conversion in argparse
+    https://stackoverflow.com/a/60750535
+    """
+
+    def __init__(self, **kwargs):
+        # Pop off the type value
+        enum_type = kwargs.pop("type", None)
+
+        # Ensure an Enum subclass is provided
+        if enum_type is None:
+            raise ValueError("type must be assigned an Enum when using EnumAction")
+        if not issubclass(enum_type, enum.Enum):
+            raise TypeError("type must be an Enum when using EnumAction")
+
+        # Generate choices from the Enum
+        options = tuple(
+            list(i.lower() for i in enum_type.names().keys()) + list(i.lower() for i in enum_type.names().values())
+        )
+        kwargs.setdefault("choices", options)
+
+        super().__init__(**kwargs)
+
+        self._enum = enum_type
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        # Convert value back into an Enum
+        value = []
+        if values:
+            for v in values:
+                try:
+                    value.append(self._enum.get_from_name(v))
+                except KeyError:
+                    pass
+        log.debug(value)
+        setattr(namespace, self.dest, value)
+
+
 class BackpackFilterParser(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str) -> Mapping[str, Any]:
         argument = argument.replace("—", "--")
@@ -808,7 +848,9 @@ class BackpackFilterParser(commands.Converter):
 
         parser.add_argument("--slot", nargs="*", dest="slot", default=ORDER, choices=ORDER)
 
-        parser.add_argument("--rarity", nargs="*", dest="rarity", default=RARITIES, choices=RARITIES)
+        parser.add_argument(
+            "--rarity", nargs="*", dest="rarity", default=[i for i in Rarities], type=Rarities, action=RarityAction
+        )
 
         parser.add_argument("--set", nargs="*", dest="set", choices=set_names, default=[])
 

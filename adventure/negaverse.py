@@ -14,6 +14,7 @@ from redbot.core.utils.chat_formatting import bold, box, humanize_number
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
+from .constants import Treasure
 from .helpers import ConfirmView, escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
@@ -256,7 +257,7 @@ class Negaverse(AdventureMixin):
                 )
                 with contextlib.suppress(Exception):
                     lock.release()
-                msg = await self._add_rewards(ctx, ctx.author, xp_won, offering, False)
+                msg = await self._add_rewards(ctx, ctx.author, xp_won, offering, Treasure())
                 xp_won_final += xp_won
                 offering_value += offering
                 winning_state = True
@@ -281,7 +282,7 @@ class Negaverse(AdventureMixin):
                 )
                 with contextlib.suppress(Exception):
                     lock.release()
-                msg = await self._add_rewards(ctx, ctx.author, xp_won, 0, False)
+                msg = await self._add_rewards(ctx, ctx.author, xp_won, 0, Treasure())
                 xp_won_final += xp_won
                 offering_value += offering
                 winning_state = True
@@ -391,4 +392,4 @@ class Negaverse(AdventureMixin):
                 ).format(author=escape(ctx.author.display_name), currency_name=currency_name),
             )
         else:
-            await ctx.bot.on_command_error(ctx, error)
+            await ctx.bot.on_command_error(ctx, error, unhandled_by_cog=True)

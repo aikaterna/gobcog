@@ -97,7 +97,7 @@ class TraderModal(discord.ui.Modal):
                         ).format(
                             author=escape(spender.display_name),
                             p_result=number,
-                            item_name=item.formatted_name,
+                            item_name=item.ansi,
                             item_price=humanize_number(price),
                             currency_name=currency_name,
                         ),
@@ -224,7 +224,7 @@ class Trader(discord.ui.View):
                     "[{hand}]) for {item_price} {currency_name}."
                 ).format(
                     i=str(index + 1),
-                    item_name=item["item"].formatted_name,
+                    item_name=item["item"].ansi,
                     lvl=item["item"].lvl,
                     str_att=str(att),
                     str_int=str(intel),

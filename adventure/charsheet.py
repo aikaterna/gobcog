@@ -69,6 +69,10 @@ class Item:
         self.degrade = kwargs.get("degrade", 5)
 
     def __str__(self):
+        return self.rarity.as_str(self.name)
+
+    @property
+    def ansi(self) -> str:
         return self.rarity.as_ansi(self.name)
 
     def row(self, player_level: int) -> Tuple[Any, ...]:
@@ -82,7 +86,7 @@ class Item:
         """
         can_equip = self.lvl <= player_level
         return (
-            str(self),
+            self.ansi,
             self.slot[0] if len(self.slot) == 1 else "two handed",
             self.att * (1 if len(self.slot) == 1 else 2),
             self.cha * (1 if len(self.slot) == 1 else 2),
@@ -361,17 +365,17 @@ class Character:
 
     def get_weapons(self) -> str:
         if self.left and len(self.left.slot) > 1:
-            return str(self.left)
+            return self.left.ansi
         elif self.right and len(self.right.slot) > 1:
-            return str(self.right)
+            return self.right.ansi
         elif self.left == self.right and self.left is not None:
-            return str(self.left)
+            return self.left.ansi
         elif self.left is not None and self.right is None:
-            return str(self.left)
+            return self.left.ansi
         elif self.right is not None and self.left is None:
-            return str(self.right)
+            return self.right.ansi
         elif self.left is not None and self.right is not None:
-            return humanize_list([str(self.left), str(self.right)])
+            return humanize_list([self.left.ansi, self.right.ansi])
         return _("fists")
 
     def remove_restrictions(self):
@@ -701,7 +705,7 @@ class Character:
 
     @staticmethod
     def get_rarity_index(rarity: Rarities):
-        if rarity not in Rarities:
+        if rarity not in [i for i in Rarities]:
             return float("inf")
         reverse_rarities = list(reversed(Rarities))
         return reverse_rarities.index(rarity)
@@ -755,7 +759,7 @@ class Character:
                 continue
             loot_number = random.randint(1, min(item.owned, how_many - looted_so_far))
             looted_so_far += loot_number
-            looted.append((str(item), loot_number))
+            looted.append((item.ansi, loot_number))
             item.owned -= loot_number
             if item.owned <= 0:
                 del self.backpack[item.name]
@@ -853,7 +857,7 @@ class Character:
                 can_equip = equip_level is not None and self.equip_level(item) > self.lvl
                 rows.append(
                     (
-                        str(item),
+                        item.ansi,
                         slot_name,
                         att,
                         cha,
@@ -874,7 +878,7 @@ class Character:
         self,
         backpack: dict,
         slots: List[str],
-        rarities: List[str],
+        rarities: List[Rarities],
         sets: List[str],
         equippable: bool,
         _except: bool,
@@ -893,7 +897,7 @@ class Character:
         tmp = {}
 
         def _sort(item):
-            return self.get_rarity_index(item), item[1].lvl, item[1].total_stats
+            return self.get_rarity_index(item[1].rarity), item[1].lvl, item[1].total_stats
 
         if not _except:
             async for item_name in AsyncIter(backpack, steps=100):
@@ -923,7 +927,7 @@ class Character:
                     continue
                 if sets and item.rarity is not Rarities.set:
                     continue
-                elif rarities and item.rarity.name not in rarities:
+                elif rarities and item.rarity not in rarities:
                     continue
                 if sets and item.set not in sets:
                     continue
@@ -977,7 +981,7 @@ class Character:
                     tmp[slot_name] = []
                 tmp[slot_name].append((item_name, item))
         else:
-            rarities = [] if rarities == RARITIES else rarities
+            rarities = [] if rarities == [i for i in Rarities] else rarities
             slots = [] if slots == ORDER else slots
             async for item_name in AsyncIter(backpack, steps=100):
                 item = backpack[item_name]
@@ -1004,7 +1008,7 @@ class Character:
                         continue
                 if slots and slot_name in slots:
                     continue
-                elif rarities and item.rarity.name in rarities:
+                elif rarities and item.rarity in rarities:
                     continue
                 if sets and item.set in sets:
                     continue
@@ -1148,7 +1152,7 @@ class Character:
                     dex = item.dex if len(slot_name_org) < 2 else item.dex * 2
                     luck = item.luck if len(slot_name_org) < 2 else item.luck * 2
                 data = [
-                    str(item),
+                    item.ansi,
                     slot_name,
                     att,
                     cha,

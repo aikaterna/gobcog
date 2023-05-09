@@ -2347,7 +2347,9 @@ class Adventure(
             failed = False
         return failed
 
-    async def _add_rewards(self, ctx: commands.Context, user: discord.Member, exp: int, cp: int, special: Treasure):
+    async def _add_rewards(
+        self, ctx: commands.Context, user: Union[discord.Member, discord.User], exp: int, cp: int, special: Treasure
+    ) -> Optional[str]:
         lock = self.get_lock(user)
         if not lock.locked():
             await lock.acquire()

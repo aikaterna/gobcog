@@ -386,7 +386,7 @@ class LootCommands(AdventureMixin):
 
             old_stats = (
                 _("You currently have {item} [{slot}] equipped | Lvl req {lv} equipped.").format(
-                    item=old_item, slot=old_slot, lv=character.equip_level(old_item)
+                    item=old_item.ansi, slot=old_slot, lv=character.equip_level(old_item)
                 )
                 + f" (ATT: {str(att)}, "
                 f"CHA: {str(cha)}, "
@@ -416,7 +416,7 @@ class LootCommands(AdventureMixin):
             chest_msg2 = (
                 _("{user} found {item} [{slot}] | Lvl req {lv}.").format(
                     user=escape(user.display_name),
-                    item=str(item),
+                    item=item.ansi,
                     slot=slot,
                     lv=character.equip_level(item),
                 )
@@ -441,7 +441,7 @@ class LootCommands(AdventureMixin):
         else:
             chest_msg2 = (
                 _("The {user} found {item} [{slot}] | Lvl req {lv}.").format(
-                    user=user, item=str(item), slot=slot, lv=character.equip_level(item)
+                    user=user, item=item.ansi, slot=slot, lv=character.equip_level(item)
                 )
                 + f" (ATT: {str(att)}, "
                 f"CHA: {str(cha)}, "

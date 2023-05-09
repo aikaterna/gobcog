@@ -11,7 +11,7 @@ from redbot.core.bot import Red
 if TYPE_CHECKING:
     from .adventureset import TaxesConverter
     from .charsheet import BackpackFilterParser, Character, Item
-    from .constants import Rarities
+    from .constants import Rarities, Treasure
     from .converters import (
         DayConverter,
         EquipableItemConverter,
@@ -182,7 +182,9 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _add_rewards(self, ctx: commands.Context, user, exp, cp, special):
+    async def _add_rewards(
+        self, ctx: commands.Context, user: Union[discord.Member, discord.User], exp: int, cp: int, special: Treasure
+    ) -> Optional[str]:
         raise NotImplementedError()
 
     @abstractmethod
