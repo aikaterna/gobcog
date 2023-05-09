@@ -86,7 +86,7 @@ class BackpackSellView(discord.ui.View):
             price += self.price
             msg = _("**{author}** sold one {item} for {price} {currency_name}.\n").format(
                 author=escape(self.ctx.author.display_name),
-                item=box(self.item, lang="ansi"),
+                item=box(self.item.ansi, lang="ansi"),
                 price=humanize_number(price),
                 currency_name=currency_name,
             )
@@ -128,7 +128,7 @@ class BackpackSellView(discord.ui.View):
                 count += 1
             msg = _("**{author}** sold all their {old_item} for {price} {currency_name}.\n").format(
                 author=escape(self.ctx.author.display_name),
-                old_item=box(str(self.item) + " - " + str(old_owned), lang="ansi"),
+                old_item=box(self.item.ansi + " - " + str(old_owned), lang="ansi"),
                 price=humanize_number(price),
                 currency_name=currency_name,
             )
@@ -170,7 +170,7 @@ class BackpackSellView(discord.ui.View):
             if price != 0:
                 msg = _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
                     author=escape(self.ctx.author.display_name),
-                    old_item=box(str(self.item) + " - " + str(old_owned - 1), lang="ansi"),
+                    old_item=box(self.item.ansi + " - " + str(old_owned - 1), lang="ansi"),
                     price=humanize_number(price),
                     currency_name=currency_name,
                 )
