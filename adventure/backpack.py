@@ -716,11 +716,12 @@ class BackPackCommands(AdventureMixin):
 
             await view.wait()
             await trade_msg.edit(view=None)
-
+            if asking is None:
+                asking = 1000
             if view.confirmed:  # buyer reacted with Yes.
                 async with self.get_lock(ctx.author):
                     with contextlib.suppress(discord.errors.NotFound):
-                        if await bank.can_spend(buyer, asking or 1000):
+                        if await bank.can_spend(buyer, asking):
                             if buy_user.rebirths + 1 < c.rebirths:
                                 return await smart_embed(
                                     ctx,
@@ -731,9 +732,9 @@ class BackPackCommands(AdventureMixin):
                                     ),
                                 )
                             try:
-                                await bank.transfer_credits(buyer, ctx.author, asking or 1000)
+                                await bank.transfer_credits(buyer, ctx.author, asking)
                             except BalanceTooHigh as e:
-                                await bank.withdraw_credits(buyer, asking or 1000)
+                                await bank.withdraw_credits(buyer, asking)
                                 await bank.set_balance(ctx.author, e.max_balance)
                             c.backpack[item.name].owned -= 1
                             newly_owned = c.backpack[item.name].owned
