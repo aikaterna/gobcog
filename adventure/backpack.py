@@ -82,7 +82,6 @@ class BackpackSellView(discord.ui.View):
                 self.ctx.guild,
             )
             price = 0
-            self.item.owned -= 1
             price += self.price
             msg = _("**{author}** sold one {item} for {price} {currency_name}.\n").format(
                 author=escape(self.ctx.author.display_name),
@@ -90,7 +89,8 @@ class BackpackSellView(discord.ui.View):
                 price=humanize_number(price),
                 currency_name=currency_name,
             )
-            if self.item.owned <= 0:
+            character.backpack[self.item.name].owned -= 1
+            if character.backpack[self.item.name].owned <= 0:
                 del character.backpack[self.item.name]
             price = max(price, 0)
             if price > 0:
@@ -121,9 +121,9 @@ class BackpackSellView(discord.ui.View):
             old_owned = self.item.owned
             count = 0
             async for _loop_counter in AsyncIter(range(0, self.item.owned), steps=50):
-                self.item.owned -= 1
                 price += self.price
-                if self.item.owned <= 0:
+                character.backpack[self.item.name].owned -= 1
+                if character.backpack[self.item.name].owned <= 0:
                     del character.backpack[self.item.name]
                 count += 1
             msg = _("**{author}** sold all their {old_item} for {price} {currency_name}.\n").format(
@@ -162,11 +162,13 @@ class BackpackSellView(discord.ui.View):
             price = 0
             old_owned = self.item.owned
             count = 0
-            async for _loop_counter in AsyncIter(range(1, self.item.owned), steps=50):
-                self.item.owned -= 1
+            async for _loop_counter in AsyncIter(range(1, character.backpack[self.item.name].owned), steps=50):
+                if character.backpack[self.item.name].owned == 1:
+                    break
+                character.backpack[self.item.name].owned -= 1
                 price += self.price
-            character.backpack[self.item.name].owned = self.item.owned
-            count += 1
+                count += 1
+
             if price != 0:
                 msg = _("**{author}** sold all but one of their {old_item} for {price} {currency_name}.\n").format(
                     author=escape(self.ctx.author.display_name),
