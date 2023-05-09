@@ -114,7 +114,7 @@ class WeeklyScoreboardSource(menus.ListPageSource):
             guild = None
 
         players = []
-        for (position, (user_id, account_data)) in enumerate(entries, start=start_position):
+        for position, (user_id, account_data) in enumerate(entries, start=start_position):
             if guild is not None:
                 member = guild.get_member(user_id)
             else:
@@ -190,7 +190,7 @@ class ScoreboardSource(WeeklyScoreboardSource):
             guild = None
 
         players = []
-        for (position, (user_id, account_data)) in enumerate(entries, start=start_position):
+        for position, (user_id, account_data) in enumerate(entries, start=start_position):
             if guild is not None:
                 member = guild.get_member(user_id)
             else:
@@ -256,7 +256,7 @@ class NVScoreboardSource(WeeklyScoreboardSource):
             guild = None
 
         players = []
-        for (position, (user_id, account_data)) in enumerate(entries, start=start_position):
+        for position, (user_id, account_data) in enumerate(entries, start=start_position):
             if guild is not None:
                 member = guild.get_member(user_id)
             else:
@@ -607,7 +607,7 @@ class BaseMenu(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction):
         if interaction.user.id not in (*interaction.client.owner_ids, self._author_id):
-            await interaction.response.send_message(_("You are not authorized to interact with this."))
+            await interaction.response.send_message(_("You are not authorized to interact with this."), ephemeral=True)
             return False
         return True
 

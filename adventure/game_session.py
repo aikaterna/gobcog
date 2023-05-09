@@ -259,7 +259,7 @@ class RunButton(discord.ui.Button):
         if await self.view.cog.config.guild(interaction.guild).god_name():
             god = await self.view.cog.config.guild(interaction.guild).god_name()
         choice = choice.replace("$god", god)
-        await interaction.response.send_message(choice, ephemeral=True)
+        await interaction.response.send_message(box(choice, lang="ansi"), ephemeral=True)
 
     async def callback(self, interaction: discord.Interaction):
         """Skip to previous track"""
