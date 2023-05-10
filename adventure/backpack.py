@@ -904,8 +904,9 @@ class BackPackCommands(AdventureMixin):
                     ),
                     view=view,
                 )
-                await msg.edit(view=None)
+
                 await view.wait()
+                await msg.edit(view=None)
                 if not view.confirmed:
                     await ctx.send("Not disassembling those items.")
                     return
