@@ -14,7 +14,7 @@ from .abc import AdventureMixin
 from .bank import bank
 from .cart import Trader
 from .charsheet import Character
-from .constants import DEV_LIST, ORDER, RARITIES
+from .constants import DEV_LIST, ORDER, RARITIES, Rarities
 from .converters import RarityConverter
 from .helpers import escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
@@ -83,14 +83,8 @@ class DevCommands(AdventureMixin):
         if not await self.no_dev_prompt(ctx):
             return
         user = ctx.author
-        rarity = rarity.lower()
         slot = slot.lower()
-        if rarity not in RARITIES:
-            return await smart_embed(
-                ctx,
-                _("Invalid rarity; choose one of {list}.").format(list=humanize_list(RARITIES)),
-            )
-        elif slot not in ORDER:
+        if slot not in ORDER:
             return await smart_embed(ctx, _("Invalid slot; choose one of {list}.").format(list=humanize_list(ORDER)))
         async with self.get_lock(user):
             try:
