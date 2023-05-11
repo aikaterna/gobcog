@@ -140,20 +140,6 @@ class Adventure(
             "pray": self.emojis.pray,
             "run": self.emojis.run,
         }
-        self._order = [
-            "head",
-            "neck",
-            "chest",
-            "gloves",
-            "belt",
-            "legs",
-            "boots",
-            "left",
-            "right",
-            "two handed",
-            "ring",
-            "charm",
-        ]
         self._treasure_controls = {
             self.emojis.yes: "equip",
             self.emojis.no: "backpack",
