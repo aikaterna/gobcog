@@ -16,7 +16,7 @@ from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ORDER, HeroClasses, Rarities
+from .constants import HeroClasses, Rarities, Slot
 from .converters import (
     BackpackFilterParser,
     EquipableItemConverter,
@@ -212,7 +212,7 @@ class BackPackCommands(AdventureMixin):
         """
 
         assert isinstance(rarity, Rarities) or rarity is None
-        assert isinstance(slot, str) or slot is None
+        assert isinstance(slot, Slot) or slot is None
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
         if not ctx.invoked_subcommand:
@@ -221,14 +221,6 @@ class BackPackCommands(AdventureMixin):
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
-            if slot:
-                slot = slot.lower()
-                if slot not in ORDER:
-                    return await smart_embed(
-                        ctx,
-                        _("{} is not a valid slot, select one of {}").format(slot, humanize_list(ORDER)),
-                        ephemeral=True,
-                    )
             await ctx.defer()
             msgs = await c.get_backpack(rarity=rarity, slot=slot, show_delta=show_diff)
             if not msgs:
@@ -273,13 +265,11 @@ class BackPackCommands(AdventureMixin):
 
             equip = c.backpack.get(equip_item.name)
             if equip:
-                slot = equip.slot[0]
-                if len(equip.slot) > 1:
-                    slot = "two handed"
-                if not getattr(c, equip.slot[0]):
+                slot = equip.slot
+                if not getattr(c, equip.slot.name):
                     equip_msg = box(
                         _("{author} equipped {item} ({slot} slot).").format(
-                            author=escape(ctx.author.display_name), item=str(equip), slot=slot
+                            author=escape(ctx.author.display_name), item=str(equip), slot=slot.get_name()
                         ),
                         lang="ansi",
                     )
@@ -289,7 +279,7 @@ class BackPackCommands(AdventureMixin):
                             author=escape(ctx.author.display_name),
                             item=str(equip),
                             slot=slot,
-                            put=getattr(c, equip.slot[0]),
+                            put=getattr(c, equip.slot.name),
                         ),
                         lang="ansi",
                     )
@@ -455,7 +445,7 @@ class BackPackCommands(AdventureMixin):
     ):
         """Sell all items in your backpack. Optionally specify rarity or slot."""
         assert isinstance(rarity, Rarities) or rarity is None
-        assert isinstance(slot, str) or slot is None
+        assert isinstance(slot, Slot) or slot is None
         if self.in_adventure(ctx):
             return await smart_embed(
                 ctx,
@@ -467,22 +457,15 @@ class BackPackCommands(AdventureMixin):
                 return await smart_embed(
                     ctx, _("You cannot sell `{rarity}` rarity items.").format(rarity=rarity), ephemeral=True
                 )
-        if slot:
-            slot = slot.lower()
-            if slot not in ORDER:
-                return await smart_embed(
-                    ctx,
-                    _("{} is not a valid slot, select one of {}").format(slot, humanize_list(ORDER)),
-                    ephemeral=True,
-                )
+
         async with ctx.typing():
             if rarity and slot:
                 msg = _("Are you sure you want to sell all {rarity} {slot} items in your inventory?").format(
-                    rarity=rarity, slot=slot
+                    rarity=rarity, slot=slot.get_name()
                 )
             elif rarity or slot:
                 msg = _("Are you sure you want to sell all{rarity}{slot} items in your inventory?").format(
-                    rarity=f" {rarity}" if rarity else "", slot=f" {slot}" if slot else ""
+                    rarity=f" {rarity}" if rarity else "", slot=f" {slot.get_name()}" if slot else ""
                 )
             else:
                 msg = _("Are you sure you want to sell **ALL ITEMS** in your inventory?")
@@ -508,9 +491,7 @@ class BackPackCommands(AdventureMixin):
                     if rarity and item.rarity is not rarity:
                         continue
                     if slot:
-                        if len(item.slot) == 1 and slot != item.slot[0]:
-                            continue
-                        elif len(item.slot) == 2 and slot != "two handed":
+                        if item.slot is not slot:
                             continue
                     item_price = 0
                     old_owned = item.owned
@@ -684,7 +665,7 @@ class BackPackCommands(AdventureMixin):
             )
         else:
             item = lookup[0]
-            hand = item.slot[0] if len(item.slot) < 2 else "two handed"
+            hand = item.slot.get_name()
             currency_name = await bank.get_currency_name(
                 ctx.guild,
             )
@@ -797,7 +778,7 @@ class BackPackCommands(AdventureMixin):
         Note: An item **degrade** level is how many rebirths it will last, before it is broken down.
         """
         assert isinstance(rarity, Rarities) or rarity is None
-        assert isinstance(slot, str) or slot is None
+        assert isinstance(slot, Slot) or slot is None
         if not await self.allow_in_dm(ctx):
             return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
         if not ctx.invoked_subcommand:
@@ -806,13 +787,6 @@ class BackPackCommands(AdventureMixin):
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
-            if slot:
-                slot = slot.lower()
-                if slot not in ORDER:
-                    return await smart_embed(
-                        ctx,
-                        _("{} is not a valid slot, select one of {}").format(slot, humanize_list(ORDER)),
-                    )
 
             backpack_pages = await c.get_backpack(rarity=rarity, slot=slot, show_delta=show_diff, equippable=True)
             if backpack_pages:

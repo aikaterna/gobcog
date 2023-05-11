@@ -3,10 +3,9 @@ import asyncio
 import logging
 import random
 import time
-from typing import Literal, Optional
+from typing import Optional
 
 import discord
-from beautifultable import ALIGN_LEFT, BeautifulTable
 from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
@@ -16,7 +15,7 @@ from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ORDER, RARITIES, Rarities
+from .constants import Rarities, Slot
 from .converters import RarityConverter
 from .helpers import LootView, _sell, escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
@@ -138,7 +137,7 @@ class LootCommands(AdventureMixin):
         if rarity is None:
             rarity = Rarities.normal
         if slot is None:
-            slot = random.choice(ORDER)
+            slot = random.choice([i for i in Slot])
         name = ""
         stats = {"att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 0}
 
@@ -174,11 +173,11 @@ class LootCommands(AdventureMixin):
             name += f" {of_keyword} {suffix}"
             add_stats(suffix_stats)
 
-        slot_list = [slot] if slot != "two handed" else ["left", "right"]
+        # slot_list = [slot] if slot != "two handed" else ["left", "right"]
         return Item(
             ctx=ctx,
             name=name,
-            slot=slot_list,
+            slot=slot.to_json(),
             rarity=rarity.name,
             att=stats["att"],
             int=stats["int"],
@@ -364,14 +363,14 @@ class LootCommands(AdventureMixin):
                 )
             )
             return None
-        slot = item.slot[0]
-        old_item = getattr(character, item.slot[0], None)
+        slot = item.slot
+        old_item = getattr(character, item.slot.name, None)
         old_stats = ""
 
         if old_item:
-            old_slot = old_item.slot[0]
-            if len(old_item.slot) > 1:
-                old_slot = _("two handed")
+            old_slot = old_item.slot
+            if old_item.slot is Slot.two_handed:
+                old_slot = old_item.slot.get_name()
                 att = old_item.att * 2
                 cha = old_item.cha * 2
                 intel = old_item.int * 2
@@ -394,8 +393,8 @@ class LootCommands(AdventureMixin):
                 f"DEX: {str(dex)}, "
                 f"LUCK: {str(luck)}) "
             )
-        if len(item.slot) > 1:
-            slot = _("two handed")
+        if item.slot is Slot.two_handed:
+            slot = item.slot.get_name()
             att = item.att * 2
             cha = item.cha * 2
             intel = item.int * 2
@@ -520,7 +519,7 @@ class LootCommands(AdventureMixin):
                     f"{bold(ctx.author.display_name)}, you need to be level "
                     f"`{equiplevel}` to equip this item. I've put it in your backpack.",
                 )
-            if not getattr(character, item.slot[0]):
+            if not getattr(character, item.slot.name):
                 equip_msg = box(
                     _("{user} equipped {item} ({slot} slot).").format(
                         user=escape(ctx.author.display_name), item=item, slot=slot
@@ -533,7 +532,7 @@ class LootCommands(AdventureMixin):
                         user=escape(ctx.author.display_name),
                         item=item,
                         slot=slot,
-                        old_item=getattr(character, item.slot[0]),
+                        old_item=getattr(character, item.slot.name),
                     ),
                     lang="ansi",
                 )

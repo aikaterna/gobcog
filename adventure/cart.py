@@ -15,7 +15,7 @@ from redbot.core.utils.chat_formatting import box, humanize_number
 
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ANSITextColours, Rarities
+from .constants import ANSITextColours, Rarities, Slot
 from .helpers import _get_epoch, escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
@@ -196,18 +196,18 @@ class Trader(discord.ui.View):
             currency_name = "credits"
         for (index, item) in enumerate(stock):
             item = stock[index]
-            if len(item["item"].slot) == 2:  # two handed weapons add their bonuses twice
-                hand = "two handed"
+            if item["item"].slot is Slot.two_handed:  # two handed weapons add their bonuses twice
+                hand = item["item"].slot.get_name()
                 att = item["item"].att * 2
                 cha = item["item"].cha * 2
                 intel = item["item"].int * 2
                 luck = item["item"].luck * 2
                 dex = item["item"].dex * 2
             else:
-                if item["item"].slot[0] == "right" or item["item"].slot[0] == "left":
-                    hand = item["item"].slot[0] + _(" handed")
+                if item["item"].slot is Slot.right or item["item"].slot is Slot.left:
+                    hand = item["item"].slot.get_name() + _(" handed")
                 else:
-                    hand = item["item"].slot[0] + _(" slot")
+                    hand = item["item"].slot.get_name() + _(" slot")
                 att = item["item"].att
                 cha = item["item"].cha
                 intel = item["item"].int

@@ -23,7 +23,7 @@ from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
 from .charsheet import Character, Item
-from .constants import DEV_LIST, ORDER, RARITIES, HeroClasses, Rarities, Skills
+from .constants import DEV_LIST, ORDER, RARITIES, HeroClasses, Rarities, Skills, Slot
 from .helpers import smart_embed
 
 log = logging.getLogger("red.cogs.adventure")
@@ -456,24 +456,24 @@ class EquipmentConverter(Transformer):
             raise BadArgument
         if argument.lower() == "all":
             items = []
-            for slot in ORDER:
-                if slot == "two handed":
+            for slot in Slot:
+                if slot is Slot.two_handed:
                     continue
-                equipped_item = getattr(c, slot)
+                equipped_item = getattr(c, slot.name)
                 if not equipped_item:
                     continue
                 items.append(equipped_item)
             return items
 
-        if argument.lower() in ORDER:
-            for slot in ORDER:
-                if slot == "two handed":
+        if argument.lower() in [i.get_name().lower() for i in Slot]:
+            for slot in Slot:
+                if slot is Slot.two_handed:
                     continue
-                equipped_item = getattr(c, slot)
+                equipped_item = getattr(c, slot.name)
                 if not equipped_item:
                     continue
-                if (equipped_item.slot[0] == argument.lower()) or (
-                    len(equipped_item.slot) > 1 and "two handed" == argument.lower()
+                if (equipped_item.slot.get_name().lower() == argument.lower()) or (
+                    equipped_item.slot is Slot.two_handed and "two handed" == argument.lower()
                 ):
                     return equipped_item
 
@@ -482,14 +482,14 @@ class EquipmentConverter(Transformer):
             i
             for i in c.get_current_equipment()
             if argument.lower() in str(i).lower()
-            if len(i.slot) != 2 or (str(i) not in matched and not matched.add(str(i)))
+            if i.slot is not Slot.two_handed or (str(i) not in matched and not matched.add(str(i)))
         )
         matched = set()
         lookup_m = list(
             i
             for i in c.get_current_equipment()
             if argument.lower() == str(i).lower()
-            if len(i.slot) != 2 or (str(i) not in matched and not matched.add(str(i)))
+            if i.slot is not Slot.two_handed or (str(i) not in matched and not matched.add(str(i)))
         )
 
         if len(lookup) == 1:
@@ -622,20 +622,26 @@ class ThemeSetPetConverter(Converter):
 
 class SlotConverter(Transformer):
     @classmethod
-    async def convert(cls, ctx: commands.Context, argument: str) -> Optional[str]:
+    async def convert(cls, ctx: commands.Context, argument: str) -> Optional[Slot]:
         if argument:
-            slot = argument.lower()
-            if slot not in ORDER:
-                raise BadArgument
-        return argument
+            try:
+                return Slot.get_from_name(argument)
+            except ValueError:
+                raise BadArgument(
+                    _("{provided} is not a valid slot, select one of {slots}").format(
+                        provided=argument, slots=humanize_list([i.get_name() for i in Slot])
+                    )
+                )
+
+        return None
 
     @classmethod
-    async def transform(cls, interaction: discord.Interaction, argument: str) -> Optional[str]:
+    async def transform(cls, interaction: discord.Interaction, argument: str) -> Optional[Slot]:
         ctx = await interaction.client.get_context(interaction)
         return cls.convert(ctx, argument)
 
     async def autocomplete(self, interaction: discord.Interaction, current: str) -> List[Choice]:
-        return [Choice(name=i, value=i) for i in ORDER if current.lower() in i]
+        return [Choice(name=i.get_name(), value=i.name) for i in Slot if current.lower() in i.get_name().lower()]
 
 
 class RarityConverter(Transformer):
@@ -793,7 +799,7 @@ class RarityAction(argparse.Action):
 
         # Generate choices from the Enum
         options = tuple(
-            list(i.lower() for i in enum_type.names().keys()) + list(i.lower() for i in enum_type.names().values())
+            set(list(i.lower() for i in enum_type.names().keys()) + list(i.lower() for i in enum_type.names().values()))
         )
         kwargs.setdefault("choices", options)
 
@@ -846,7 +852,7 @@ class BackpackFilterParser(commands.Converter):
         parser.add_argument("--deg", dest="degrade", nargs="+")
         parser.add_argument("--degrade", dest="degrade", nargs="+")
 
-        parser.add_argument("--slot", nargs="*", dest="slot", default=ORDER, choices=ORDER)
+        parser.add_argument("--slot", nargs="*", dest="slot", default=[i for i in Slot], type=Slot, action=RarityAction)
 
         parser.add_argument(
             "--rarity", nargs="*", dest="rarity", default=[i for i in Rarities], type=Rarities, action=RarityAction

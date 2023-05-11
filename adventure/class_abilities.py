@@ -17,7 +17,7 @@ from redbot.core.utils.predicates import MessagePredicate
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ORDER, HeroClasses, Rarities
+from .constants import HeroClasses, Rarities, Slot
 from .converters import HeroClassConverter, ItemConverter
 from .helpers import ConfirmView, escape, is_dev, smart_embed
 from .menus import BaseMenu, SimpleSource
@@ -1129,19 +1129,16 @@ class ClassAbilities(AdventureMixin):
         newint = int((base_int * modifier) + base_int)
         newdex = int((base_dex * modifier) + base_dex)
         newluck = int((base_luck * modifier) + base_luck)
-        newslot = random.choice(ORDER)
-        if newslot == "two handed":
-            newslot = ["right", "left"]
-        else:
-            newslot = [newslot]
-        if len(newslot) == 2:  # two handed weapons add their bonuses twice
+        newslot = random.choice([i for i in Slot])
+
+        if newslot is Slot.two_handed:  # two handed weapons add their bonuses twice
             hand = "two handed"
         else:
-            if newslot[0] == "right" or newslot[0] == "left":
-                hand = newslot[0] + " handed"
+            if newslot is Slot.right or newslot is Slot.left:
+                hand = newslot.get_name() + " handed"
             else:
-                hand = newslot[0] + " slot"
-        if len(newslot) == 2:
+                hand = newslot.get_name() + " slot"
+        if newslot is Slot.two_handed:
             two_handed_msg = box(
                 _(
                     "{author}, your forging roll was {dice}({roll}).\n"
@@ -1213,7 +1210,7 @@ class ClassAbilities(AdventureMixin):
                     name = reply.content.lower()
         item = {
             name: {
-                "slot": newslot,
+                "slot": newslot.to_json(),
                 "att": newatt,
                 "cha": newdip,
                 "int": newint,
