@@ -118,7 +118,7 @@ class LootCommands(AdventureMixin):
                 timeout=60,
             ).start(ctx=ctx)
 
-    async def _genitem(self, ctx: commands.Context, rarity: Optional[Rarities] = None, slot: str = None):
+    async def _genitem(self, ctx: commands.Context, rarity: Optional[Rarities] = None, slot: Optional[Slot] = None):
         """Generate an item."""
         if rarity is Rarities.set:
             items = list(self.TR_GEAR_SET.items())
@@ -126,7 +126,7 @@ class LootCommands(AdventureMixin):
                 [
                     i
                     for i in items
-                    if i[1]["slot"] == [slot] or (slot == "two handed" and i[1]["slot"] == ["left", "right"])
+                    if i[1]["slot"] == [slot.name] or (slot is Slot.two_handed and len(i[1]["slot"]) > 1)
                 ]
                 if slot
                 else items
