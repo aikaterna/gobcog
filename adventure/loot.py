@@ -123,11 +123,7 @@ class LootCommands(AdventureMixin):
         if rarity is Rarities.set:
             items = list(self.TR_GEAR_SET.items())
             items = (
-                [
-                    i
-                    for i in items
-                    if i[1]["slot"] == [slot.name] or (slot is Slot.two_handed and len(i[1]["slot"]) > 1)
-                ]
+                [i for i in items if i[1]["slot"] == [slot.name] or (slot is Slot.two_handed and len(i[1]["slot"]) > 1)]
                 if slot
                 else items
             )
@@ -225,6 +221,7 @@ class LootCommands(AdventureMixin):
                     boxes=humanize_list([i.get_name() for i in costs.keys()]),
                 ),
             )
+            return
 
         rebirth_normal = 2
         rebirth_rare = 8

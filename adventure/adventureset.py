@@ -15,7 +15,7 @@ from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .constants import ORDER
+from .constants import Slot
 from .converters import DayConverter, PercentageConverter, parse_timedelta
 from .helpers import has_separated_economy, smart_embed
 
@@ -369,10 +369,10 @@ class AdventureSetCommands(AdventureMixin):
             except Exception as exc:
                 log.exception("Error with the new character sheet", exc_info=exc)
                 return
-            for slot in ORDER:
-                if slot == "two handed":
+            for slot in Slot:
+                if slot is Slot.two_handed:
                     continue
-                equipped_item = getattr(c, slot)
+                equipped_item = slot.get_item_slot(c)
                 if equipped_item and equipped_item.name.lower() == full_item_name.lower():
                     item = equipped_item
             if item:

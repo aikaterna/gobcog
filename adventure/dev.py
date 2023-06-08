@@ -8,15 +8,15 @@ from typing import Optional, Union
 import discord
 from redbot.core import commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number, pagify
+from redbot.core.utils.chat_formatting import bold, box, humanize_number, pagify
 
 from .abc import AdventureMixin
 from .bank import bank
 from .cart import Trader
 from .charsheet import Character
-from .constants import DEV_LIST, ORDER, RARITIES, Rarities
-from .converters import RarityConverter
-from .helpers import escape, is_dev, smart_embed
+from .constants import DEV_LIST
+from .converters import RarityConverter, SlotConverter
+from .helpers import escape, is_dev
 from .menus import BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -78,14 +78,12 @@ class DevCommands(AdventureMixin):
 
     @commands.command()
     @commands.is_owner()
-    async def genitems(self, ctx: commands.Context, rarity: RarityConverter, slot: str, num: int = 1):
+    async def genitems(self, ctx: commands.Context, rarity: RarityConverter, slot: SlotConverter, num: int = 1):
         """[Dev] Generate random items."""
         if not await self.no_dev_prompt(ctx):
             return
         user = ctx.author
         slot = slot.lower()
-        if slot not in ORDER:
-            return await smart_embed(ctx, _("Invalid slot; choose one of {list}.").format(list=humanize_list(ORDER)))
         async with self.get_lock(user):
             try:
                 c = await Character.from_json(ctx, self.config, user, self._daily_bonus)

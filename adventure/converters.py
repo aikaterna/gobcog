@@ -23,7 +23,7 @@ from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
 from .charsheet import Character, Item
-from .constants import DEV_LIST, ORDER, RARITIES, HeroClasses, Rarities, Skills, Slot
+from .constants import DEV_LIST, RARITIES, HeroClasses, Rarities, Skills, Slot
 from .helpers import smart_embed
 
 log = logging.getLogger("red.cogs.adventure")
@@ -344,10 +344,10 @@ class EquipableItemConverter(Transformer):
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
         equipped_items = set()
-        for slots in ORDER:
-            if slots == "two handed":
+        for slot in Slot:
+            if slot is Slot.two_handed:
                 continue
-            item = getattr(c, slots, None)
+            item = slot.get_item_slot(c)
             if item:
                 equipped_items.add(str(item))
         no_markdown = Item.remove_markdowns(argument)
@@ -427,10 +427,10 @@ class EquipableItemConverter(Transformer):
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
         equipped_items = set()
-        for slots in ORDER:
-            if slots == "two handed":
+        for slot in Slot:
+            if slot is Slot.two_handed:
                 continue
-            item = getattr(c, slots, None)
+            item = slot.get_item_slot(c)
             if item:
                 equipped_items.add(str(item))
         lookup = [

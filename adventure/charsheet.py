@@ -17,16 +17,7 @@ from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import box, escape, humanize_list, humanize_number
 
 from .bank import bank
-from .constants import (
-    DEV_LIST,
-    REBIRTH_LVL,
-    REBIRTH_STEP,
-    ANSITextColours,
-    HeroClasses,
-    Rarities,
-    Treasure,
-    Slot,
-)
+from .constants import DEV_LIST, REBIRTH_LVL, REBIRTH_STEP, ANSITextColours, HeroClasses, Rarities, Slot, Treasure
 
 log = logging.getLogger("red.cogs.adventure")
 
@@ -46,7 +37,7 @@ class Item:
             self.name: str = kwargs.get("name", "Default Name").lower()
         try:
             self.slot: Slot = Slot.from_list(kwargs.get("slot", []))
-        except ValueError:
+        except KeyError:
             self.slot = Slot.head
         self.att: int = kwargs.get("att", 0)
         self.int: int = kwargs.get("int", 0)

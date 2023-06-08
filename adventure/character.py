@@ -14,7 +14,7 @@ from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ORDER, Rarities, Slot
+from .constants import Rarities, Slot
 from .converters import EquipableItemConverter, EquipmentConverter, SkillConverter
 from .helpers import ConfirmView, _title_case, escape, smart_embed
 from .menus import BaseMenu, SimpleSource
@@ -351,10 +351,7 @@ class CharacterCommands(AdventureMixin):
         luck = 0
 
         def get_slot_index(slot: Slot):
-            slot = slot[0]
-            if slot not in ORDER:
-                return float("inf")
-            return ORDER.index(slot)
+            return slot.order()
 
         data_sorted = sorted(userdata["items"].items(), key=get_slot_index)
         items_names = set()

@@ -3,10 +3,13 @@ from __future__ import annotations
 import logging
 import time
 from enum import Enum
-from typing import Dict, Optional, Union, List
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import humanize_list
+
+if TYPE_CHECKING:
+    from .charsheet import Character, Item
 
 _ = Translator("Adventure", __file__)
 
@@ -51,7 +54,12 @@ class Slot(Enum):
             )
         )
 
-    def order(self) -> Optional[int]:
+    def get_item_slot(self, character: Character) -> Optional[Item]:
+        if self is Slot.two_handed:
+            return None
+        return getattr(character, self.name, None)
+
+    def order(self) -> int:
         return {
             Slot.head: 0,
             Slot.neck: 1,
@@ -64,28 +72,28 @@ class Slot(Enum):
             Slot.right: 8,
             Slot.two_handed: 9,
             Slot.ring: 10,
-            Slot.charm: 11
-        }.get(self)
+            Slot.charm: 11,
+        }.get(self, -1)
 
     @staticmethod
-    def names() -> Dict[str, str]:
+    def names() -> Dict[Slot, str]:
         return {
-            "head": _("Head"),
-            "neck": _("Neck"),
-            "chest": _("Chest"),
-            "gloves": _("Gloves"),
-            "belt": _("Belt"),
-            "legs": _("Legs"),
-            "boots": _("Boots"),
-            "left": _("Left"),
-            "right": _("Right"),
-            "two handed": _("Two Handed"),
-            "ring": _("Ring"),
-            "charm": _("Charm")
+            Slot.head: _("Head"),
+            Slot.neck: _("Neck"),
+            Slot.chest: _("Chest"),
+            Slot.gloves: _("Gloves"),
+            Slot.belt: _("Belt"),
+            Slot.legs: _("Legs"),
+            Slot.boots: _("Boots"),
+            Slot.left: _("Left"),
+            Slot.right: _("Right"),
+            Slot.two_handed: _("Two Handed"),
+            Slot.ring: _("Ring"),
+            Slot.charm: _("Charm"),
         }
 
     def get_name(self) -> str:
-        return self.names().get(self.name.replace("_", " "))
+        return self.names().get(self)
 
     def to_json(self) -> List[str]:
         if self is Slot.two_handed:
