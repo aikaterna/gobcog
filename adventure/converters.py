@@ -663,7 +663,15 @@ class RarityConverter(Transformer):
         return await cls.convert(ctx, argument)
 
     async def autocomplete(self, interaction: discord.Interaction, current: str) -> List[Choice]:
-        return [Choice(name=i.get_name(), value=i.name) for i in Rarities if current.lower() in i.get_name().lower()]
+        choices = []
+        # cog = interaction.client.get_cog("Adventure")
+        log.debug(interaction.command)
+        for rarity in Rarities:
+            if interaction.command and interaction.command.name in ["loot", "convert"] and not rarity.is_chest:
+                continue
+            if current.lower() in rarity.get_name().lower():
+                choices.append(Choice(name=rarity.get_name(), value=rarity.name))
+        return choices
 
 
 class SkillConverter(Transformer):
