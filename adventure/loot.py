@@ -42,56 +42,56 @@ class LootCommands(AdventureMixin):
         Use the box rarity type with the command: normal, rare, epic, legendary, ascended or set.
         """
         log.debug(box_type)
-        await ctx.defer()
-        if (not is_dev(ctx.author) and number > 100) or number < 1:
-            return await smart_embed(ctx, _("Nice try :smirk:."))
-        if self.in_adventure(ctx):
-            return await smart_embed(
-                ctx,
-                _("You tried to open a loot chest but then realised you left them all back at the inn."),
-            )
-        if not await self.allow_in_dm(ctx):
-            return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
-        msgs = []
-        async with self.get_lock(ctx.author):
-            try:
-                c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
-            except Exception as exc:
-                log.exception("Error with the new character sheet", exc_info=exc)
-                return
-            if box_type is None:
-                chests = c.treasure.ansi
-                return await ctx.send(
-                    box(
-                        _("{author} owns {chests} chests.").format(
-                            author=escape(ctx.author.display_name),
-                            chests=chests,
-                        ),
-                        lang="ansi",
-                    )
-                )
-            if c.is_backpack_full(is_dev=is_dev(ctx.author)):
-                await ctx.send(
-                    _("{author}, your backpack is currently full.").format(author=bold(ctx.author.display_name))
-                )
-                return
-            if not box_type.is_chest:
+        async with ctx.typing():
+            if (not is_dev(ctx.author) and number > 100) or number < 1:
+                return await smart_embed(ctx, _("Nice try :smirk:."))
+            if self.in_adventure(ctx):
                 return await smart_embed(
                     ctx,
-                    _("There is talk of a {} treasure chest but nobody ever saw one.").format(box_type.get_name()),
+                    _("You tried to open a loot chest but then realised you left them all back at the inn."),
                 )
-            redux = box_type.value
-            treasure = c.treasure[redux]
-            if treasure < 1 or treasure < number:
-                await smart_embed(
-                    ctx,
-                    _("{author}, you do not have enough {box} treasure chests to open.").format(
-                        author=bold(ctx.author.display_name), box=box_type
-                    ),
-                )
-            else:
-                if number > 1:
-                    async with ctx.typing():
+            if not await self.allow_in_dm(ctx):
+                return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
+            msgs = []
+            async with self.get_lock(ctx.author):
+                try:
+                    c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
+                except Exception as exc:
+                    log.exception("Error with the new character sheet", exc_info=exc)
+                    return
+                if box_type is None:
+                    chests = c.treasure.ansi
+                    return await ctx.send(
+                        box(
+                            _("{author} owns {chests} chests.").format(
+                                author=escape(ctx.author.display_name),
+                                chests=chests,
+                            ),
+                            lang="ansi",
+                        )
+                    )
+                if c.is_backpack_full(is_dev=is_dev(ctx.author)):
+                    await ctx.send(
+                        _("{author}, your backpack is currently full.").format(author=bold(ctx.author.display_name))
+                    )
+                    return
+                if not box_type.is_chest:
+                    return await smart_embed(
+                        ctx,
+                        _("There is talk of a {} treasure chest but nobody ever saw one.").format(box_type.get_name()),
+                    )
+                redux = box_type.value
+                treasure = c.treasure[redux]
+                if treasure < 1 or treasure < number:
+                    await smart_embed(
+                        ctx,
+                        _("{author}, you do not have enough {box} treasure chests to open.").format(
+                            author=bold(ctx.author.display_name), box=box_type
+                        ),
+                    )
+                    return
+                else:
+                    if number > 1:
                         # atomically save reduced loot count then lock again when saving inside
                         # open chests
                         c.treasure[redux] -= number
@@ -104,12 +104,12 @@ class LootCommands(AdventureMixin):
                         tables = await c.make_backpack_tables(rows, msg)
                         for t in tables:
                             msgs.append(t)
-                else:
-                    # atomically save reduced loot count then lock again when saving inside
-                    # open chests
-                    c.treasure[redux] -= 1
-                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
-                    await self._open_chest(ctx, ctx.author, box_type, character=c)  # returns item and msg
+                    else:
+                        # atomically save reduced loot count then lock again when saving inside
+                        # open chests
+                        c.treasure[redux] -= 1
+                        await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
+                        await self._open_chest(ctx, ctx.author, box_type, character=c)  # returns item and msg
         if msgs:
             await BaseMenu(
                 source=SimpleSource(msgs),
