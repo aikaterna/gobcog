@@ -123,7 +123,7 @@ class LootCommands(AdventureMixin):
         if rarity is Rarities.set:
             items = list(self.TR_GEAR_SET.items())
             items = (
-                [i for i in items if i[1]["slot"] == [slot.name] or (slot is Slot.two_handed and len(i[1]["slot"]) > 1)]
+                [i for i in items if i[1]["slot"] == [slot.value] or (slot is Slot.two_handed and len(i[1]["slot"]) > 1)]
                 if slot
                 else items
             )
@@ -156,7 +156,7 @@ class LootCommands(AdventureMixin):
         for stat in stats.keys():
             stats[stat] += material_stat
 
-        equipment, equipment_stats = random.choice(list(self.EQUIPMENT[slot].items()))
+        equipment, equipment_stats = random.choice(list(self.EQUIPMENT[slot.value].items()))
         name += f"{equipment}"
         add_stats(equipment_stats)
 

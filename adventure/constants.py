@@ -39,6 +39,9 @@ class Slot(Enum):
             return cls.two_handed
         return cls(data[0])
 
+    def __str__(self):
+        return self.names()[self]
+
     @classmethod
     def get_from_name(cls, name: str) -> Slot:
         for i in cls:
@@ -92,7 +95,7 @@ class Slot(Enum):
             Slot.charm: _("Charm"),
         }
 
-    def get_name(self) -> str:
+    def get_name(self) -> Optional[str]:
         return self.names().get(self)
 
     def to_json(self) -> List[str]:
