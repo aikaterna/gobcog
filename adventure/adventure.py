@@ -2336,16 +2336,12 @@ class Adventure(
     async def _add_rewards(
         self, ctx: commands.Context, user: Union[discord.Member, discord.User], exp: int, cp: int, special: Treasure
     ) -> Optional[str]:
-        lock = self.get_lock(user)
-        if not lock.locked():
-            await lock.acquire()
-        try:
-            c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            lock.release()
-            return
-        else:
+        async with self.get_lock(user):
+            try:
+                c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
             rebirth_text = ""
             c.exp += exp
             member = ctx.guild.get_member(user.id)
@@ -2408,10 +2404,6 @@ class Adventure(
                 c.treasure += special
             await self.config.user(user).set(await c.to_json(ctx, self.config))
             return rebirth_text
-        finally:
-            lock = self.get_lock(user)
-            with contextlib.suppress(Exception):
-                lock.release()
 
     async def _adv_countdown(self, ctx: commands.Context, seconds, title) -> asyncio.Task:
         await self._data_check(ctx)
