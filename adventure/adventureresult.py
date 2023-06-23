@@ -1,19 +1,33 @@
 import logging
-from typing import List, MutableMapping
+from typing import List, MutableMapping, TypedDict
 
 from redbot.core import commands
 
 log = logging.getLogger("red.cogs.adventure")
 
 
+class StatRange(TypedDict):
+    stat_type: str
+    min_stat: float
+    max_stat: float
+    win_percent: float
+
+
+class Raid(TypedDict):
+    main_action: str
+    amount: float
+    num_ppl: int
+    success: bool
+
+
 class AdventureResults:
     """Object to store recent adventure results."""
 
-    def __init__(self, num_raids):
-        self._num_raids = num_raids
-        self._last_raids: MutableMapping[int, List] = {}
+    def __init__(self, num_raids: int):
+        self._num_raids: int = num_raids
+        self._last_raids: MutableMapping[int, List[Raid]] = {}
 
-    def add_result(self, ctx: commands.Context, main_action, amount, num_ppl, success):
+    def add_result(self, ctx: commands.Context, main_action: str, amount: float, num_ppl: int, success: bool):
         """Add result to this object.
         :main_action: Main damage action taken by the adventurers
             (highest amount dealt). Should be either "attack" or
@@ -26,14 +40,16 @@ class AdventureResults:
             self._last_raids[ctx.guild.id] = []
 
         if len(self._last_raids.get(ctx.guild.id, [])) >= self._num_raids:
-            if ctx.guild.id in self._last_raids:
+            try:
                 self._last_raids[ctx.guild.id].pop(0)
-        raid_dict = {}
-        for var in ("main_action", "amount", "num_ppl", "success"):
-            raid_dict[var] = locals()[var]
-        self._last_raids[ctx.guild.id].append(raid_dict)
+            except IndexError:
+                pass
 
-    def get_stat_range(self, ctx: commands.Context):
+        self._last_raids[ctx.guild.id].append(
+            Raid(main_action=main_action, amount=amount, num_ppl=num_ppl, success=success)
+        )
+
+    def get_stat_range(self, ctx: commands.Context) -> StatRange:
         """Return reasonable stat range for monster pool to have based
         on last few raids' damage.
 
@@ -44,9 +60,13 @@ class AdventureResults:
         # damage
         if ctx.guild.id not in self._last_raids:
             self._last_raids[ctx.guild.id] = []
-        SOLO_RAID_SCALE = 0.25
+        SOLO_RAID_SCALE: float = 0.25
+        min_stat: float = 0.0
+        max_stat: float = 0.0
+        stat_type: str = "hp"
+        win_percent: float = 0.0
         if len(self._last_raids.get(ctx.guild.id, [])) == 0:
-            return {"stat_type": "hp", "min_stat": 0, "max_stat": 0, "win_percent": 0}
+            return StatRange(stat_type=stat_type, min_stat=min_stat, max_stat=max_stat, win_percent=win_percent)
 
         # tally up stats for raids
         num_attack = 0
@@ -90,11 +110,7 @@ class AdventureResults:
             if win_percent < 0.5:
                 min_stat = avg_amount * win_percent
                 max_stat = avg_amount * 1.5
-
-        stats_dict = {}
-        for var in ("stat_type", "min_stat", "max_stat", "win_percent"):
-            stats_dict[var] = locals()[var]
-        return stats_dict
+        return StatRange(stat_type=stat_type, min_stat=min_stat, max_stat=max_stat, win_percent=win_percent)
 
     def __str__(self):
         return str(self._last_raids)
