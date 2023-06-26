@@ -23,7 +23,7 @@ from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
 from .charsheet import Character, Item
-from .constants import DEV_LIST, RARITIES, HeroClasses, Rarities, Skills, Slot
+from .constants import DEV_LIST, HeroClasses, Rarities, Skills, Slot
 from .helpers import smart_embed
 
 log = logging.getLogger("red.cogs.adventure")
@@ -133,7 +133,8 @@ class Stats(Converter):
         except AttributeError:
             raise BadArgument(_("No slot position was provided."))
         try:
-            result["rarity"] = RARITY.search(argument).group(0)
+            rarity_re = "|".join(i.name for i in Rarities if i.value < Rarities.pet.value)
+            result["rarity"] = re.search(rarity_re, argument, flags=re.I).group(0)
         except AttributeError:
             raise BadArgument(_("No rarity was provided."))
         for key, value in possible_stats.items():
@@ -161,13 +162,17 @@ class ItemsConverter(Converter):
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             raise BadArgument
+        rarity = None
         try:
-            rarity_match = RARITY.match(argument.lower()).group(0)
-            for r in Rarities:
-                if rarity_match.lower() in r:
-                    rarity = r
+            rarity_re = "|".join(f"{k}|{v}" for k, v in Rarities.names().items())
+            rarity_match = re.match(rarity_re, argument.lower(), flags=re.I)
+            if rarity_match:
+                try:
+                    rarity = Rarities.get_from_name(str(rarity_match.group(0)))
+                except KeyError:
+                    pass
         except AttributeError:
-            rarity = None
+            pass
 
         if argument.lower() == "all":
             rarity = True
@@ -185,10 +190,10 @@ class ItemsConverter(Converter):
             for i in lookup_e:
                 _temp_items.add(str(i))
         elif rarity is True:
-            lookup = list(i for x, i in c.backpack.items())
+            lookup = list(i for i in c.backpack.values())
             return "all", lookup
         else:
-            lookup = list(i for x, i in c.backpack.items() if i.rarity is rarity)
+            lookup = list(i for i in c.backpack.values() if i.rarity is rarity)
             if lookup:
                 return "all", lookup
             raise BadArgument(_("You don't own any `{}` items.").format(argument))
