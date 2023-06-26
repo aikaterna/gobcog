@@ -20,7 +20,6 @@ from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number, pagify
-from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
 from .adventureresult import AdventureResults
