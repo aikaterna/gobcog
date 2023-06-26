@@ -180,8 +180,8 @@ class ItemsConverter(Converter):
         if rarity is None:
             no_markdown = Item.remove_markdowns(argument)
             lookup = list(i for x, i in c.backpack.items() if no_markdown.lower() in x.lower())
-            lookup_m = list(i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i))
-            lookup_e = list(i for x, i in c.backpack.items() if argument == str(i))
+            lookup_m = list(i for i in c.backpack.values() if argument.lower() == str(i).lower() and str(i))
+            lookup_e = list(i for i in c.backpack.values() if argument == str(i))
             _temp_items = set()
             for i in lookup:
                 _temp_items.add(str(i))
@@ -207,7 +207,7 @@ class ItemsConverter(Converter):
         elif len(lookup) == 0 and len(lookup_m) == 0:
             raise BadArgument(_("`{}` doesn't seem to match any items you own.").format(argument))
         else:
-            lookup = list(i for x, i in c.backpack.items() if str(i) in _temp_items)
+            lookup = list(i for i in c.backpack.values() if str(i) in _temp_items)
             if len(lookup) > 10:
                 raise BadArgument(
                     _("You have too many items matching the name `{}`, please be more specific.").format(argument)
@@ -272,8 +272,8 @@ class ItemConverter(Transformer):
             raise BadArgument
         no_markdown = Item.remove_markdowns(argument)
         lookup = list(i for x, i in c.backpack.items() if no_markdown.lower() in x.lower())
-        lookup_m = list(i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i))
-        lookup_e = list(i for x, i in c.backpack.items() if argument == str(i))
+        lookup_m = list(i for i in c.backpack.values() if argument.lower() == str(i).lower() and str(i))
+        lookup_e = list(i for i in c.backpack.values() if argument == str(i))
 
         _temp_items = set()
         for i in lookup:
@@ -292,7 +292,7 @@ class ItemConverter(Transformer):
         elif len(lookup) == 0 and len(lookup_m) == 0:
             raise BadArgument(_("`{}` doesn't seem to match any items you own.").format(argument))
         else:
-            lookup = list(i for x, i in c.backpack.items() if str(i) in _temp_items)
+            lookup = list(i for i in c.backpack.values() if str(i) in _temp_items)
             if len(lookup) > 25:
                 raise BadArgument(
                     _("You have too many items matching the name `{}`, please be more specific.").format(argument)
@@ -330,7 +330,7 @@ class ItemConverter(Transformer):
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             return []
-        return [Choice(name=str(x), value=x.name) for i, x in c.backpack.items() if current.lower() in str(x).lower()][
+        return [Choice(name=str(x), value=x.name) for x in c.backpack.values() if current.lower() in str(x).lower()][
             :25
         ]
 
@@ -360,17 +360,17 @@ class EquipableItemConverter(Transformer):
             i for x, i in c.backpack.items() if no_markdown.lower() in x.lower() and str(i) not in equipped_items
         )
         lookup_m = list(
-            i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i) not in equipped_items
+            i for i in c.backpack.values() if argument.lower() == str(i).lower() and str(i) not in equipped_items
         )
-        lookup_e = list(i for x, i in c.backpack.items() if argument == str(i) and str(i) not in equipped_items)
+        lookup_e = list(i for i in c.backpack.values() if argument == str(i) and str(i) not in equipped_items)
 
         already_lookup = list(
             i for x, i in c.backpack.items() if no_markdown.lower() in x.lower() and str(i) in equipped_items
         )
         already_lookup_m = list(
-            i for x, i in c.backpack.items() if argument.lower() == str(i).lower() and str(i) in equipped_items
+            i for i in c.backpack.values() if argument.lower() == str(i).lower() and str(i) in equipped_items
         )
-        already_lookup_e = list(i for x, i in c.backpack.items() if argument == str(i) and str(i) in equipped_items)
+        already_lookup_e = list(i for i in c.backpack.values() if argument == str(i) and str(i) in equipped_items)
 
         _temp_items = set()
         for i in lookup:
@@ -391,7 +391,7 @@ class EquipableItemConverter(Transformer):
                 raise BadArgument(_("`{}` matches the name of an item already equipped.").format(argument))
             raise BadArgument(_("`{}` doesn't seem to match any items you own.").format(argument))
         else:
-            lookup = list(i for x, i in c.backpack.items() if str(i) in _temp_items)
+            lookup = list(i for i in c.backpack.values() if str(i) in _temp_items)
             if len(lookup) > 10:
                 raise BadArgument(
                     _("You have too many items matching the name `{}`, please be more specific.").format(argument)
