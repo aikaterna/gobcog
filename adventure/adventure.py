@@ -8,7 +8,7 @@ import time
 from abc import ABC
 from datetime import datetime, timedelta
 from types import SimpleNamespace
-from typing import Literal, MutableMapping, Optional, Union
+from typing import Dict, Literal, MutableMapping, Optional, Tuple, Union
 
 import discord
 from discord.ext.commands import CheckFailure
@@ -43,6 +43,7 @@ from .loot import LootCommands
 from .negaverse import Negaverse
 from .rebirth import RebirthCommands
 from .themeset import ThemesetCommands
+from .types import Monster
 
 _ = Translator("Adventure", __file__)
 
@@ -658,7 +659,7 @@ class Adventure(
         possible_monsters = []
         stat_range = self._adv_results.get_stat_range(ctx)
         async for (e, (m, stats)) in AsyncIter(monsters.items(), steps=100).enumerate(start=1):
-            if stat_range["max_stat"] > 0:
+            if stat_range["max_stat"] > 0.0:
                 main_stat = stats["hp"] if (stat_range["stat_type"] == "attack") else stats["dipl"]
                 appropriate_range = (stat_range["min_stat"] * 0.5) <= main_stat <= (stat_range["max_stat"] * 1.2)
             else:
@@ -682,7 +683,7 @@ class Adventure(
             choice = random.choice(possible_monsters)
         return choice
 
-    def _dynamic_monster_stats(self, ctx: commands.Context, choice: MutableMapping):
+    def _dynamic_monster_stats(self, ctx: commands.Context, choice: Monster) -> Monster:
         stat_range = self._adv_results.get_stat_range(ctx)
         win_percentage = stat_range.get("win_percent", 0.5)
         choice["cdef"] = choice.get("cdef", 1.0)
@@ -776,14 +777,23 @@ class Adventure(
         choice["cdef"] = new_cdef
         return choice
 
-    async def update_monster_roster(self, ctx: commands.Context):
-        try:
-            c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
-            failed = False
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            failed = True
+    async def update_monster_roster(self, c: Optional[Character] = None) -> Tuple[Dict[str, Monster], float, bool]:
+        """
+        Gets the current list of available monsters, their stats, and whether
+        or not to spawn a transcended.
 
+        Parameters
+        ----------
+            c: Optional[Character]
+                The character used to determine actual stats of the monster.
+                If this is `None` then just basic stats will apply.
+
+        Returns
+        -------
+            Tuple[Dict[str, Monster], float, bool]
+                The Available monsters dictionary, the stats they should have scaled,
+                and whether or not it is transcended.
+        """
         transcended_chance = random.randint(0, 10)
         theme = await self.config.theme()
         extra_monsters = await self.config.themes.all()
@@ -791,17 +801,19 @@ class Adventure(
         monster_stats = 1
         monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
         transcended = False
-        if not failed:
+        # set our default return values first
+        monster_stats = 1.0
+        if transcended_chance == 5:
+            monster_stats = 2.0
+
+        # if this is a normal adventure start e.g. not a bot owner
+        # picking the adventure, then we can randomly adjust the stats
+        if c is not None:
             if transcended_chance == 5:
                 monster_stats = 2 + max((c.rebirths // 10) - 1, 0)
                 transcended = True
             elif c.rebirths >= 10:
                 monster_stats = 1 + max((c.rebirths // 10) - 1, 0) / 2
-        else:
-            if transcended_chance == 5:
-                monster_stats = 2
-            else:
-                monster_stats = 1
         return monsters, monster_stats, transcended
 
     async def _simple(self, ctx: commands.Context, adventure_msg, challenge: str = None, attribute: str = None):
@@ -817,7 +829,7 @@ class Adventure(
             else:
                 easy_mode = True
 
-        monster_roster, monster_stats, transcended = await self.update_monster_roster(ctx)
+        monster_roster, monster_stats, transcended = await self.update_monster_roster(c)
         if not challenge or challenge not in monster_roster:
             challenge = await self.get_challenge(ctx, monster_roster)
 
@@ -1370,6 +1382,7 @@ class Adventure(
                 treasure,
             )
             parsed_users = []
+
             for action_name, action in participants.items():
                 for user in action:
                     try:
@@ -1378,6 +1391,7 @@ class Adventure(
                         log.exception("Error with the new character sheet", exc_info=exc)
                         continue
                     current_val = c.adventures.get(action_name, 0)
+
                     c.adventures.update({action_name: current_val + 1})
                     if user not in parsed_users:
                         special_action = "loses" if lost or user in participants["run"] else "wins"

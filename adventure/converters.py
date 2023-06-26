@@ -714,7 +714,7 @@ class ChallengeConverter(Transformer):
         if ctx.author.id not in (*ctx.bot.owner_ids, *DEV_LIST):
             return ""
         cog = ctx.bot.get_cog("Adventure")
-        monsters, monster_stats, transcended = await cog.update_monster_roster(ctx)
+        monsters, monster_stats, transcended = await cog.update_monster_roster()
         if argument not in monsters:
             return ""
         return argument
@@ -728,8 +728,7 @@ class ChallengeConverter(Transformer):
         if interaction.user.id not in (*interaction.client.owner_ids, *DEV_LIST):
             return []
         cog = interaction.client.get_cog("Adventure")
-        ctx = await interaction.client.get_context(interaction)
-        monsters, monster_stats, transcended = await cog.update_monster_roster(ctx)
+        monsters, monster_stats, transcended = await cog.update_monster_roster()
         return [Choice(name=m, value=m) for m in monsters if current.lower() in m.lower()][:25]
 
 
