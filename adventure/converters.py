@@ -643,7 +643,7 @@ class SlotConverter(Transformer):
     @classmethod
     async def transform(cls, interaction: discord.Interaction, argument: str) -> Optional[Slot]:
         ctx = await interaction.client.get_context(interaction)
-        return cls.convert(ctx, argument)
+        return await cls.convert(ctx, argument)
 
     async def autocomplete(self, interaction: discord.Interaction, current: str) -> List[Choice]:
         return [Choice(name=i.get_name(), value=i.name) for i in Slot if current.lower() in i.get_name().lower()]
