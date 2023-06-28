@@ -1,6 +1,9 @@
 import logging
 from typing import List, MutableMapping, TypedDict
 
+from datetime import timedelta
+
+import discord
 from redbot.core import commands
 
 log = logging.getLogger("red.cogs.adventure")
@@ -18,14 +21,16 @@ class Raid(TypedDict):
     amount: float
     num_ppl: int
     success: bool
+    time: int
 
 
 class AdventureResults:
     """Object to store recent adventure results."""
 
-    def __init__(self, num_raids: int):
+    def __init__(self, num_raids: int, *, remove_old: int = -1):
         self._num_raids: int = num_raids
         self._last_raids: MutableMapping[int, List[Raid]] = {}
+        self._remove_by_age = remove_old
 
     def add_result(self, ctx: commands.Context, main_action: str, amount: float, num_ppl: int, success: bool):
         """Add result to this object.
@@ -38,6 +43,7 @@ class AdventureResults:
         """
         if ctx.guild.id not in self._last_raids:
             self._last_raids[ctx.guild.id] = []
+        self._remove_old(ctx)
 
         if len(self._last_raids.get(ctx.guild.id, [])) >= self._num_raids:
             try:
@@ -46,8 +52,17 @@ class AdventureResults:
                 pass
 
         self._last_raids[ctx.guild.id].append(
-            Raid(main_action=main_action, amount=amount, num_ppl=num_ppl, success=success)
+            Raid(main_action=main_action, amount=amount, num_ppl=num_ppl, success=success, time=ctx.message.id)
         )
+
+    def _remove_old(self, ctx: commands.Context):
+        if self._remove_by_age < 0:
+            return
+        for raid_index in range(len(self._last_raids.get(ctx.guild.id, []))):
+            raid_time = self._last_raids[ctx.guild.id][raid_index]["time"]
+            diff = ctx.message.created_at - discord.utils.snowflake_time(raid_time)
+            if diff <= timedelta(seconds=self._remove_by_age):
+                self._last_raids[ctx.guild.id].pop(raid_index)
 
     def get_stat_range(self, ctx: commands.Context) -> StatRange:
         """Return reasonable stat range for monster pool to have based
@@ -60,6 +75,7 @@ class AdventureResults:
         # damage
         if ctx.guild.id not in self._last_raids:
             self._last_raids[ctx.guild.id] = []
+        self._remove_old(ctx)
         SOLO_RAID_SCALE: float = 0.25
         min_stat: float = 0.0
         max_stat: float = 0.0
