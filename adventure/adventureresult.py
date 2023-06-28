@@ -1,7 +1,6 @@
 import logging
-from typing import List, MutableMapping, TypedDict
-
 from datetime import timedelta
+from typing import List, MutableMapping, TypedDict
 
 import discord
 from redbot.core import commands
