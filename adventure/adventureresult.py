@@ -32,6 +32,22 @@ class AdventureResults:
         self._last_raids: MutableMapping[int, List[Raid]] = {}
         self._remove_by_age = remove_old
 
+    @property
+    def remove_by_age(self):
+        return self._remove_by_age
+
+    @remove_by_age.setter
+    def remove_by_age(self, other: int):
+        self._remove_by_age = other
+
+    @property
+    def num_raids(self):
+        return self._num_raids
+
+    @num_raids.setter
+    def num_raids(self, other: int):
+        self._num_raids = other
+
     def add_result(self, ctx: commands.Context, main_action: str, amount: float, num_ppl: int, success: bool):
         """Add result to this object.
         :main_action: Main damage action taken by the adventurers

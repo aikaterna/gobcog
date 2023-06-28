@@ -80,6 +80,6 @@ default_global = {
     "max_allowed_withdraw": 50000,
     "disallow_withdraw": False,
     "easy_mode": False,
-    "reset_by_age": -1,
-    "results_length": 20,
+    "remove_by_age": -1,
+    "num_raids": 20,
 }
