@@ -327,7 +327,7 @@ class CharacterCommands(AdventureMixin):
         ).start(ctx=ctx)
 
     async def _build_loadout_display(
-        self, ctx: commands.Context, userdata, loadout=True, rebirths: int = None, index: int = None
+        self, ctx: commands.Context, userdata: dict, loadout=True, rebirths: int = None, index: int = None
     ):
         table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
         table.set_style(BeautifulTable.STYLE_RST)
@@ -350,7 +350,11 @@ class CharacterCommands(AdventureMixin):
         dex = 0
         luck = 0
 
-        def get_slot_index(slot: Slot):
+        def get_slot_index(slot: Union[Slot, tuple, list]):
+            if isinstance(slot, str):
+                slot = Slot.from_list([slot])
+            elif isinstance(slot, (tuple, list)):
+                slot = Slot.from_list(slot)
             return slot.order()
 
         data_sorted = sorted(userdata["items"].items(), key=get_slot_index)

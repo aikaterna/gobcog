@@ -42,6 +42,12 @@ class Slot(Enum):
     def __str__(self):
         return self.names()[self]
 
+    @property
+    def char_slot(self):
+        if self is Slot.two_handed:
+            return "right"
+        return self.name
+
     @classmethod
     def get_from_name(cls, name: str) -> Slot:
         for i in cls:
@@ -136,14 +142,14 @@ class Rarities(Enum):
     @staticmethod
     def names():
         return {
-            "normal": _("Normal"),
-            "rare": _("Rare"),
-            "epic": _("Epic"),
-            "legendary": _("Legendary"),
-            "ascended": _("Ascended"),
-            "set": _("Set"),
-            "forged": _("Forged"),
-            "event": _("Event"),
+            Rarities.normal: _("Normal"),
+            Rarities.rare: _("Rare"),
+            Rarities.epic: _("Epic"),
+            Rarities.legendary: _("Legendary"),
+            Rarities.ascended: _("Ascended"),
+            Rarities.set: _("Set"),
+            Rarities.forged: _("Forged"),
+            Rarities.event: _("Event"),
         }
 
     def prefix_chance(self) -> Optional[float]:
