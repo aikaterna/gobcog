@@ -202,9 +202,13 @@ class Adventure(
         # we'll only have a repo if the cog was installed through Downloader at some point
         if self._repo:
             ret += f"Repo: {self._repo}\n"
-        # we should have a commit if we have the repo but just incase
-        if self._commit:
             ret += f"Commit: [{self._commit[:9]}]({self._repo}/tree/{self._commit})"
+        else:
+            ret += "Repo: Unknown Repo\n"
+            if self._commit:
+                ret += f"Commit: {self._commit}"
+            else:
+                ret += "Commit: Unknown commit"
         return ret
 
     async def cog_before_invoke(self, ctx: commands.Context):
@@ -228,7 +232,7 @@ class Adventure(
                 if cog.name == "adventure":
                     if cog.repo is not None:
                         self._repo = cog.repo.clean_url
-                        self._commit = cog.repo.commit
+                    self._commit = cog.commit
         try:
             global _config
             _config = self.config

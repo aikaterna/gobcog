@@ -285,7 +285,13 @@ class AdventureSetCommands(AdventureMixin):
     @adventureset.command()
     async def version(self, ctx: commands.Context):
         """Display the version of adventure being used."""
-        await ctx.send(box(_("Adventure version: {}").format(self.__version__)))
+        await ctx.send(
+            box(
+                _("Adventure version: {version}\nRepo: {repo}\nCommit: {commit}").format(
+                    version=self.__version__, repo=self._repo, commit=self._commit
+                )
+            )
+        )
 
     @adventureset.command()
     @commands.admin_or_permissions(administrator=True)

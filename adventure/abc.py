@@ -67,6 +67,8 @@ class AdventureMixin(ABC):
         self.MATERIALS: dict = None
         self.PREFIXES: dict = None
         self.SUFFIXES: dict = None
+        self._repo: str
+        self._commit: str
 
     #######################################################################
     # adventure.py                                                        #
