@@ -226,8 +226,9 @@ class Adventure(
             cogs = await downloader.installed_cogs()
             for cog in cogs:
                 if cog.name == "adventure":
-                    self._repo = cog.repo.clean_url
-                    self._commit = cog.repo.commit
+                    if cog.repo is not None:
+                        self._repo = cog.repo.clean_url
+                        self._commit = cog.repo.commit
         try:
             global _config
             _config = self.config
