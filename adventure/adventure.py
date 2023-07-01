@@ -99,7 +99,7 @@ class Adventure(
         self.bot = bot
         bank._init(bot)
         self._last_trade = {}
-        self._adv_results = AdventureResults(20)
+        self._adv_results: AdventureResults = AdventureResults(20)
         self.emojis = SimpleNamespace()
         self.emojis.fumble = "\N{EXCLAMATION QUESTION MARK}\N{VARIATION SELECTOR-16}"
         self.emojis.level_up = "\N{BLACK UP-POINTING DOUBLE TRIANGLE}"
@@ -237,6 +237,9 @@ class Adventure(
                 get_path = bundled_data_path
             else:
                 get_path = cog_data_path
+
+            self._adv_results.remove_by_age = await self.config.remove_by_age()
+            self._adv_results.num_raids = await self.config.num_rads()
 
             as_monster_fp = get_path(self) / f"{theme}" / "as_monsters.json"
             attribs_fp = get_path(self) / f"{theme}" / "attribs.json"
