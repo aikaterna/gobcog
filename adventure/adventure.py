@@ -93,7 +93,7 @@ class Adventure(
             user_id
         ).clear()  # This will only ever touch the separate currency, leaving bot economy to be handled by core.
 
-    __version__ = "4.0.1"
+    __version__ = "4.0.2"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -188,6 +188,24 @@ class Adventure(
         self.app_command.remove_command("adventure")
         self._adventure.app_command.name = "start"
         self.app_command.add_command(self._adventure.app_command)
+        self._commit = ""
+        self._repo = ""
+
+    def format_help_for_context(self, ctx: commands.Context) -> str:
+        """
+        Thanks Sinbad!
+
+        How many people are going to copy this one?
+        """
+        pre_processed = super().format_help_for_context(ctx)
+        ret = f"{pre_processed}\n\nCog Version: {self.__version__}\n"
+        # we'll only have a repo if the cog was installed through Downloader at some point
+        if self._repo:
+            ret += f"Repo: {self._repo}\n"
+        # we should have a commit if we have the repo but just incase
+        if self._commit:
+            ret += f"Commit: [{self._commit[:9]}]({self._repo}/tree/{self._commit})"
+        return ret
 
     async def cog_before_invoke(self, ctx: commands.Context):
         await self._ready_event.wait()
@@ -203,6 +221,13 @@ class Adventure(
     async def initialize(self):
         """This will load all the bundled data into respective variables."""
         await self.bot.wait_until_red_ready()
+        downloader = self.bot.get_cog("Downloader")
+        if downloader is not None:
+            cogs = await downloader.installed_cogs()
+            for cog in cogs:
+                if cog.name == "adventure":
+                    self._repo = cog.repo.clean_url
+                    self._commit = cog.repo.commit
         try:
             global _config
             _config = self.config

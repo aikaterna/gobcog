@@ -811,7 +811,10 @@ class RarityAction(argparse.Action):
 
         # Generate choices from the Enum
         options = tuple(
-            set(list(i.lower() for i in enum_type.names().keys()) + list(i.lower() for i in enum_type.names().values()))
+            set(
+                list(i.name.lower() for i in enum_type.names().keys())
+                + list(i.lower() for i in enum_type.names().values())
+            )
         )
         kwargs.setdefault("choices", options)
 

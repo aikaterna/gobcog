@@ -380,7 +380,6 @@ class Negaverse(AdventureMixin):
     @_negaverse_command.error
     async def negaverse_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
-            ctx.command.reset_cooldown(ctx)
             currency_name = await bank.get_currency_name(
                 ctx.guild,
             )

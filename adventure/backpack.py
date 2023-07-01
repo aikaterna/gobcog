@@ -266,7 +266,7 @@ class BackPackCommands(AdventureMixin):
             equip = c.backpack.get(equip_item.name)
             if equip:
                 slot = equip.slot
-                if not getattr(c, equip.slot.name):
+                if not getattr(c, equip.slot.char_slot):
                     equip_msg = box(
                         _("{author} equipped {item} ({slot} slot).").format(
                             author=escape(ctx.author.display_name), item=str(equip), slot=slot.get_name()
@@ -283,9 +283,10 @@ class BackPackCommands(AdventureMixin):
                         ),
                         lang="ansi",
                     )
-                await ctx.send(equip_msg)
+
                 c = await c.equip_item(equip, True, is_dev(ctx.author))  # FIXME:
                 await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
+        await ctx.send(equip_msg)
 
     @_backpack.command(name="eset", cooldown_after_parsing=True)
     @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
