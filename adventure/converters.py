@@ -672,6 +672,8 @@ class RarityConverter(Transformer):
         # cog = interaction.client.get_cog("Adventure")
         log.debug(interaction.command)
         for rarity in Rarities:
+            if rarity is Rarities.pet:
+                continue
             if interaction.command and interaction.command.name in ["loot", "convert"] and not rarity.is_chest:
                 continue
             if current.lower() in rarity.get_name().lower():

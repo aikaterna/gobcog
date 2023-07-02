@@ -124,7 +124,7 @@ class Rarities(Enum):
     pet = 64
 
     def __str__(self):
-        return self.name.title()
+        return self.names()[self]
 
     @classmethod
     def get_from_name(cls, name: str) -> Rarities:
@@ -150,6 +150,7 @@ class Rarities(Enum):
             Rarities.set: _("Set"),
             Rarities.forged: _("Forged"),
             Rarities.event: _("Event"),
+            Rarities.pet: _("Pet"),
         }
 
     def prefix_chance(self) -> Optional[float]:
@@ -169,7 +170,7 @@ class Rarities(Enum):
         }.get(self)
 
     def get_name(self) -> str:
-        return self.names().get(self.name, _("Normal"))
+        return self.names().get(self, _("Normal"))
 
     @property
     def ansi(self) -> str:
