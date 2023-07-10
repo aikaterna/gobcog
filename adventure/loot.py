@@ -365,7 +365,7 @@ class LootCommands(AdventureMixin):
             )
             return None
         slot = item.slot
-        old_item = getattr(character, item.slot.name, None)
+        old_item = getattr(character, item.slot.char_slot, None)
         old_stats = ""
 
         if old_item:
@@ -520,7 +520,7 @@ class LootCommands(AdventureMixin):
                     f"{bold(ctx.author.display_name)}, you need to be level "
                     f"`{equiplevel}` to equip this item. I've put it in your backpack.",
                 )
-            if not getattr(character, item.slot.name):
+            if not getattr(character, item.slot.char_slot):
                 equip_msg = box(
                     _("{user} equipped {item} ({slot} slot).").format(
                         user=escape(ctx.author.display_name), item=item, slot=slot
@@ -533,7 +533,7 @@ class LootCommands(AdventureMixin):
                         user=escape(ctx.author.display_name),
                         item=item,
                         slot=slot,
-                        old_item=getattr(character, item.slot.name),
+                        old_item=getattr(character, item.slot.char_slot),
                     ),
                     lang="ansi",
                 )
