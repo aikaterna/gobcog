@@ -306,6 +306,7 @@ class Character:
         self.rebirths = kwargs.pop("rebirths", 0)
         self.last_known_currency = kwargs.get("last_known_currency")
         self.last_currency_check = kwargs.get("last_currency_check")
+        self.static_last_known_currency = kwargs.get("static_last_known_currency")
         self.gear_set_bonus = {}
         self.get_set_bonus()
         self.maxlevel = self.get_max_level()
@@ -1445,6 +1446,7 @@ class Character:
             hero_data[k] = v
         hero_data["last_skill_reset"] = data.get("last_skill_reset", 0)
         hero_data["last_known_currency"] = data.get("last_known_currency", 0)
+        hero_data["static_last_known_currency"] = data.get("static_last_known_currency")
         hero_data["last_currency_check"] = data.get("last_currency_check", 0)
         return cls(**hero_data, ctx=ctx, daily_bonus_mapping=daily_bonus_mapping)
 
@@ -1512,6 +1514,7 @@ class Character:
             "set_items": self.set_items,
             "last_skill_reset": self.last_skill_reset,
             "last_known_currency": self.last_known_currency,
+            "static_last_known_currency": self.static_last_known_currency,
         }
 
     async def rebirth(self, dev_val: int = None) -> dict:
@@ -1595,6 +1598,7 @@ class Character:
             "rebirths": self.rebirths,
             "set_items": self.set_items,
             "last_known_currency": 0,
+            "static_last_known_currency": None,
             "last_currency_check": 0,
         }
 

@@ -7,6 +7,7 @@ default_user = {
     "last_skill_reset": 0,
     "last_known_currency": 0,
     "last_currency_check": 0,
+    "static_last_known_currency": None,
     "treasure": [0, 0, 0, 0, 0, 0],
     "items": {
         "head": {},

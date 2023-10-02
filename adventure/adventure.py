@@ -2403,6 +2403,8 @@ class Adventure(
             rebirth_emoji = self.emojis.rebirth
             if lvl_end >= c.maxlevel:
                 rebirthextra = _("{} You can now rebirth {}").format(rebirth_emoji, user.mention)
+                if c.static_last_known_currency is None:
+                    c.static_last_known_currency = c.bal
             if lvl_start < lvl_end:
                 # recalculate free skillpoint pool based on new level and already spent points.
                 c.lvl = lvl_end

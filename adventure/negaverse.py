@@ -373,7 +373,6 @@ class Negaverse(AdventureMixin):
                     current_loses_value = character.nega.get("loses", 0)
                     character.nega.update({"loses": current_loses_value + 1})
                     changed = True
-
                 if changed:
                     await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
 

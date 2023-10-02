@@ -46,7 +46,16 @@ class RebirthCommands(AdventureMixin):
             rebirthcost = 1000 * c.rebirths
             current_balance = c.bal
             last_known_currency = c.last_known_currency
-            if last_known_currency and current_balance / last_known_currency < 0.25:
+            if (
+                c.static_last_known_currency is None
+                and last_known_currency
+                and (current_balance / last_known_currency) < 0.5
+            ) or (c.static_last_known_currency is not None and (current_balance / c.static_last_known_currency) < 0.5):
+                if c.static_last_known_currency is None:
+                    c.static_last_known_currency = last_known_currency
+                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
+                if c.static_last_known_currency is not None:
+                    last_known_currency = c.static_last_known_currency
                 currency_name = await bank.get_currency_name(
                     ctx.guild,
                 )
