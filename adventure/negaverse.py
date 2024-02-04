@@ -14,7 +14,7 @@ from redbot.core.utils.chat_formatting import bold, box, humanize_number
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .constants import Treasure
+from .constants import Rarities,Treasure
 from .helpers import ConfirmView, escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
@@ -178,7 +178,7 @@ class Negaverse(AdventureMixin):
                 loss_string = _("all of their")
                 loss_state = True
                 items = await character.looted(
-                    how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"}
+                    how_many=max(int(10 - roll) // 2, 1), exclude={Rarities.event, Rarities.normal, Rarities.rare, Rarities.epic}
                 )
                 if items:
                     item_string = "\n".join([f"{v} x{i}" for v, i in items])
@@ -216,7 +216,7 @@ class Negaverse(AdventureMixin):
                 loss_state = True
                 if character.bal < loss:
                     items = await character.looted(
-                        how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"}
+                        how_many=max(int(10 - roll) // 2, 1), exclude={Rarities.event, Rarities.normal, Rarities.rare, Rarities.epic}
                     )
                     if items:
                         item_string = "\n".join([f"{v} {i}" for v, i in items])
@@ -316,7 +316,7 @@ class Negaverse(AdventureMixin):
                 loss_state = True
                 if character.bal < loss:
                     items = await character.looted(
-                        how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"}
+                        how_many=max(int(10 - roll) // 2, 1), exclude={Rarities.event, Rarities.normal, Rarities.rare, Rarities.epic}
                     )
                     if items:
                         item_string = "\n".join([f"{i}  - {v}" for v, i in items])

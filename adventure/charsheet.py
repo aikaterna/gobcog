@@ -731,7 +731,7 @@ class Character:
     async def looted(self, how_many: int = 1, exclude: set = None) -> List[Tuple[str, int]]:
         if exclude is None:
             exclude = {Rarities.normal, Rarities.rare, Rarities.epic, Rarities.forged}
-        exclude.add("forged")
+        exclude.add(Rarities.forged)
         items = [i for n, i in self.backpack.items() if i.rarity not in exclude]
         looted_so_far = 0
         looted = []
