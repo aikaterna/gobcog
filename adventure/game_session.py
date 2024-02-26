@@ -331,7 +331,6 @@ class SpecialActionButton(discord.ui.Button):
 
     async def send_insight(self, interaction: discord.Interaction, c: Character):
         user = interaction.user
-        log.debug("Sending Insight")
         if c.heroclass["ability"]:
             await self.send_in_use(interaction)
             return
@@ -347,7 +346,6 @@ class SpecialActionButton(discord.ui.Button):
             else:
                 good = False
                 msg = _("Another hero has already done a better job than you.")
-                log.debug("Sending bad")
                 await smart_embed(
                     message=msg,
                     interaction=interaction,
@@ -485,8 +483,6 @@ class SpecialActionButton(discord.ui.Button):
                         cog=self.view.cog,
                         interaction=interaction,
                     )
-            else:
-                log.debug("Psychic is bad")
         else:
             await self.send_cooldown(interaction, c, cooldown_time)
 
