@@ -331,14 +331,14 @@ class SpecialActionButton(discord.ui.Button):
 
     async def send_insight(self, interaction: discord.Interaction, c: Character):
         user = interaction.user
+        log.debug("Sending Insight")
         if c.heroclass["ability"]:
-            log.debug("Psychic in use already")
             await self.send_in_use(interaction)
             return
         cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
         if "cooldown" not in c.heroclass:
             c.heroclass["cooldown"] = cooldown_time + 1
-        if c.heroclass["cooldown"] + cooldown_time <= time.time():
+        if c.heroclass["cooldown"] <= time.time():
             max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 15 else 20
             roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
             if self.view.insight[0] < roll:
@@ -347,6 +347,7 @@ class SpecialActionButton(discord.ui.Button):
             else:
                 good = False
                 msg = _("Another hero has already done a better job than you.")
+                log.debug("Sending bad")
                 await smart_embed(
                     message=msg,
                     interaction=interaction,
@@ -354,15 +355,15 @@ class SpecialActionButton(discord.ui.Button):
                     cog=self.view.cog,
                 )
             c.heroclass["ability"] = True
-            c.heroclass["cooldown"] = time.time()
-            async with self.view.cog.get_lock(c.user):
-                await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
-                if good:
-                    msg = _("{skill} **{c}** is focusing on the monster ahead...{skill}").format(
-                        c=escape(user.display_name),
-                        skill=self.view.cog.emojis.skills.psychic,
-                    )
-                    await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
+            c.heroclass["cooldown"] = time.time() + cooldown_time
+
+            await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
+            if good:
+                msg = _("{skill} **{c}** is focusing on the monster ahead...{skill}").format(
+                    c=escape(user.display_name),
+                    skill=self.view.cog.emojis.skills.psychic,
+                )
+                await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
             if good:
                 session = self.view
                 if roll <= 0.4:
@@ -484,6 +485,8 @@ class SpecialActionButton(discord.ui.Button):
                         cog=self.view.cog,
                         interaction=interaction,
                     )
+            else:
+                log.debug("Psychic is bad")
         else:
             await self.send_cooldown(interaction, c, cooldown_time)
 
@@ -725,6 +728,8 @@ class GameSession(discord.ui.View):
             all_users = []
             in_adventure = False
             for guild_session in self.cog._sessions.values():
+                if guild_session.ctx.message.id == self.ctx.message.id:
+                    continue
                 if guild_session.in_adventure(user):
                     in_adventure = True
 
@@ -732,14 +737,12 @@ class GameSession(discord.ui.View):
                 user_id = f"{user.id}-{user.guild.id}"
                 # iterating through reactions here and removing them seems to be expensive
                 # so they can just keep their react on the adventures they can't join
-                if user_id not in self.cog._react_messaged:
-                    await interaction.response.send_message(
-                        _(
-                            "**{c}**, you are already in an existing adventure. "
-                            "Wait for it to finish before joining another one."
-                        ).format(c=escape(user.display_name)),
-                        ephemeral=True,
-                    )
-                    self.cog._react_messaged.append(user_id)
-                    return
+                await interaction.response.send_message(
+                    _(
+                        "**{c}**, you are already in an existing adventure. "
+                        "Wait for it to finish before joining another one."
+                    ).format(c=escape(user.display_name)),
+                    ephemeral=True,
+                )
+            return not in_adventure
         return True
