@@ -90,7 +90,7 @@ async def smart_embed(
 
 
 def check_running_adventure(ctx):
-    for (guild_id, session) in ctx.bot.get_cog("Adventure")._sessions.items():
+    for guild_id, session in ctx.bot.get_cog("Adventure")._sessions.items():
         user_ids: list = []
         options = ["fight", "magic", "talk", "pray", "run"]
         for i in options:

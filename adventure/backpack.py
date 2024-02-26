@@ -279,7 +279,7 @@ class BackPackCommands(AdventureMixin):
                             author=escape(ctx.author.display_name),
                             item=str(equip),
                             slot=slot,
-                            put=getattr(c, equip.slot.name),
+                            put=getattr(c, equip.slot.char_slot),
                         ),
                         lang="ansi",
                     )

@@ -6,7 +6,7 @@ import random
 import time
 from copy import copy
 from datetime import date, datetime
-from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union
+from typing import Any, Dict, List, MutableMapping, Optional, Set, Tuple, Union
 
 import discord
 from beautifultable import ALIGN_LEFT, BeautifulTable
@@ -728,10 +728,16 @@ class Character:
                 final.append(sorted(tmp[slot_name], key=_sort))
         return final
 
-    async def looted(self, how_many: int = 1, exclude: set = None) -> List[Tuple[str, int]]:
-        if exclude is None:
+    async def looted(self, how_many: int = 1, exclude: Set[Union[str, Rarities]] = set()) -> List[Tuple[str, int]]:
+        if not exclude:
             exclude = {Rarities.normal, Rarities.rare, Rarities.epic, Rarities.forged}
-        exclude.add("forged")
+        else:
+            for rarity in exclude:
+                if isinstance(rarity, Rarities):
+                    exclude.add(rarity)
+                else:
+                    exclude.add(Rarities.get_from_name(rarity))
+        exclude.add(Rarities.forged)
         items = [i for n, i in self.backpack.items() if i.rarity not in exclude]
         looted_so_far = 0
         looted = []
