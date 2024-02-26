@@ -562,7 +562,7 @@ class ClassAbilities(AdventureMixin):
             cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
-            if c.heroclass["cooldown"] + cooldown_time <= time.time():
+            if c.heroclass["cooldown"] <= time.time():
                 max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 15 else 20
                 roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
                 if ctx.guild.id in self._sessions and self._sessions[ctx.guild.id].insight[0] < roll:
@@ -572,7 +572,7 @@ class ClassAbilities(AdventureMixin):
                     good = False
                     await smart_embed(ctx, _("Another hero has already done a better job than you."))
                 c.heroclass["ability"] = True
-                c.heroclass["cooldown"] = time.time()
+                c.heroclass["cooldown"] = time.time() + cooldown_time
                 async with self.get_lock(c.user):
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     if good:
