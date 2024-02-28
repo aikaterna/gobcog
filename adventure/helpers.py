@@ -1,8 +1,9 @@
+from __future__ import annotations
 import random
 import re
 import time
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
 
 import discord
 from discord.ext.commands import CheckFailure
@@ -15,6 +16,9 @@ from .charsheet import Character, Item
 from .constants import DEV_LIST, Rarities
 
 _ = Translator("Adventure", __file__)
+
+if TYPE_CHECKING:
+    from .abc import AdventureMixin
 
 
 async def _get_epoch(seconds: int):
@@ -33,7 +37,7 @@ async def smart_embed(
     success: Optional[bool] = None,
     image: Optional[str] = None,
     ephemeral: bool = False,
-    cog: Optional[Cog] = None,
+    cog: Optional[AdventureMixin] = None,
     interaction: Optional[discord.Interaction] = None,
     view: Optional[discord.ui.View] = discord.utils.MISSING,
     embed_colour: Optional[str] = None,

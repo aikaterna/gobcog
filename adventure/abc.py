@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, MutableMapping, Optional, Union
 
 import discord
@@ -39,6 +40,7 @@ class AdventureMixin(ABC):
         self.config: Config
         self.bot: Red
         self.settings: Dict[Any, Any]
+        self.emojis: SimpleNamespace
         self._ready: asyncio.Event
         self._adventure_countdown: dict
         self._rewards: dict

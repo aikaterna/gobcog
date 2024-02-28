@@ -336,31 +336,34 @@ class EconomyCommands(AdventureMixin):
     ):
         """[Owner] Adds a custom item to a specified member.
 
-        Item names containing spaces must be enclosed in double quotes. `[p]give item @locastan
-        "fine dagger" 1 att 1 charisma rare twohanded` will give a two handed .fine_dagger with 1
-        attack and 1 charisma to locastan. if a stat is not specified it will default to 0, order
-        does not matter.
+        Item names containing spaces must be enclosed in double quotes.
         available stats are:
-         - `attack` or `att`
-         - `charisma` or `diplo`
-         - `charisma` or `cha`
-         - `intelligence` or `int`
-         - `dexterity` or `dex`
-         - `luck`
-         - `rarity` (one of normal, rare, epic, legendary, set, forged, or event)
-         - `degrade` (Set to -1 to never degrade on rebirths)
-         - `level` (lvl)
-         - `slot` (one of `head`, `neck`, `chest`, `gloves`, `belt`, `legs`, `boots`, `left`, `right`
-         `ring`, `charm`, `twohanded`)
-
-        `[p]give item @locastan "fine dagger" 1 att 1 charisma -1 degrade 100 level rare twohanded`
+        - `attack:` or `att:` defaults to 0.
+        - `charisma:` or `diplo:` or `cha:` defaults to 0.
+        - `intelligence:` or `int:` defaults to 0.
+        - `dexterity:` or `dex:` defaults to 0.
+        - `luck:` defaults to 0.
+        - `rarity:` (one of `normal`, `rare`, `epic`, `legendary`, `set`, `forged`, or `event`) defaults to normal.
+        - `degrade:` (Set to -1 to never degrade on rebirths) defaults to 3.
+        - `level:` or `lvl:` defaults to the calculated level required based on stats.
+        - `slot:` (one of `head`, `neck`, `chest`, `gloves`, `belt`, `legs`, `boots`, `left`, `right`
+          `ring`, `charm`, `two handed`) defaults to left.
+        Example:
+        ```
+        [p]give item @locastan "fine dagger" att: 1 charisma: 1 degrade: -1 level: 100 rarity: rare slot: twohanded
+        ```
+        Will give locastan a 1 attack 1 charisma `.fine_dagger`.
         """
         if item_name.isnumeric():
             return await smart_embed(ctx, _("Item names cannot be numbers."))
         item_name = re.sub(r"[^\w ]", "", item_name)
         if user is None:
             user = ctx.author
-        new_item = {item_name: stats}
+        try:
+            new_item = {item_name: await stats.to_json(ctx)}
+        except commands.BadArgument as e:
+            await ctx.send(e)
+            return
         item = Item.from_json(ctx, new_item)
         async with self.get_lock(user):
             try:
@@ -370,14 +373,15 @@ class EconomyCommands(AdventureMixin):
                 return
             await c.add_to_backpack(item)
             await self.config.user(user).set(await c.to_json(ctx, self.config))
-        await ctx.send(
-            box(
+        item_table = await c.make_backpack_tables([item.row(c.lvl)])
+        msg = box(
                 _("An item named {item} has been created and placed in {author}'s backpack.").format(
-                    item=item, author=escape(user.display_name)
+                    item=item, author=escape(user.display_name), item_stats=item_table
                 ),
                 lang="ansi",
             )
-        )
+        msg += item_table[0]
+        await ctx.send(msg)
 
     @give.command(name="loot")
     async def _give_loot(

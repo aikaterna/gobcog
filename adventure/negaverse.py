@@ -9,12 +9,12 @@ from typing import Optional, Union
 import discord
 from redbot.core import commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import bold, box, humanize_number
+from redbot.core.utils.chat_formatting import bold, box, humanize_number, pagify
 
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .constants import Treasure
+from .constants import Treasure, Rarities
 from .helpers import ConfirmView, escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
@@ -171,26 +171,20 @@ class Negaverse(AdventureMixin):
             xp_won = int(xp_won * (min(max(random.randint(0, character.rebirths), 1), 50) / 100 + 1))
             xp_won = int(xp_won * (character.gear_set_bonus.get("xpmult", 1) + daymult))
             if roll == -2:
-                looted = ""
                 curr_balance = character.bal
                 await bank.set_balance(ctx.author, 0)
                 offering_value += curr_balance
                 loss_string = _("all of their")
                 loss_state = True
+                max_items_lost = max(min(10, int(len(character.backpack) * 0.10)), 0)
                 items = await character.looted(
-                    how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"}
+                    how_many=random.randint(1, max_items_lost), exclude={Rarities.normal, Rarities.epic, Rarities.rare}
                 )
-                if items:
-                    item_string = "\n".join([f"{v} x{i}" for v, i in items])
-                    looted = box(f"{item_string}", lang="ansi")
-                    await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
+                # Devs steal a random amount of items between 1 and 10 legendaries and up always
+                # Rarities included for dev fails always above epic rarities
                 loss_msg = _(", losing {loss} {currency_name} as {negachar} rifled through their belongings.").format(
                     loss=loss_string, currency_name=currency_name, negachar=bold(negachar)
                 )
-                if looted:
-                    loss_msg += _(" {negachar} also stole the following items:\n\n{items}").format(
-                        items=looted, negachar=bold(negachar)
-                    )
                 await nega_msg.edit(
                     content=_("{content}\n{author} fumbled and died to {negachar}'s savagery{loss_msg}").format(
                         content=nega_msg.content,
@@ -200,10 +194,17 @@ class Negaverse(AdventureMixin):
                     ),
                     view=None,
                 )
+                if items:
+                    item_string = "\n".join([f"{v} {i}" for v, i in items])
+                    await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
+                    looted_msg = _("{negachar} also stole the following items:\n\n{items}").format(
+                        items=item_string, negachar=bold(negachar)
+                    )
+                    for page in pagify(looted_msg):
+                        await ctx.send(box(page, lang="ansi"))
                 ctx.command.reset_cooldown(ctx)
             elif roll < 10:
                 loss = round(bal // 3)
-                looted = ""
                 curr_balance = character.bal
                 try:
                     await bank.withdraw_credits(ctx.author, loss)
@@ -214,21 +215,20 @@ class Negaverse(AdventureMixin):
                     offering_value += curr_balance
                     loss_string = _("all of their")
                 loss_state = True
+                max_items_lost = max(min(10, int(len(character.backpack) * 0.10)), 0)
+                items_to_lose = random.randint(0, max_items_lost)
+                # crit fails lose between 0 and 10 items based on their total backpack size
                 if character.bal < loss:
-                    items = await character.looted(
-                        how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"}
-                    )
-                    if items:
-                        item_string = "\n".join([f"{v} {i}" for v, i in items])
-                        looted = box(f"{item_string}", lang="ansi")
-                        await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
+                    items_to_lose += 1
+                items = await character.looted(
+                    how_many=items_to_lose, exclude={Rarities.normal, Rarities.rare, Rarities.epic}
+                )
+                # Rarities included for crit fails always abive epic rarity
+
                 loss_msg = _(", losing {loss} {currency_name} as {negachar} rifled through their belongings.").format(
                     loss=loss_string, currency_name=currency_name, negachar=bold(negachar)
                 )
-                if looted:
-                    loss_msg += _(" {negachar} also stole the following items:\n\n{items}").format(
-                        items=looted, negachar=bold(negachar)
-                    )
+
                 await nega_msg.edit(
                     content=_("{content}\n{author} fumbled and died to {negachar}'s savagery{loss_msg}").format(
                         content=nega_msg.content,
@@ -238,6 +238,15 @@ class Negaverse(AdventureMixin):
                     ),
                     view=None,
                 )
+                if items:
+                    item_string = "\n".join([f"{v} {i}" for v, i in items])
+                    await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
+                    looted_msg = _("{negachar} also stole the following items:\n\n{items}").format(
+                        items=item_string, negachar=bold(negachar)
+                    )
+                    for page in pagify(looted_msg):
+                        await ctx.send(box(page, lang="ansi"))
+
                 ctx.command.reset_cooldown(ctx)
             elif roll == 50 and versus < 50:
                 await nega_msg.edit(
@@ -304,7 +313,6 @@ class Negaverse(AdventureMixin):
             else:
                 loss = round(bal / (random.randint(10, 25)))
                 curr_balance = character.bal
-                looted = ""
                 try:
                     await bank.withdraw_credits(ctx.author, loss)
                     offering_value += loss
@@ -314,23 +322,24 @@ class Negaverse(AdventureMixin):
                     loss_string = _("all of their")
                     offering_value += curr_balance
                 loss_state = True
+                exclude_list = {i for i in Rarities if i.value not in range(0, ((versus-roll)//10)+1)}
+                # regular fails lose rarities depending on the difference of the roll
+                # i.e. A near loss should only lose normal quality items but severely losing
+                # will lose up to ascended if the versus rolled max and you rolled just above crit miss
+                max_items_lost = max(min(10, int(len(character.backpack) * 0.10)), 0)
+                # max items to lose based on 10% of the players total items in their backpack
+                # users with fewer items should lose less but hoarders lose more up to a max of 10
+                items_to_lose = random.randint(0, max_items_lost)
                 if character.bal < loss:
-                    items = await character.looted(
-                        how_many=max(int(10 - roll) // 2, 1), exclude={"event", "normal", "rare", "epic"}
-                    )
-                    if items:
-                        item_string = "\n".join([f"{i}  - {v}" for v, i in items])
-                        looted = box(f"{item_string}", lang="ansi")
-                        await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
+                    items_to_lose += 1
+                items = await character.looted(
+                    how_many=items_to_lose, exclude=exclude_list
+                )
                 loss_msg = _(", losing {loss} {currency_name} as {negachar} looted their backpack.").format(
                     loss=loss_string,
                     currency_name=currency_name,
                     negachar=bold(negachar),
                 )
-                if looted:
-                    loss_msg += _(" {negachar} also stole the following items:\n\n{items}").format(
-                        items=looted, negachar=bold(negachar)
-                    )
                 await nega_msg.edit(
                     content=_("{author} {dice}({roll}) was killed by {negachar} {dice}({versus}){loss_msg}").format(
                         dice=self.emojis.dice,
@@ -342,6 +351,14 @@ class Negaverse(AdventureMixin):
                     ),
                     view=None,
                 )
+                if items:
+                    item_string = "\n".join([f"{v} {i}" for v, i in items])
+                    await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
+                    looted_msg = _("{negachar} also stole the following items:\n\n{items}").format(
+                        items=item_string, negachar=bold(negachar)
+                    )
+                    for page in pagify(looted_msg):
+                        await ctx.send(box(page, lang="ansi"))
                 ctx.command.reset_cooldown(ctx)
         finally:
             lock = self.get_lock(ctx.author)

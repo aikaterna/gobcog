@@ -1,3 +1,4 @@
+from __future__ import annotations
 import logging
 import random
 import time
@@ -295,6 +296,10 @@ class SpecialActionButton(discord.ui.Button):
         self.action_type = "special_action"
         self.label_name = "Special Action"
 
+    @property
+    def view(self) -> GameSession:
+        return super().view
+
     async def send_cooldown(self, interaction: discord.Interaction, c: Character, cooldown_time: int):
         cooldown_time = int(c.heroclass["cooldown"])
         msg = _(
@@ -377,16 +382,16 @@ class SpecialActionButton(discord.ui.Button):
                     hp = session.monster_modified_stats["hp"]
                     diplo = session.monster_modified_stats["dipl"]
                     if roll == 1:
-                        hp = int(hp * self.ATTRIBS[session.attribute][0] * session.monster_stats)
-                        dipl = int(diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats)
+                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0] * session.monster_stats)
+                        dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1] * session.monster_stats)
                         msg += _(
                             "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}){trans}.\n"
                         ).format(
                             challenge=session.challenge,
                             attr=session.attribute,
-                            hp_symbol=self.emojis.hp,
+                            hp_symbol=self.view.cog.emojis.hp,
                             hp=humanize_number(ceil(hp)),
-                            dipl_symbol=self.emojis.dipl,
+                            dipl_symbol=self.view.cog.emojis.dipl,
                             dipl=humanize_number(ceil(dipl)),
                             trans=f" (**Transcended**) {self.view.cog.emojis.skills.psychic}"
                             if session.transcended
@@ -394,25 +399,25 @@ class SpecialActionButton(discord.ui.Button):
                         )
                         self.view.exposed = True
                     elif roll >= 0.95:
-                        hp = hp * self.ATTRIBS[session.attribute][0] * session.monster_stats
-                        dipl = diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats
+                        hp = hp * self.view.cog.ATTRIBS[session.attribute][0] * session.monster_stats
+                        dipl = diplo * self.view.cog.ATTRIBS[session.attribute][1] * session.monster_stats
                         msg += _(
                             "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}).\n"
                         ).format(
                             challenge=session.challenge,
                             attr=session.attribute,
-                            hp_symbol=self.emojis.hp,
+                            hp_symbol=self.view.cog.emojis.hp,
                             hp=humanize_number(ceil(hp)),
-                            dipl_symbol=self.emojis.dipl,
+                            dipl_symbol=self.view.cog.emojis.dipl,
                             dipl=humanize_number(ceil(dipl)),
                         )
                         self.view.exposed = True
                     elif roll >= 0.90:
-                        hp = hp * self.ATTRIBS[session.attribute][0] * session.monster_stats
+                        hp = hp * self.view.cog.ATTRIBS[session.attribute][0] * session.monster_stats
                         msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
                             challenge=session.challenge,
                             attr=session.attribute,
-                            hp_symbol=self.emojis.hp,
+                            hp_symbol=self.view.cog.emojis.hp,
                             hp=humanize_number(ceil(hp)),
                         )
                         self.view.exposed = True

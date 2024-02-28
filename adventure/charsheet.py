@@ -64,6 +64,20 @@ class Item:
     def __str__(self):
         return self.rarity.as_str(self.name)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Item):
+            return False
+        return (
+            other.name == self.name
+            and other.rarity is self.rarity
+            and other.dex == self.dex
+            and other.luck == self.luck
+            and other.att == self.att
+            and other.int == self.int
+            and other.cha == self.cha
+            and other.slot is self.slot
+        )
+
     @property
     def ansi(self) -> str:
         return self.rarity.as_ansi(self.name)
@@ -88,7 +102,9 @@ class Item:
             self.luck * (1 if self.slot is not Slot.two_handed else 2),
             f"{ANSITextColours.red.as_str(str(self.lvl))}" if not can_equip else f"{self.lvl}",
             self.owned,
-            f"[{self.degrade}]" if self.rarity in ["legendary", "event", "ascended"] and self.degrade >= 0 else "N/A",
+            f"[{self.degrade}]"
+            if self.rarity in [Rarities.legendary, Rarities.event, Rarities.ascended] and self.degrade >= 0
+            else "N/A",
             self.set or "N/A",
         )
 
@@ -150,7 +166,6 @@ class Item:
     def from_json(cls, ctx: commands.Context, data: dict):
         name = "".join(data.keys())
         data = data[name]
-        rarity = "normal"
         if name.startswith("."):
             name = name.replace("_", " ").replace(".", "")
             rarity = "rare"
@@ -190,7 +205,7 @@ class Item:
         elif name.startswith("{Event:'"):
             name = name.replace("{Event:'", "").replace("''}", "")
             rarity = "event"
-        rarity = data["rarity"] if "rarity" in data else rarity
+        rarity = data.get("rarity", "normal")
         att = data["att"] if "att" in data else 0
         dex = data["dex"] if "dex" in data else 0
         inter = data["int"] if "int" in data else 0
@@ -728,17 +743,12 @@ class Character:
                 final.append(sorted(tmp[slot_name], key=_sort))
         return final
 
-    async def looted(self, how_many: int = 1, exclude: Set[Union[str, Rarities]] = set()) -> List[Tuple[str, int]]:
-        if not exclude:
-            exclude = {Rarities.normal, Rarities.rare, Rarities.epic, Rarities.forged}
-        else:
-            for rarity in exclude:
-                if isinstance(rarity, Rarities):
-                    exclude.add(rarity)
-                else:
-                    exclude.add(Rarities.get_from_name(rarity))
+    async def looted(self, how_many: int = 1, exclude: Optional[Set[Rarities]] = None) -> List[Tuple[str, int]]:
+        if exclude is None:
+            exclude = {Rarities.forged, Rarities.event}
         exclude.add(Rarities.forged)
-        items = [i for n, i in self.backpack.items() if i.rarity not in exclude]
+        exclude.add(Rarities.event)
+        items = [i for i in self.backpack.values() if i.rarity not in exclude]
         looted_so_far = 0
         looted = []
         if not items:
@@ -747,7 +757,8 @@ class Character:
         while how_many > looted_so_far:
             if looted_so_far >= how_many:
                 break
-            if count >= 5:
+            if count >= 10:
+                # Our max items stolen is 10 now
                 break
             item = random.choice(items)
             if not bool(random.getrandbits(1)):
@@ -776,7 +787,7 @@ class Character:
             "CHA",
             "INT",
             "DEX",
-            "LUC",
+            "LUCK",
             "LVL",
             "QTY",
             "DEG",
@@ -1534,14 +1545,19 @@ class Character:
             self.belt,
             self.legs,
             self.boots,
-            self.left,
-            self.right,
             self.ring,
             self.charm,
             self.neck,
         ]:
             if item and item.to_json() not in list(self.pieces_to_keep.values()):
                 await self.add_to_backpack(item)
+        if (self.left and self.left.slot is Slot.two_handed) or (self.right and self.right.slot is Slot.two_handed):
+            if self.left.to_json() not in list(self.pieces_to_keep.values()):
+                await self.add_to_backpack(self.left)
+        else:
+            for item in [self.left, self.right]:
+                if item and item.to_json() not in list(self.pieces_to_keep.values()):
+                    await self.add_to_backpack(item)
         forged = 0
         for k, v in self.backpack.items():
             for n, i in v.to_json().items():
@@ -1606,15 +1622,21 @@ class Character:
 
     def keep_equipped(self):
         items_to_keep = {}
-        last_slot = ""
         for slots in Slot:
-            if slots is Slot.two_handed:
+            if slots in [Slot.two_handed, Slot.left, Slot.right]:
                 continue
-            if last_slot == "two handed":
-                last_slot = slots
-                continue
+            items_to_keep[slots.name] = {}
             item = getattr(self, slots.name)
-            items_to_keep[slots] = item.to_json() if self.rebirths >= 30 and item and item.set else {}
+            if item and item.set and self.rebirths >= 30:
+                items_to_keep[slots.name] = item.to_json()
+        if self.left == self.right and self.right is not None:
+            if self.right.set and self.rebirths >= 30:
+                items_to_keep["right"] = self.right.to_json()
+        else:
+            if self.left and self.left.set and self.rebirths >= 30:
+                items_to_keep["left"] = self.left.to_json()
+            if self.right and self.right.set and self.rebirths >= 30:
+                items_to_keep["right"] = self.right.to_json()
         self.pieces_to_keep = items_to_keep
 
 

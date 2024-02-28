@@ -50,6 +50,8 @@ class Slot(Enum):
 
     @classmethod
     def get_from_name(cls, name: str) -> Slot:
+        if name.lower() == "twohanded":
+            return Slot.two_handed
         for i in cls:
             if " " in name:
                 name = name.replace(" ", "_")

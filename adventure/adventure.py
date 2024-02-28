@@ -93,7 +93,7 @@ class Adventure(
             user_id
         ).clear()  # This will only ever touch the separate currency, leaving bot economy to be handled by core.
 
-    __version__ = "4.0.4"
+    __version__ = "4.0.5"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -871,7 +871,7 @@ class Adventure(
         if easy_mode:
             if transcended:
                 # Shows Transcended on Easy mode
-                new_challenge = _("Transcended {}").format(challenge.replace("Ascended", ""))
+                new_challenge = _("Transcended {}").format(challenge.replace("Ascended ", ""))
             no_monster = False
             if monster_roster[challenge]["boss"]:
                 timer = 60 * 5
