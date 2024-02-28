@@ -157,24 +157,12 @@ class SlotConverter(Transformer):
 
 
 class Stats(commands.FlagConverter, case_insensitive=True):
-    attack: Optional[int] = commands.flag(
-        name="att", aliases=["attack"], default=0
-    )
-    charisma: Optional[int] = commands.flag(
-        name="cha", aliases=["charisma", "diplomacy", "diplo"], default=0
-    )
-    intelligence: Optional[int] = commands.flag(
-        name="int", aliases=["intelligence"], default=0
-    )
-    dexterity: Optional[int] = commands.flag(
-        name="dex", aliases=["dexterity"], default=0
-    )
-    luck: Optional[int] = commands.flag(
-        name="luck", default=0
-    )
-    rarity: Optional[Rarities] = commands.flag(
-        name="rarity", default=Rarities.normal, converter=RarityConverter
-    )
+    attack: Optional[int] = commands.flag(name="att", aliases=["attack"], default=0)
+    charisma: Optional[int] = commands.flag(name="cha", aliases=["charisma", "diplomacy", "diplo"], default=0)
+    intelligence: Optional[int] = commands.flag(name="int", aliases=["intelligence"], default=0)
+    dexterity: Optional[int] = commands.flag(name="dex", aliases=["dexterity"], default=0)
+    luck: Optional[int] = commands.flag(name="luck", default=0)
+    rarity: Optional[Rarities] = commands.flag(name="rarity", default=Rarities.normal, converter=RarityConverter)
     degrade: Optional[int] = commands.flag(name="degrade", aliases=["deg"], default=3)
     level: Optional[int] = commands.flag(name="level", aliases=["lvl"], default=1)
     slot: Optional[Slot] = commands.flag(name="slot", default=Slot.right, converter=SlotConverter)
@@ -200,7 +188,7 @@ class Stats(commands.FlagConverter, case_insensitive=True):
             "luck": self.luck,
             "rarity": self.rarity.name if self.rarity else "normal",
             "degrade": self.degrade,
-            "lvl": self.level
+            "lvl": self.level,
         }
         for key, value in possible_stats.items():
             if key in ["slot", "rarity"]:

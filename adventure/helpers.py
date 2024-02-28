@@ -1,9 +1,10 @@
 from __future__ import annotations
+
 import random
 import re
 import time
 from enum import Enum
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 import discord
 from discord.ext.commands import CheckFailure

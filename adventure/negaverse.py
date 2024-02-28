@@ -14,7 +14,7 @@ from redbot.core.utils.chat_formatting import bold, box, humanize_number, pagify
 from .abc import AdventureMixin
 from .bank import bank
 from .charsheet import Character
-from .constants import Treasure, Rarities
+from .constants import Rarities, Treasure
 from .helpers import ConfirmView, escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
@@ -322,7 +322,7 @@ class Negaverse(AdventureMixin):
                     loss_string = _("all of their")
                     offering_value += curr_balance
                 loss_state = True
-                exclude_list = {i for i in Rarities if i.value not in range(0, ((versus-roll)//10)+1)}
+                exclude_list = {i for i in Rarities if i.value not in range(0, ((versus - roll) // 10) + 1)}
                 # regular fails lose rarities depending on the difference of the roll
                 # i.e. A near loss should only lose normal quality items but severely losing
                 # will lose up to ascended if the versus rolled max and you rolled just above crit miss
@@ -332,9 +332,7 @@ class Negaverse(AdventureMixin):
                 items_to_lose = random.randint(0, max_items_lost)
                 if character.bal < loss:
                     items_to_lose += 1
-                items = await character.looted(
-                    how_many=items_to_lose, exclude=exclude_list
-                )
+                items = await character.looted(how_many=items_to_lose, exclude=exclude_list)
                 loss_msg = _(", losing {loss} {currency_name} as {negachar} looted their backpack.").format(
                     loss=loss_string,
                     currency_name=currency_name,

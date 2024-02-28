@@ -375,11 +375,11 @@ class EconomyCommands(AdventureMixin):
             await self.config.user(user).set(await c.to_json(ctx, self.config))
         item_table = await c.make_backpack_tables([item.row(c.lvl)])
         msg = box(
-                _("An item named {item} has been created and placed in {author}'s backpack.").format(
-                    item=item, author=escape(user.display_name), item_stats=item_table
-                ),
-                lang="ansi",
-            )
+            _("An item named {item} has been created and placed in {author}'s backpack.").format(
+                item=item, author=escape(user.display_name), item_stats=item_table
+            ),
+            lang="ansi",
+        )
         msg += item_table[0]
         await ctx.send(msg)
 
