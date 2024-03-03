@@ -26,7 +26,7 @@ from .converters import (
     SlotConverter,
 )
 from .helpers import ConfirmView, _sell, escape, is_dev, smart_embed
-from .menus import BackpackMenu, BaseMenu, SimpleSource
+from .menus import BackpackMenu, BackpackSource, BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
 
@@ -229,7 +229,8 @@ class BackPackCommands(AdventureMixin):
                     _("You have no items in your backpack."),
                 )
             await BackpackMenu(
-                source=SimpleSource(msgs),
+                source=BackpackSource(msgs),
+                cog=self,
                 help_command=self._backpack,
                 delete_message_after=True,
                 clear_reactions_after=True,
@@ -266,27 +267,24 @@ class BackPackCommands(AdventureMixin):
             equip = c.backpack.get(equip_item.name)
             if equip:
                 slot = equip.slot
-                if not getattr(c, equip.slot.char_slot):
-                    equip_msg = box(
-                        _("{author} equipped {item} ({slot} slot).").format(
-                            author=escape(ctx.author.display_name), item=str(equip), slot=slot.get_name()
-                        ),
-                        lang="ansi",
+                put = getattr(c, equip.slot.char_slot)
+                equip_msg = _("{author} equipped {item} ({slot} slot)").format(
+                    author=escape(ctx.author.display_name),
+                    item=equip.as_ansi(),
+                    slot=slot.get_name(),
+                )
+                if put:
+                    equip_msg += _("and put {put} into their backpack").format(
+                        author=escape(ctx.author.display_name),
+                        item=equip.as_ansi(),
+                        slot=slot,
+                        put=getattr(c, equip.slot.char_slot).as_ansi(),
                     )
-                else:
-                    equip_msg = box(
-                        _("{author} equipped {item} ({slot} slot) and put {put} into their backpack.").format(
-                            author=escape(ctx.author.display_name),
-                            item=str(equip),
-                            slot=slot,
-                            put=getattr(c, equip.slot.char_slot),
-                        ),
-                        lang="ansi",
-                    )
+                equip_msg += f".\n{equip.table(c)}"
 
                 c = await c.equip_item(equip, True, is_dev(ctx.author))  # FIXME:
                 await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
-        await ctx.send(equip_msg)
+        await ctx.send(box(equip_msg, lang="ansi"))
 
     @_backpack.command(name="eset", cooldown_after_parsing=True)
     @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)

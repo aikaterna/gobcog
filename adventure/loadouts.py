@@ -9,7 +9,7 @@ from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
 from .abc import AdventureMixin
-from .charsheet import Character
+from .charsheet import Character, Item
 from .helpers import escape, smart_embed
 from .menus import BaseMenu, SimpleSource
 
@@ -119,11 +119,11 @@ class LoadoutCommands(AdventureMixin):
             for (l_name, loadout) in c.loadouts.items():
                 if name and name.lower() == l_name:
                     index = count
-                stats = await self._build_loadout_display(ctx, {"items": loadout}, rebirths=c.rebirths, index=count + 1)
-                msg = _("{name} Loadout for {author}\n\n{stats}").format(
-                    name=l_name, author=escape(ctx.author.display_name), stats=stats
-                )
-                msg_list.append(box(msg, lang="ansi"))
+                items = [Item.from_json(ctx, raw_item) for raw_item in loadout.values() if raw_item]
+
+                title = _("{name} Loadout for {author}").format(name=l_name, author=escape(ctx.author.display_name))
+                stats = await c.make_backpack_tables(items, title=title, include_total=True)
+                msg_list.extend([str(table) for table in stats])
                 count += 1
             if msg_list:
                 await BaseMenu(

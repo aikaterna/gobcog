@@ -251,23 +251,20 @@ class CharacterCommands(AdventureMixin):
             stats_msg += breakdown
             stats_msg += "Multiple complete set bonuses stack."
             msg_list.append(box(stats_msg, lang="ini"))
-        set_items = {key: value for key, value in self.TR_GEAR_SET.items() if value["set"] == title_cased_set_name}
 
-        d = {}
-        for k, v in set_items.items():
-            if len(v["slot"]) > 1:
-                d.update({v["slot"][0]: {k: v}})
-                d.update({v["slot"][1]: {k: v}})
-            else:
-                d.update({v["slot"][0]: {k: v}})
+        dummy_items = []
+        for name, data in self.TR_GEAR_SET.items():
+            if data["set"] != title_cased_set_name:
+                continue
+            dummy_items.append(Item.from_json(ctx, {name: data}))
 
-        loadout_display = await self._build_loadout_display(ctx, {"items": d}, loadout=False, rebirths=c.rebirths)
-        set_msg = _("{set_name} Set Pieces\n\n").format(set_name=title_cased_set_name)
-        set_msg += loadout_display
-        msg_list.append(box(set_msg, lang="ansi"))
+        loadout_display = await c.make_backpack_tables(
+            dummy_items, title=_("{set_name} Set Pieces\n\n").format(set_name=title_cased_set_name), include_total=True
+        )
+        msg_list.extend([str(table) for table in loadout_display])
         backpack_contents = await c.get_backpack(set_name=title_cased_set_name, clean=True)
         if backpack_contents:
-            msg_list.extend(backpack_contents)
+            msg_list.extend([str(table) for table in backpack_contents])
         await BaseMenu(
             source=SimpleSource(msg_list),
             delete_message_after=True,
@@ -315,92 +312,16 @@ class CharacterCommands(AdventureMixin):
             if (item_name, slots, slot_name) in items_names:
                 continue
             items_names.add((item_name, slots, slot_name))
-            rows.append(item.row(c.lvl))
+            rows.append(item)
         tables = await c.make_backpack_tables(rows, msg)
         for t in tables:
-            msgs.append(t)
+            msgs.append(str(t))
         await BaseMenu(
             source=SimpleSource([box(c, lang="ansi"), *msgs]),
             delete_message_after=True,
             clear_reactions_after=True,
             timeout=180,
         ).start(ctx=ctx)
-
-    async def _build_loadout_display(
-        self, ctx: commands.Context, userdata: dict, loadout=True, rebirths: int = None, index: int = None
-    ):
-        table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
-        table.set_style(BeautifulTable.STYLE_RST)
-        table.columns.header = [
-            "Name",
-            "Slot",
-            "ATT",
-            "CHA",
-            "INT",
-            "DEX",
-            "LUC",
-            "LVL",
-            "SET",
-        ]
-        form_string = ""
-        last_slot = ""
-        att = 0
-        cha = 0
-        intel = 0
-        dex = 0
-        luck = 0
-
-        def get_slot_index(slot: Union[Slot, tuple, list]):
-            if isinstance(slot, str):
-                slot = Slot.from_list([slot])
-            elif isinstance(slot, (tuple, list)):
-                slot = Slot.from_list(slot)
-            return slot.order()
-
-        data_sorted = sorted(userdata["items"].items(), key=get_slot_index)
-        items_names = set()
-        for (slot, data) in data_sorted:
-            if slot == "backpack":
-                continue
-            if last_slot == "two handed":
-                last_slot = slot
-                continue
-            if not data:
-                continue
-            item = Item.from_json(ctx, data)
-            item_name = str(item)
-            slots = item.slot
-            slot_name = item.slot.get_name()
-            if (item_name, slots, slot_name) in items_names:
-                continue
-            items_names.add((item_name, slots, slot_name))
-            data = (
-                item_name,
-                slot_name,
-                item.att * (1 if slots == 1 else 2),
-                item.cha * (1 if slots == 1 else 2),
-                item.int * (1 if slots == 1 else 2),
-                item.dex * (1 if slots == 1 else 2),
-                item.luck * (1 if slots == 1 else 2),
-                item.lvl if item.rarity is Rarities.event else max(item.lvl - min(max(rebirths // 2 - 1, 0), 50), 1),
-                item.set or "N/A",
-            )
-            if data not in table.rows:
-                table.rows.append(data)
-            att += item.att
-            cha += item.cha
-            intel += item.int
-            dex += item.dex
-            luck += item.luck
-
-        table.set_style(BeautifulTable.STYLE_RST)
-        form_string += str(table)
-
-        form_string += _("\n\nTotal stats: ")
-        form_string += f"({att} | {cha} | {intel} | {dex} | {luck})"
-        if index is not None:
-            form_string += f"\nPage {index}"
-        return form_string
 
     @commands.hybrid_command()
     async def unequip(self, ctx: commands.Context, *, item: EquipmentConverter):

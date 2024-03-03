@@ -11,6 +11,7 @@ class Monster(TypedDict):
     hp: int
     pdef: float
     mdef: float
+    cdef: float
     dipl: int
     image: str
     boss: bool

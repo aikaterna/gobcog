@@ -18,7 +18,7 @@ from .charsheet import Character, Item
 from .constants import Rarities, Slot
 from .converters import RarityConverter
 from .helpers import LootView, _sell, escape, is_dev, smart_embed
-from .menus import BaseMenu, SimpleSource
+from .menus import BackpackMenu, BackpackSource
 
 _ = Translator("Adventure", __file__)
 
@@ -41,19 +41,18 @@ class LootCommands(AdventureMixin):
 
         Use the box rarity type with the command: normal, rare, epic, legendary, ascended or set.
         """
-        log.debug(box_type)
+        if (not is_dev(ctx.author) and number > 100) or number < 1:
+            return await smart_embed(ctx, _("Nice try :smirk:."))
+        if self.in_adventure(ctx):
+            return await smart_embed(
+                ctx,
+                _("You tried to open a loot chest but then realised you left them all back at the inn."),
+            )
+        if not await self.allow_in_dm(ctx):
+            return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
         async with ctx.typing():
-            if (not is_dev(ctx.author) and number > 100) or number < 1:
-                return await smart_embed(ctx, _("Nice try :smirk:."))
-            if self.in_adventure(ctx):
-                return await smart_embed(
-                    ctx,
-                    _("You tried to open a loot chest but then realised you left them all back at the inn."),
-                )
-            if not await self.allow_in_dm(ctx):
-                return await smart_embed(ctx, _("This command is not available in DM's on this bot."))
-            msgs = []
             async with self.get_lock(ctx.author):
+                msgs = []
                 try:
                     c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
                 except Exception as exc:
@@ -100,7 +99,7 @@ class LootCommands(AdventureMixin):
                         msg = _("{}, you've opened the following items:\n\n").format(escape(ctx.author.display_name))
                         rows = []
                         async for index, item in AsyncIter(items.values(), steps=100).enumerate(start=1):
-                            rows.append(item.row(c.lvl))
+                            rows.append(item)
                         tables = await c.make_backpack_tables(rows, msg)
                         for t in tables:
                             msgs.append(t)
@@ -109,13 +108,16 @@ class LootCommands(AdventureMixin):
                         # open chests
                         c.treasure[redux] -= 1
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
-                        await self._open_chest(ctx, ctx.author, box_type, character=c)  # returns item and msg
+                        await self._open_chest(ctx, ctx.author, box_type, character=c)
+                        # returns item and msg
         if msgs:
-            await BaseMenu(
-                source=SimpleSource(msgs),
+            await BackpackMenu(
+                source=BackpackSource(msgs),
+                cog=self,
                 delete_message_after=True,
                 clear_reactions_after=True,
                 timeout=60,
+                help_command=self.loot,
             ).start(ctx=ctx)
 
     async def _genitem(self, ctx: commands.Context, rarity: Optional[Rarities] = None, slot: Optional[Slot] = None):
@@ -364,101 +366,33 @@ class LootCommands(AdventureMixin):
                 )
             )
             return None
+        table = item.table(character)
         slot = item.slot
         old_item = getattr(character, item.slot.char_slot, None)
         old_stats = ""
 
         if old_item:
-            old_slot = old_item.slot
-            if old_item.slot is Slot.two_handed:
-                old_slot = old_item.slot.get_name()
-                att = old_item.att * 2
-                cha = old_item.cha * 2
-                intel = old_item.int * 2
-                luck = old_item.luck * 2
-                dex = old_item.dex * 2
-            else:
-                att = old_item.att
-                cha = old_item.cha
-                intel = old_item.int
-                luck = old_item.luck
-                dex = old_item.dex
-
-            old_stats = (
-                _("You currently have {item} [{slot}] equipped | Lvl req {lv} equipped.").format(
-                    item=old_item.ansi, slot=old_slot, lv=character.equip_level(old_item)
-                )
-                + f" (ATT: {str(att)}, "
-                f"CHA: {str(cha)}, "
-                f"INT: {str(intel)}, "
-                f"DEX: {str(dex)}, "
-                f"LUCK: {str(luck)}) "
-            )
-        if item.slot is Slot.two_handed:
-            slot = item.slot.get_name()
-            att = item.att * 2
-            cha = item.cha * 2
-            intel = item.int * 2
-            luck = item.luck * 2
-            dex = item.dex * 2
-        else:
-            att = item.att
-            cha = item.cha
-            intel = item.int
-            luck = item.luck
-            dex = item.dex
+            old_item_name, old_item_row = old_item.row(character)
+            table.rows.append([_("Currently Equipped\n") + old_item_name])
+            table.rows.append(old_item_row)
         if hasattr(user, "id"):
             view = LootView(60, user)
         else:
             view = LootView(60, ctx.author)
 
-        if hasattr(user, "display_name"):
-            chest_msg2 = (
-                _("{user} found {item} [{slot}] | Lvl req {lv}.").format(
-                    user=escape(user.display_name),
-                    item=item.ansi,
-                    slot=slot,
-                    lv=character.equip_level(item),
-                )
-                + f" (ATT: {str(att)}, "
-                f"CHA: {str(cha)}, "
-                f"INT: {str(intel)}, "
-                f"DEX: {str(dex)}, "
-                f"LUCK: {str(luck)}) "
-            )
-
-            await open_msg.edit(
-                content=box(
-                    _(
-                        "{c_msg}\n\n{c_msg_2}\n\nDo you want to equip "
-                        "this item, put in your backpack, or sell this item?\n\n"
-                        "{old_stats}"
-                    ).format(c_msg=chest_msg, c_msg_2=chest_msg2, old_stats=old_stats),
-                    lang="ansi",
-                ),
-                view=view,
-            )
-        else:
-            chest_msg2 = (
-                _("The {user} found {item} [{slot}] | Lvl req {lv}.").format(
-                    user=user, item=item.ansi, slot=slot, lv=character.equip_level(item)
-                )
-                + f" (ATT: {str(att)}, "
-                f"CHA: {str(cha)}, "
-                f"INT: {str(intel)}, "
-                f"DEX: {str(dex)}, "
-                f"LUCK: {str(luck)}), "
-            )
-            await open_msg.edit(
-                content=box(
-                    _(
-                        "{c_msg}\n{c_msg_2}\nDo you want to equip "
-                        "this item, put in your backpack, or sell this item?\n\n{old_stats}"
-                    ).format(c_msg=chest_msg, c_msg_2=chest_msg2, old_stats=old_stats),
-                    lang="ansi",
-                ),
-                view=view,
-            )
+        old_stats = str(table)
+        chest_msg2 = _("{user} found {item}.\n").format(user=escape(user.display_name), item=item.ansi)
+        await open_msg.edit(
+            content=box(
+                _(
+                    "{c_msg}\n\n{c_msg_2}\n\nDo you want to equip "
+                    "this item, put in your backpack, or sell this item?\n\n"
+                    "{old_stats}"
+                ).format(c_msg=chest_msg, c_msg_2=chest_msg2, old_stats=old_stats),
+                lang="ansi",
+            ),
+            view=view,
+        )
         await view.wait()
         if view.result.value == 0:
             await self._clear_react(open_msg)
@@ -466,8 +400,8 @@ class LootCommands(AdventureMixin):
             await open_msg.edit(
                 content=(
                     box(
-                        _("{user} put the {item} into their backpack.").format(
-                            user=escape(ctx.author.display_name), item=item
+                        _("{user} put the {item} into their backpack.\n{item_stats}").format(
+                            user=escape(ctx.author.display_name), item=item.as_ansi(), item_stats=item.table(character)
                         ),
                         lang="ansi",
                     )
@@ -495,7 +429,7 @@ class LootCommands(AdventureMixin):
                     box(
                         _("{user} sold the {item} for {price} {currency_name}.").format(
                             user=escape(ctx.author.display_name),
-                            item=item,
+                            item=item.as_ansi(),
                             price=humanize_number(price),
                             currency_name=currency_name,
                         ),
@@ -516,27 +450,24 @@ class LootCommands(AdventureMixin):
                 await character.add_to_backpack(item)
                 await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                 return await smart_embed(
-                    ctx,
-                    f"{bold(ctx.author.display_name)}, you need to be level "
-                    f"`{equiplevel}` to equip this item. I've put it in your backpack.",
+                    ctx=ctx,
+                    message=_(
+                        "{user}, you need to be level "
+                        "`{equiplevel}` to equip this item. I've put it in your backpack."
+                    ).format(user=bold(ctx.author.display_name), equiplevel=equiplevel),
                 )
             if not getattr(character, item.slot.char_slot):
-                equip_msg = box(
-                    _("{user} equipped {item} ({slot} slot).").format(
-                        user=escape(ctx.author.display_name), item=item, slot=slot
-                    ),
-                    lang="ansi",
+                equip_msg = _("{user} equipped {item} ({slot} slot).").format(
+                    user=escape(ctx.author.display_name), item=item.as_ansi(), slot=slot
                 )
             else:
-                equip_msg = box(
-                    _("{user} equipped {item} ({slot} slot) and put {old_item} into their backpack.").format(
-                        user=escape(ctx.author.display_name),
-                        item=item,
-                        slot=slot,
-                        old_item=getattr(character, item.slot.char_slot),
-                    ),
-                    lang="ansi",
+                equip_msg = _("{user} equipped {item} ({slot} slot) and put {old_item} into their backpack.").format(
+                    user=escape(ctx.author.display_name),
+                    item=item,
+                    slot=slot,
+                    old_item=getattr(character, item.slot.char_slot).as_ansi(),
                 )
-            await open_msg.edit(content=equip_msg, view=None)
+            equip_msg += f".\n{item.table(character)}"
+            await open_msg.edit(content=box(equip_msg, lang="ansi"), view=None)
             character = await character.equip_item(item, False, is_dev(ctx.author))
             await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))

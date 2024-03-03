@@ -2,7 +2,14 @@
     "fight":
     {
         "tinkerer":
-        [],
+        [
+            "Putting down your shiny thing, you avidly swing your $weapon at the $monster.",
+            "Regretting disassembling your Ion Cannon, you decide the $weapon is enough to put the hurt on $monster.",
+            "Having your trusty $weapon in hand, you decide that the $monster is more important than remaking the wheel.",
+            "Now that the $monster has appeared, you stop working with your tools and begin working with your $weapon.",
+            "Leaving your $weapon behind, you grab the first thing to throw at the $monster before you - just the way your mother did when you were young. Which was a shame, that was your favorite wrench.",
+            "The $monster may be flesh and bone, but you can see all sorts of possibilities as you begin to dissect it with your $weapon."
+        ],
         "bard":
         [
             "Feeling rather uncreative, you decide to instead bash your $weapon at the $monster."

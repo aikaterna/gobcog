@@ -383,43 +383,43 @@ class SpecialActionButton(discord.ui.Button):
                     hp = session.monster_modified_stats["hp"]
                     diplo = session.monster_modified_stats["dipl"]
                     if roll == 1:
-                        hp = int(hp * self.view.cog.ATTRIBS[session.attribute][0] * session.monster_stats)
-                        dipl = int(diplo * self.view.cog.ATTRIBS[session.attribute][1] * session.monster_stats)
+                        hp = session.monster_hp()
+                        dipl = session.monster_dipl()
                         msg += _(
                             "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}){trans}.\n"
                         ).format(
                             challenge=session.challenge,
                             attr=session.attribute,
                             hp_symbol=self.view.cog.emojis.hp,
-                            hp=humanize_number(ceil(hp)),
+                            hp=humanize_number(hp),
                             dipl_symbol=self.view.cog.emojis.dipl,
-                            dipl=humanize_number(ceil(dipl)),
+                            dipl=humanize_number(dipl),
                             trans=f" (**Transcended**) {self.view.cog.emojis.skills.psychic}"
                             if session.transcended
                             else f"{self.view.cog.emojis.skills.psychic}",
                         )
                         self.view.exposed = True
                     elif roll >= 0.95:
-                        hp = hp * self.view.cog.ATTRIBS[session.attribute][0] * session.monster_stats
-                        dipl = diplo * self.view.cog.ATTRIBS[session.attribute][1] * session.monster_stats
+                        hp = session.monster_hp()
+                        dipl = session.monster_dipl()
                         msg += _(
                             "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}).\n"
                         ).format(
                             challenge=session.challenge,
                             attr=session.attribute,
                             hp_symbol=self.view.cog.emojis.hp,
-                            hp=humanize_number(ceil(hp)),
+                            hp=humanize_number(hp),
                             dipl_symbol=self.view.cog.emojis.dipl,
-                            dipl=humanize_number(ceil(dipl)),
+                            dipl=humanize_number(dipl),
                         )
                         self.view.exposed = True
                     elif roll >= 0.90:
-                        hp = hp * self.view.cog.ATTRIBS[session.attribute][0] * session.monster_stats
+                        hp = session.monster_hp()
                         msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
                             challenge=session.challenge,
                             attr=session.attribute,
                             hp_symbol=self.view.cog.emojis.hp,
-                            hp=humanize_number(ceil(hp)),
+                            hp=humanize_number(hp),
                         )
                         self.view.exposed = True
                     elif roll > 0.75:
@@ -642,6 +642,7 @@ class GameSession(discord.ui.View):
         self.cog: AdventureMixin = kwargs.pop("cog")
         self.challenge: str = kwargs.pop("challenge")
         self.attribute: dict = kwargs.pop("attribute")
+        self.attribute_stats: Tuple[float, ...] = kwargs.pop("attribute_stats", (1.0, 1.0))
         self.guild: discord.Guild = kwargs.pop("guild")
         self.boss: bool = kwargs.pop("boss")
         self.miniboss: dict = kwargs.pop("miniboss")
@@ -678,6 +679,12 @@ class GameSession(discord.ui.View):
         self.add_item(self.pray_button)
         self.add_item(self.run_button)
         self.add_item(self.special_button)
+
+    def monster_hp(self) -> int:
+        return max(int(self.monster_modified_stats.get("hp", 0) * self.attribute_stats[0] * self.monster_stats), 1)
+
+    def monster_dipl(self) -> int:
+        return max(int(self.monster_modified_stats.get("dipl", 0) * self.attribute_stats[1] * self.monster_stats), 1)
 
     async def update(self):
         self.attack_button.label = self.attack_button.label_name.format(f"({len(self.fight)})")

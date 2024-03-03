@@ -1,15 +1,21 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import discord
 from redbot.core.commands import commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import escape, humanize_number
+from redbot.core.utils.chat_formatting import box, escape, humanize_number
 from redbot.vendored.discord.ext import menus
 
 from .bank import bank
+from .charsheet import Character
+from .helpers import is_dev, smart_embed
+
+if TYPE_CHECKING:
+    from .abc import AdventureMixin
+    from .charsheet import BackpackTable
 
 _ = Translator("Adventure", __file__)
 log = logging.getLogger("red.cogs.adventure.menus")
@@ -555,11 +561,12 @@ class BaseMenu(discord.ui.View):
     async def _get_kwargs_from_page(self, page: Any):
         value = await self.source.format_page(self, page)
         if isinstance(value, dict):
+            value["view"] = self
             return value
         elif isinstance(value, str):
-            return {"content": value, "embed": None}
+            return {"content": value, "embed": None, "view": self}
         elif isinstance(value, discord.Embed):
-            return {"embed": value, "content": None}
+            return {"embed": value, "content": None, "view": self}
         return value
 
     async def show_page(self, page_number: int, interaction: discord.Interaction):
@@ -567,7 +574,7 @@ class BaseMenu(discord.ui.View):
         self.current_page = page_number
         kwargs = await self._get_kwargs_from_page(page)
         await self.update()
-        await interaction.response.edit_message(**kwargs, view=self)
+        await interaction.response.edit_message(**kwargs)
 
     async def send_initial_message(
         self, ctx: Optional[commands.Context], page: int = 0, interaction: Optional[discord.Interaction] = None
@@ -584,10 +591,10 @@ class BaseMenu(discord.ui.View):
         kwargs = await self._get_kwargs_from_page(page)
         await self.update()
         if ctx is None and interaction is not None:
-            await interaction.response.send_message(**kwargs, view=self)
+            await interaction.response.send_message(**kwargs)
             return await interaction.original_response()
         else:
-            return await ctx.send(**kwargs, view=self)
+            return await ctx.send(**kwargs)
 
     async def show_checked_page(self, page_number: int, interaction: discord.Interaction) -> None:
         max_pages = self._source.get_max_pages()
@@ -828,11 +835,90 @@ class LeaderboardMenu(BaseMenu):
         await self.change_source(source=EconomySource(entries=bank_sorted), interaction=interaction)
 
 
+class BackpackSelectEquip(discord.ui.Select):
+    def __init__(self, options: List[discord.SelectOption]):
+        self.view: BackpackMenu
+        super().__init__(min_values=1, max_values=1, options=options, placeholder=_("Equip"))
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        equip_item = self.view.source.current_table.items[int(self.values[0])]
+        if self.view.cog.in_adventure(self.view.ctx):
+            return await smart_embed(
+                message=_("You tried to equip an item but the monster ahead of you commands your attention."),
+                ephemeral=True,
+                interaction=interaction,
+            )
+        async with self.view.cog.get_lock(self.view.ctx.author):
+            try:
+                c = await Character.from_json(
+                    self.view.ctx, self.view.cog.config, self.view.ctx.author, self.view.cog._daily_bonus
+                )
+            except Exception as exc:
+                log.exception("Error with the new character sheet", exc_info=exc)
+                return
+            equiplevel = c.equip_level(equip_item)
+            if is_dev(self.view.ctx.author):  # FIXME:
+                equiplevel = 0
+
+            if not c.can_equip(equip_item):
+                return await smart_embed(
+                    message=_("You need to be level `{level}` to equip this item.").format(level=equiplevel),
+                    interaction=interaction,
+                )
+
+            equip = c.backpack.get(equip_item.name)
+            if equip:
+                slot = equip.slot
+                put = getattr(c, equip.slot.char_slot)
+                equip_msg = _("{author} equipped {item} ({slot} slot)").format(
+                    author=escape(self.view.ctx.author.display_name),
+                    item=equip.as_ansi(),
+                    slot=slot.get_name(),
+                )
+                if put:
+                    equip_msg += " " + _("and put {put} into their backpack").format(
+                        author=escape(self.view.ctx.author.display_name),
+                        item=equip.as_ansi(),
+                        slot=slot,
+                        put=getattr(c, equip.slot.char_slot).as_ansi(),
+                    )
+                equip_msg += f".\n{equip.table(c)}"
+
+                c = await c.equip_item(equip, True, is_dev(self.view.ctx.author))  # FIXME:
+                await self.view.cog.config.user(self.view.ctx.author).set(
+                    await c.to_json(self.view.ctx, self.view.cog.config)
+                )
+                await smart_embed(message=box(equip_msg, lang="ansi"), interaction=interaction)
+
+
+class BackpackSource(menus.ListPageSource):
+    def __init__(self, entries: List[BackpackTable]):
+        super().__init__(entries, per_page=1)
+        self.current_table = entries[0]
+        self.select_options = [
+            discord.SelectOption(label=str(item), value=i, description=item.stat_str())
+            for i, item in enumerate(self.current_table.items)
+        ]
+
+    def is_paginating(self):
+        return True
+
+    async def format_page(self, menu: menus.MenuPages, page: BackpackTable):
+        self.current_table = page
+        self.select_options = [
+            discord.SelectOption(label=str(item), value=i, description=item.stat_str())
+            for i, item in enumerate(self.current_table.items)
+        ]
+        return str(page)
+
+
 class BackpackMenu(BaseMenu):
     def __init__(
         self,
-        source: menus.PageSource,
+        source: BackpackSource,
         help_command: commands.Command,
+        cog: AdventureMixin,
         clear_reactions_after: bool = True,
         delete_message_after: bool = False,
         timeout: int = 180,
@@ -848,12 +934,23 @@ class BackpackMenu(BaseMenu):
             **kwargs,
         )
         self.__help_command = help_command
+        self.equip_select = None
+        if self.source.select_options:
+            self.equip_select = BackpackSelectEquip(self.source.select_options)
+            self.add_item(self.equip_select)
+        self.cog = cog
+
+    async def _get_kwargs_from_page(self, page: Any):
+        if self.equip_select is not None:
+            self.remove_item(self.equip_select)
+        ret = await super()._get_kwargs_from_page(page)
+        if self.source.select_options:
+            self.equip_select = BackpackSelectEquip(self.source.select_options)
+            self.add_item(self.equip_select)
+        return ret
 
     @discord.ui.button(style=discord.ButtonStyle.grey, emoji="\N{INFORMATION SOURCE}\N{VARIATION SELECTOR-16}", row=1)
     async def send_help(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         """Sends help for the provided command."""
-        await self.ctx.send_help(self.__help_command)
-        self.delete_message_after = True
-        self.stop()
         await interaction.response.defer()
-        await self.on_timeout()
+        await self.ctx.send_help(self.__help_command)

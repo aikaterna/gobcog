@@ -592,7 +592,7 @@ class ClassAbilities(AdventureMixin):
                         mdef = session.monster_modified_stats["mdef"]
                         cdef = session.monster_modified_stats.get("cdef", 1.0)
                         hp = session.monster_modified_stats["hp"]
-                        diplo = session.monster_modified_stats["dipl"]
+                        dipl = session.monster_modified_stats["dipl"]
                         choice = random.choice(["physical", "magic", "diplomacy"])
                         if choice == "physical":
                             physical_roll = 0.4
@@ -608,8 +608,8 @@ class ClassAbilities(AdventureMixin):
                             diplo_roll = 0.4
 
                         if roll == 1:
-                            hp = int(hp * self.ATTRIBS[session.attribute][0] * session.monster_stats)
-                            dipl = int(diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats)
+                            hp = session.monster_hp()
+                            dipl = session.monster_dipl()
                             msg += _(
                                 "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}){trans}.\n"
                             ).format(
@@ -625,8 +625,8 @@ class ClassAbilities(AdventureMixin):
                             )
                             self._sessions[ctx.guild.id].exposed = True
                         elif roll >= 0.95:
-                            hp = hp * self.ATTRIBS[session.attribute][0] * session.monster_stats
-                            dipl = diplo * self.ATTRIBS[session.attribute][1] * session.monster_stats
+                            hp = session.monster_hp()
+                            dipl = session.monster_dipl()
                             msg += _(
                                 "This monster is **a{attr} {challenge}** ({hp_symbol} {hp}/{dipl_symbol} {dipl}).\n"
                             ).format(
@@ -639,7 +639,7 @@ class ClassAbilities(AdventureMixin):
                             )
                             self._sessions[ctx.guild.id].exposed = True
                         elif roll >= 0.90:
-                            hp = hp * self.ATTRIBS[session.attribute][0] * session.monster_stats
+                            hp = session.monster_hp()
                             msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
                                 challenge=session.challenge,
                                 attr=session.attribute,

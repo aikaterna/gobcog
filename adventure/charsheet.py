@@ -9,12 +9,12 @@ from datetime import date, datetime
 from typing import Any, Dict, List, MutableMapping, Optional, Set, Tuple, Union
 
 import discord
-from beautifultable import ALIGN_LEFT, BeautifulTable
+from beautifultable import ALIGN_CENTER, BeautifulTable
 from discord.ext.commands import check
 from redbot.core import Config, commands
 from redbot.core.i18n import Translator
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import box, escape, humanize_list, humanize_number
+from redbot.core.utils.chat_formatting import box, escape, humanize_list, humanize_number, pagify
 
 from .bank import bank
 from .constants import DEV_LIST, REBIRTH_LVL, REBIRTH_STEP, ANSITextColours, HeroClasses, Rarities, Slot, Treasure
@@ -22,6 +22,17 @@ from .constants import DEV_LIST, REBIRTH_LVL, REBIRTH_STEP, ANSITextColours, Her
 log = logging.getLogger("red.cogs.adventure")
 
 _ = Translator("Adventure", __file__)
+
+COLUMN_WIDTHS = [5, 5, 5, 5, 6]
+
+
+class BackpackTable:
+    def __init__(self, table: str, items: List[Item]):
+        self.table = table
+        self.items = items
+
+    def __str__(self):
+        return self.table
 
 
 class Item:
@@ -82,31 +93,92 @@ class Item:
     def ansi(self) -> str:
         return self.rarity.as_ansi(self.name)
 
-    def row(self, player_level: int) -> Tuple[Any, ...]:
+    def as_ansi(self, maxwidth: Optional[int] = None) -> str:
+        return self.rarity.as_ansi(self.name, maxwidth)
+
+    def stat_str(self) -> str:
+        mult = 2 if self.slot is Slot.two_handed else 1
+        ret = self.slot.get_name() or ""
+        stats = [
+            "ATT",
+            "CHA",
+            "INT",
+            "DEX",
+            "LUCK",
+        ]
+
+        ret += " " + " | ".join(f"{stat_name}: {getattr(self, stat_name.lower(), 0) * mult}" for stat_name in stats)
+        return ret
+
+    def row(self, player: Character, show_delta: bool = False) -> Tuple[Any, ...]:
         """
         Return a tuple of relevant data for use in tables for this item.
 
         Parameters
         ----------
-            player_level: int
-                The players current level to know whether or not to make the item level red.
+            player: Character
+                The player's Character sheet to know their level and show possible deltas.
         """
-        can_equip = self.lvl <= player_level
-        return (
-            self.ansi,
-            self.slot.get_name(),
-            self.att * (1 if self.slot is not Slot.two_handed else 2),
-            self.cha * (1 if self.slot is not Slot.two_handed else 2),
-            self.int * (1 if self.slot is not Slot.two_handed else 2),
-            self.dex * (1 if self.slot is not Slot.two_handed else 2),
-            self.luck * (1 if self.slot is not Slot.two_handed else 2),
-            f"{ANSITextColours.red.as_str(str(self.lvl))}" if not can_equip else f"{self.lvl}",
-            self.owned,
-            f"[{self.degrade}]"
-            if self.rarity in [Rarities.legendary, Rarities.event, Rarities.ascended] and self.degrade >= 0
-            else "N/A",
-            self.set or "N/A",
-        )
+        can_equip = self.lvl <= player.lvl
+        subtable = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
+        subtable.set_style(BeautifulTable.STYLE_RST)
+        # subtable.columns.header = [self.ansi]
+        degrade_str = ""
+        if self.rarity in [Rarities.legendary, Rarities.event, Rarities.ascended] and self.degrade >= 0:
+            degrade_str = f"[{self.degrade}]"
+        set_str = ""
+        if self.set:
+            set_str = f"\n{self.set}"
+        lvl_str = f"{ANSITextColours.red.as_str(str(self.lvl))}" if not can_equip else f"{self.lvl}"
+        lvl_str = _("Lvl: {lvl_str}").format(lvl_str=lvl_str)
+        if show_delta:
+            current_equipped = getattr(player, self.slot.char_slot, None)
+            att = player.get_equipped_delta(current_equipped, self, "att")
+            cha = player.get_equipped_delta(current_equipped, self, "cha")
+            intel = player.get_equipped_delta(current_equipped, self, "int")
+            dex = player.get_equipped_delta(current_equipped, self, "dex")
+            luck = player.get_equipped_delta(current_equipped, self, "luck")
+        else:
+            att = self.att * (1 if self.slot is not Slot.two_handed else 2)
+            cha = self.cha * (1 if self.slot is not Slot.two_handed else 2)
+            intel = self.int * (1 if self.slot is not Slot.two_handed else 2)
+            dex = self.dex * (1 if self.slot is not Slot.two_handed else 2)
+            luck = self.luck * (1 if self.slot is not Slot.two_handed else 2)
+        stats = [
+            att,
+            cha,
+            intel,
+            dex,
+            luck,
+        ]
+        subtable.rows.append(stats)
+        subtable.columns.width = COLUMN_WIDTHS
+        subtable.border.top = ""
+        item_name = self.as_ansi(45)
+        return f"{self.owned}x {lvl_str} {self.slot.get_name()} {degrade_str}\n{item_name}{set_str}", subtable
+
+    def table(self, player: Character) -> str:
+        table = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
+        table.set_style(BeautifulTable.STYLE_RST)
+        table.border.top = ""
+        table.border.bottom = ""
+        headers = [
+            "ATT",
+            "CHA",
+            "INT",
+            "DEX",
+            "LUCK",
+        ]
+        subtable = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
+        subtable.set_style(BeautifulTable.STYLE_RST)
+        subtable.columns.width = COLUMN_WIDTHS
+        subtable.rows.append(headers)
+        subtable.border.top = ""
+        table.rows.append([subtable])
+        item_name, item_row = self.row(player)
+        table.rows.append([item_name])
+        table.rows.append([item_row])
+        return table
 
     @property
     def formatted_name(self):
@@ -776,38 +848,93 @@ class Character:
                 self.backpack[item.name] = item
         return looted
 
-    async def make_backpack_tables(self, items: List[List[str]], title: str = "") -> List[str]:
-        table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
+    async def make_backpack_tables(
+        self, items: List[Item], title: str = "", show_delta: bool = False, include_total: bool = False
+    ) -> List[BackpackTable]:
+        table = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
         table.set_style(BeautifulTable.STYLE_RST)
+        table.border.top = ""
+        table.border.bottom = ""
         tables = []
+        items_group = []
         headers = [
-            "Name",
-            "Slot",
+            # "Name",
+            # "Slot",
             "ATT",
             "CHA",
             "INT",
             "DEX",
             "LUCK",
-            "LVL",
-            "QTY",
-            "DEG",
-            "SET",
+            # "LVL",
+            # "QTY",
+            # "DEG",
+            # "SET",
         ]
-        table.columns.header = headers
+        # table.columns.header = headers
+        headertable = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
+        headertable.set_style(BeautifulTable.STYLE_RST)
+        # subtable.rows.append(["Name"])
+        headertable.columns.width = COLUMN_WIDTHS
+        headertable.rows.append(headers)
+        headertable.border.top = ""
+        # table.rows.append(["Name"])
+        table.rows.append([headertable])
+        # used for displaying the "headers"
 
         footer = _("\nPage {page_num}").format(page_num=len(tables) + 1)
-        for item_index in range(len(items)):
+        att = 0
+        cha = 0
+        intel = 0
+        dex = 0
+        luck = 0
+        for item in items:
             footer = _("\nPage {page_num}").format(page_num=len(tables) + 1)
-            item = items[item_index]
-            table.rows.append(item)
-            if len(title + str(table) + footer) > 1900:
+            item_name, item_row = item.row(self, show_delta=show_delta)
+            items_group.append(item)
+            table.rows.append([item_name])
+            table.rows.append([item_row])
+            if len(title + str(table) + footer) > 1600:
                 table.rows.pop()
-                tables.append(box(f"{title} {table} {footer}", lang="ansi"))
-                table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
+                table.rows.pop()
+                items_group.pop()
+                if include_total:
+                    totaltable = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
+                    totaltable.set_style(BeautifulTable.STYLE_RST)
+                    totaltable.columns.width = COLUMN_WIDTHS
+                    totaltable.rows.append([att, cha, intel, dex, luck])
+                    # used when the total is to be included at the bottom
+                    table.rows.append([_("Total")])
+                    table.rows.append([totaltable])
+                att = 0
+                cha = 0
+                intel = 0
+                dex = 0
+                luck = 0
+
+                tables.append(BackpackTable(table=box(f"{title}\n{table} {footer}", lang="ansi"), items=items_group))
+                items_group = []
+                table = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
                 table.set_style(BeautifulTable.STYLE_RST)
-                table.columns.header = headers
-                table.rows.append(item)
-        tables.append(box(f"{title} {table} {footer}", lang="ansi"))
+                table.border.top = ""
+                table.border.bottom = ""
+                table.rows.append([headertable])
+                # table.columns.header = headers
+                table.rows.append([item_name])
+                table.rows.append([item_row])
+                items_group.append(item)
+            att += item.att * (1 if item.slot is not Slot.two_handed else 2)
+            cha += item.cha * (1 if item.slot is not Slot.two_handed else 2)
+            intel += item.int * (1 if item.slot is not Slot.two_handed else 2)
+            dex += item.dex * (1 if item.slot is not Slot.two_handed else 2)
+            luck += item.luck * (1 if item.slot is not Slot.two_handed else 2)
+        if include_total:
+            totaltable = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
+            totaltable.set_style(BeautifulTable.STYLE_RST)
+            totaltable.columns.width = COLUMN_WIDTHS
+            totaltable.rows.append([att, cha, intel, dex, luck])
+            table.rows.append([_("Total")])
+            table.rows.append([totaltable])
+        tables.append(BackpackTable(table=box(f"{title}\n{table} {footer}", lang="ansi"), items=items_group))
         return tables
 
     async def get_backpack(
@@ -830,14 +957,13 @@ class Character:
             msg = _("{author}'s backpack\n\n").format(author=escape(self.user.display_name, formatting=True))
         else:
             msg = _("{author}'s forgeables\n\n").format(author=escape(self.user.display_name, formatting=True))
+        # subtable = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
         async for slot_group in AsyncIter(bkpk, steps=100):
             slot_name_org = slot_group[0][1].slot
-            slot_name = slot_name_org.get_name()
             if slot is not None and slot is not slot_name_org:
                 continue
             if clean and not slot_group:
                 continue
-            current_equipped = getattr(self, slot_name_org.name, None)
             async for item_name, item in AsyncIter(slot_group, steps=100):
                 if forging and (item.rarity in [Rarities.forged, Rarities.set] or item in consumed_list):
                     continue
@@ -850,38 +976,8 @@ class Character:
                     continue
                 if set_name is not None and set_name != item.set:
                     continue
-                if show_delta:
-                    att = self.get_equipped_delta(current_equipped, item, "att")
-                    cha = self.get_equipped_delta(current_equipped, item, "cha")
-                    intel = self.get_equipped_delta(current_equipped, item, "int")
-                    dex = self.get_equipped_delta(current_equipped, item, "dex")
-                    luck = self.get_equipped_delta(current_equipped, item, "luck")
-                else:
-                    att = item.att if slot_name_org is not Slot.two_handed else item.att * 2
-                    cha = item.cha if slot_name_org is not Slot.two_handed else item.cha * 2
-                    intel = item.int if slot_name_org is not Slot.two_handed else item.int * 2
-                    dex = item.dex if slot_name_org is not Slot.two_handed else item.dex * 2
-                    luck = item.luck if slot_name_org is not Slot.two_handed else item.luck * 2
-                equip_level = self.equip_level(item)
-                can_equip = equip_level is not None and self.equip_level(item) > self.lvl
-                rows.append(
-                    (
-                        item.ansi,
-                        slot_name,
-                        att,
-                        cha,
-                        intel,
-                        dex,
-                        luck,
-                        f"{ANSITextColours.red.as_str(str(equip_level))}" if can_equip else f"{equip_level}",
-                        item.owned,
-                        f"[{item.degrade}]"
-                        if item.rarity in [Rarities.legendary, Rarities.event, Rarities.ascended] and item.degrade >= 0
-                        else "N/A",
-                        item.set or "N/A",
-                    )
-                )
-        return await self.make_backpack_tables(rows, msg)
+                rows.append(item)
+        return await self.make_backpack_tables(rows, msg, show_delta)
 
     async def get_sorted_backpack_arg_parse(
         self,
@@ -1111,7 +1207,7 @@ class Character:
         )
 
         msg = _("{author}'s backpack\n\n").format(author=escape(self.user.display_name, formatting=True))
-        table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
+        table = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
         table.set_style(BeautifulTable.STYLE_RST)
         tables = []
         headers = [
@@ -1140,7 +1236,7 @@ class Character:
             async for item_name, item in AsyncIter(slot_group, steps=100):
                 if len(str(table)) > 1500:
                     tables.append(box(msg + str(table) + f"\nPage {len(tables) + 1}", lang="ansi"))
-                    table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
+                    table = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
                     table.set_style(BeautifulTable.STYLE_RST)
                     table.columns.header = headers
                     remainder = False
@@ -1239,7 +1335,7 @@ class Character:
             comparing_to_stat = getattr(to_compare, stat_name, 0)
 
         diff = int(comparing_to_stat - equipped_stat)
-        return f"[{diff}]" if diff < 0 else f"+{diff}" if diff > 0 else "0"
+        return ANSITextColours.red.as_str(diff) if diff < 0 else ANSITextColours.green.as_str(diff) if diff > 0 else "0"
 
     async def equip_item(self, item: Item, from_backpack: bool = True, dev=False):
         """This handles moving an item from backpack to equipment."""
@@ -1403,7 +1499,7 @@ class Character:
         if len(data["treasure"]) == 5:
             data["treasure"].insert(4, 0)
 
-        if heroclass["name"] == "Ranger":
+        if heroclass["name"].lower() == "ranger":
             if heroclass.get("pet"):
                 theme = await config.theme()
                 extra_pets = await config.themes.all()

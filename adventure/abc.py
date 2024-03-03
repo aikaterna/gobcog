@@ -437,12 +437,6 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _build_loadout_display(
-        self, ctx: commands.Context, userdata, loadout=True, rebirths: int = None, index: int = None
-    ):
-        raise NotImplementedError()
-
-    @abstractmethod
     async def unequip(self, ctx: commands.Context, *, item: EquipmentConverter):
         raise NotImplementedError()
 

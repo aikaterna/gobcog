@@ -718,10 +718,13 @@ class Adventure(
         win_percentage = stat_range.get("win_percent", 0.5)
         choice["cdef"] = choice.get("cdef", 1.0)
         if win_percentage >= 0.90:
+            # more than 90% win rate
             monster_hp_min = int(choice["hp"] * 2)
             monster_hp_max = int(choice["hp"] * 3)
+            # hp 2-3x base
             monster_diplo_min = int(choice["dipl"] * 2)
             monster_diplo_max = int(choice["dipl"] * 3)
+            # dipl 2-3x base
             percent_pdef = random.randrange(25, 30) / 100
             monster_pdef = choice["pdef"] * percent_pdef
             percent_mdef = random.randrange(25, 30) / 100
@@ -729,10 +732,13 @@ class Adventure(
             percent_cdef = random.randrange(25, 30) / 100
             monster_cdef = choice["cdef"] * percent_cdef
         elif win_percentage >= 0.75:
+            # less than 90% win rate but more than 75%
             monster_hp_min = int(choice["hp"] * 1.5)
             monster_hp_max = int(choice["hp"] * 2)
+            # hp 1.5-2x base
             monster_diplo_min = int(choice["dipl"] * 1.5)
             monster_diplo_max = int(choice["dipl"] * 2)
+            # dipl 1.5-2x base
             percent_pdef = random.randrange(15, 25) / 100
             monster_pdef = choice["pdef"] * percent_pdef
             percent_mdef = random.randrange(15, 25) / 100
@@ -740,10 +746,13 @@ class Adventure(
             percent_cdef = random.randrange(15, 25) / 100
             monster_cdef = choice["cdef"] * percent_cdef
         elif win_percentage >= 0.50:
+            # less than 75% win rate but more than 50%
             monster_hp_min = int(choice["hp"])
             monster_hp_max = int(choice["hp"] * 1.5)
+            # hp 1-1.5x base
             monster_diplo_min = int(choice["dipl"])
             monster_diplo_max = int(choice["dipl"] * 1.5)
+            # dipl 1-1.5x base
             percent_pdef = random.randrange(1, 15) / 100
             monster_pdef = choice["pdef"] * percent_pdef
             percent_mdef = random.randrange(1, 15) / 100
@@ -751,10 +760,13 @@ class Adventure(
             percent_cdef = random.randrange(1, 15) / 100
             monster_cdef = choice["cdef"] * percent_cdef
         elif win_percentage >= 0.35:
+            # less than 50% win rate but more than 35%
             monster_hp_min = int(choice["hp"] * 0.9)
             monster_hp_max = int(choice["hp"])
+            # hp 0.9-1x base
             monster_diplo_min = int(choice["dipl"] * 0.9)
             monster_diplo_max = int(choice["dipl"])
+            # dipl 0.9-1x base
             percent_pdef = random.randrange(1, 15) / 100
             monster_pdef = choice["pdef"] * percent_pdef * -1
             percent_mdef = random.randrange(1, 15) / 100
@@ -762,10 +774,13 @@ class Adventure(
             percent_cdef = random.randrange(1, 15) / 100
             monster_cdef = choice["cdef"] * percent_cdef * -1
         elif win_percentage >= 0.15:
+            # less than 35% win rate but more than 15%
             monster_hp_min = int(choice["hp"] * 0.8)
             monster_hp_max = int(choice["hp"] * 0.9)
+            # hp 0.8-0.9x base
             monster_diplo_min = int(choice["dipl"] * 0.8)
             monster_diplo_max = int(choice["dipl"] * 0.9)
+            # dipl 0.8-0.9x base
             percent_pdef = random.randrange(15, 25) / 100
             monster_pdef = choice["pdef"] * percent_pdef * -1
             percent_mdef = random.randrange(15, 25) / 100
@@ -773,10 +788,13 @@ class Adventure(
             percent_cdef = random.randrange(15, 25) / 100
             monster_cdef = choice["cdef"] * percent_cdef * -1
         else:
+            # less than 15% win rate
             monster_hp_min = int(choice["hp"] * 0.6)
             monster_hp_max = int(choice["hp"] * 0.8)
+            # hp 0.6-0.8x base
             monster_diplo_min = int(choice["dipl"] * 0.6)
             monster_diplo_max = int(choice["dipl"] * 0.8)
+            # dipl 0.6-0.8x base
             percent_pdef = random.randrange(25, 30) / 100
             monster_pdef = choice["pdef"] * percent_pdef * -1
             percent_mdef = random.randrange(25, 30) / 100
@@ -904,6 +922,7 @@ class Adventure(
             cog=self,
             challenge=new_challenge if not no_monster else None,
             attribute=attribute if not no_monster else None,
+            attribute_stats=self.ATTRIBS[attribute] if not no_monster else [],
             guild=ctx.guild,
             boss=monster_roster[challenge]["boss"] if not no_monster else None,
             miniboss=monster_roster[challenge]["miniboss"] if not no_monster else None,
@@ -1461,13 +1480,8 @@ class Adventure(
             ctx.guild.id, fumblelist, critlist, attack, magic
         )
         result_msg = run_msg + pray_msg + talk_msg + fight_msg
-        challenge_attrib = session.attribute
-        hp = max(
-            int(session.monster_modified_stats["hp"] * self.ATTRIBS[challenge_attrib][0] * session.monster_stats), 1
-        )
-        dipl = max(
-            int(session.monster_modified_stats["dipl"] * self.ATTRIBS[challenge_attrib][1] * session.monster_stats), 1
-        )
+        hp = session.monster_hp()
+        dipl = session.monster_dipl()
 
         dmg_dealt = int(attack + magic)
         diplomacy = int(diplomacy)
@@ -1875,7 +1889,7 @@ class Adventure(
             if loss_list:
                 self._loss_message[ctx.message.id] = humanize_list(loss_list).strip()
         output = f"{result_msg}\n{text}"
-        output = pagify(output, page_length=1900)
+        output = pagify(output, delims=["\n", "```"], page_length=1900, priority=True)
         img_sent = session.monster["image"] if not session.easy_mode else None
         for i in output:
             await smart_embed(ctx, i, success=success, image=img_sent)

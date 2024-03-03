@@ -373,14 +373,14 @@ class EconomyCommands(AdventureMixin):
                 return
             await c.add_to_backpack(item)
             await self.config.user(user).set(await c.to_json(ctx, self.config))
-        item_table = await c.make_backpack_tables([item.row(c.lvl)])
+        item_table = item.table(c)
         msg = box(
             _("An item named {item} has been created and placed in {author}'s backpack.").format(
-                item=item, author=escape(user.display_name), item_stats=item_table
+                item=item, author=escape(user.display_name)
             ),
             lang="ansi",
         )
-        msg += item_table[0]
+        msg += item_table
         await ctx.send(msg)
 
     @give.command(name="loot")
@@ -392,7 +392,9 @@ class EconomyCommands(AdventureMixin):
         number: int = 1,
     ):
         """[Owner] Give treasure chest(s) to all specified users."""
-
+        assert isinstance(loot_type, Rarities)
+        # this is here to make the typechecker not assume that some code is unreachable
+        # due to the way discord.py converters work not reporting the correct typehint returned
         users = users or [ctx.author]
         loot_types = [
             Rarities.normal,
