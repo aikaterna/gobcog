@@ -3,7 +3,7 @@ import asyncio
 import logging
 import random
 import time
-from typing import Optional
+from typing import Optional, Union
 
 import discord
 from redbot.core import commands
@@ -347,11 +347,11 @@ class LootCommands(AdventureMixin):
         return items
 
     async def _open_chest(self, ctx: commands.Context, user: discord.User, chest_type: Rarities, character: Character):
-        if hasattr(user, "display_name"):
+        if chest_type is not Rarities.pet:
             chest_msg = _("{} is opening a treasure chest. What riches lay inside?").format(escape(user.display_name))
         else:
-            chest_msg = _("{user}'s {f} is foraging for treasure. What will it find?").format(
-                user=escape(ctx.author.display_name), f=(user[:1] + user[1:])
+            chest_msg = _("{user}'s {pet} is foraging for treasure. What will it find?").format(
+                user=escape(ctx.author.display_name), pet=character.heroclass.get("pet", {}).get("name", "No Pet?")
             )
         open_msg = await ctx.send(box(chest_msg, lang="ansi"))
         await asyncio.sleep(2)
@@ -375,13 +375,17 @@ class LootCommands(AdventureMixin):
             old_item_name, old_item_row = old_item.row(character)
             table.rows.append([_("Currently Equipped\n") + old_item_name])
             table.rows.append(old_item_row)
-        if hasattr(user, "id"):
-            view = LootView(60, user)
-        else:
-            view = LootView(60, ctx.author)
+        view = LootView(60, ctx.author)
 
         old_stats = str(table)
-        chest_msg2 = _("{user} found {item}.\n").format(user=escape(user.display_name), item=item.ansi)
+        if chest_type is not Rarities.pet:
+            chest_msg2 = _("{user} found {item}.\n").format(user=escape(user.display_name), item=item.ansi)
+        else:
+            chest_msg2 = _("{user}'s' {pet} found {item}.\n").format(
+                user=escape(user=user.display_name),
+                pet=character.heroclass.get("pet", {}).get("name", "No Pet?"),
+                item=item.ansi,
+            )
         await open_msg.edit(
             content=box(
                 _(
