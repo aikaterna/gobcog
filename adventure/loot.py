@@ -347,11 +347,12 @@ class LootCommands(AdventureMixin):
         return items
 
     async def _open_chest(self, ctx: commands.Context, user: discord.User, chest_type: Rarities, character: Character):
+        pet = character.heroclass.get("pet", {}).get("name", "No Pet?")
         if chest_type is not Rarities.pet:
             chest_msg = _("{} is opening a treasure chest. What riches lay inside?").format(escape(user.display_name))
         else:
             chest_msg = _("{user}'s {pet} is foraging for treasure. What will it find?").format(
-                user=escape(ctx.author.display_name), pet=character.heroclass.get("pet", {}).get("name", "No Pet?")
+                user=escape(ctx.author.display_name), pet=pet
             )
         open_msg = await ctx.send(box(chest_msg, lang="ansi"))
         await asyncio.sleep(2)
@@ -360,7 +361,7 @@ class LootCommands(AdventureMixin):
             await open_msg.edit(
                 content=box(
                     _("{c_msg}\nThe {user} found nothing of value.").format(
-                        c_msg=chest_msg, user=(user[:1] + user[1:])
+                        c_msg=chest_msg, user=pet
                     ),
                     lang="ansi",
                 )
@@ -382,8 +383,8 @@ class LootCommands(AdventureMixin):
             chest_msg2 = _("{user} found {item}.\n").format(user=escape(user.display_name), item=item.ansi)
         else:
             chest_msg2 = _("{user}'s' {pet} found {item}.\n").format(
-                user=escape(user=user.display_name),
-                pet=character.heroclass.get("pet", {}).get("name", "No Pet?"),
+                user=escape(user.display_name),
+                pet=pet,
                 item=item.ansi,
             )
         await open_msg.edit(
