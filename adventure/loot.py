@@ -360,9 +360,7 @@ class LootCommands(AdventureMixin):
         if chest_type == "pet" and not item:
             await open_msg.edit(
                 content=box(
-                    _("{c_msg}\nThe {user} found nothing of value.").format(
-                        c_msg=chest_msg, user=pet
-                    ),
+                    _("{c_msg}\nThe {user} found nothing of value.").format(c_msg=chest_msg, user=pet),
                     lang="ansi",
                 )
             )
