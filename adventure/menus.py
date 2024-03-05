@@ -838,58 +838,60 @@ class LeaderboardMenu(BaseMenu):
 class BackpackSelectEquip(discord.ui.Select):
     def __init__(self, options: List[discord.SelectOption]):
         self.view: BackpackMenu
-        super().__init__(min_values=1, max_values=1, options=options, placeholder=_("Equip"))
+        super().__init__(min_values=1, max_values=len(options), options=options, placeholder=_("Equip"))
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        equip_item = self.view.source.current_table.items[int(self.values[0])]
         if self.view.cog.in_adventure(self.view.ctx):
             return await smart_embed(
                 message=_("You tried to equip an item but the monster ahead of you commands your attention."),
                 ephemeral=True,
                 interaction=interaction,
             )
+        equip_msg = ""
         async with self.view.cog.get_lock(self.view.ctx.author):
-            try:
-                c = await Character.from_json(
-                    self.view.ctx, self.view.cog.config, self.view.ctx.author, self.view.cog._daily_bonus
-                )
-            except Exception as exc:
-                log.exception("Error with the new character sheet", exc_info=exc)
-                return
-            equiplevel = c.equip_level(equip_item)
-            if is_dev(self.view.ctx.author):  # FIXME:
-                equiplevel = 0
+            for item_index in self.values:
+                equip_item = self.view.source.current_table.items[int(item_index)]
+                try:
+                    c = await Character.from_json(
+                        self.view.ctx, self.view.cog.config, self.view.ctx.author, self.view.cog._daily_bonus
+                    )
+                except Exception as exc:
+                    log.exception("Error with the new character sheet", exc_info=exc)
+                    return
+                equiplevel = c.equip_level(equip_item)
+                if is_dev(self.view.ctx.author):  # FIXME:
+                    equiplevel = 0
 
-            if not c.can_equip(equip_item):
-                return await smart_embed(
-                    message=_("You need to be level `{level}` to equip this item.").format(level=equiplevel),
-                    interaction=interaction,
-                )
+                if not c.can_equip(equip_item):
+                    equip_msg += _("You need to be level `{level}` to equip {item}.").format(
+                            level=equiplevel, item=equip_item.ansi
+                        )
+                    equip_msg += "\n\n"
+                    continue
 
-            equip = c.backpack.get(equip_item.name)
-            if equip:
-                slot = equip.slot
-                put = getattr(c, equip.slot.char_slot)
-                equip_msg = _("{author} equipped {item} ({slot} slot)").format(
-                    author=escape(self.view.ctx.author.display_name),
-                    item=equip.as_ansi(),
-                    slot=slot.get_name(),
-                )
-                if put:
-                    equip_msg += " " + _("and put {put} into their backpack").format(
+                equip = c.backpack.get(equip_item.name)
+                if equip:
+                    slot = equip.slot
+                    put = getattr(c, equip.slot.char_slot)
+                    equip_msg += _("{author} equipped {item} ({slot} slot)").format(
                         author=escape(self.view.ctx.author.display_name),
                         item=equip.as_ansi(),
-                        slot=slot,
-                        put=getattr(c, equip.slot.char_slot).as_ansi(),
+                        slot=slot.get_name(),
                     )
-                equip_msg += f".\n{equip.table(c)}"
-
-                c = await c.equip_item(equip, True, is_dev(self.view.ctx.author))  # FIXME:
-                await self.view.cog.config.user(self.view.ctx.author).set(
-                    await c.to_json(self.view.ctx, self.view.cog.config)
-                )
-                await smart_embed(message=box(equip_msg, lang="ansi"), interaction=interaction)
+                    if put:
+                        equip_msg += " " + _("and put {put} into their backpack").format(
+                            author=escape(self.view.ctx.author.display_name),
+                            item=equip.as_ansi(),
+                            slot=slot,
+                            put=getattr(c, equip.slot.char_slot).as_ansi(),
+                        )
+                    c = await c.equip_item(equip, True, is_dev(self.view.ctx.author))  # FIXME:
+                    await self.view.cog.config.user(self.view.ctx.author).set(
+                        await c.to_json(self.view.ctx, self.view.cog.config)
+                    )
+                equip_msg += ".\n\n"
+        await smart_embed(message=box(equip_msg, lang="ansi"), interaction=interaction)
 
 
 class BackpackSource(menus.ListPageSource):
@@ -897,7 +899,7 @@ class BackpackSource(menus.ListPageSource):
         super().__init__(entries, per_page=1)
         self.current_table = entries[0]
         self.select_options = [
-            discord.SelectOption(label=str(item), value=i, description=item.stat_str())
+            discord.SelectOption(label=str(item), value=i, description=item.stat_str(), emoji=item.rarity.emoji)
             for i, item in enumerate(self.current_table.items)
         ]
 
@@ -907,7 +909,7 @@ class BackpackSource(menus.ListPageSource):
     async def format_page(self, menu: menus.MenuPages, page: BackpackTable):
         self.current_table = page
         self.select_options = [
-            discord.SelectOption(label=str(item), value=i, description=item.stat_str())
+            discord.SelectOption(label=str(item), value=i, description=item.stat_str(), emoji=item.rarity.emoji)
             for i, item in enumerate(self.current_table.items)
         ]
         return str(page)

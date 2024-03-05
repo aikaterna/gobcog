@@ -195,22 +195,18 @@ class DevCommands(AdventureMixin):
 
         if len(self._sessions) > 0:
             for server_id, adventure in self._sessions.items():
+                guild = self.bot.get_guild(server_id)
+                if guild is None:
+                    # should not happen but the type checker is happier
+                    continue
                 stat_range = self._adv_results.get_stat_range(ctx)
                 pdef = adventure.monster_modified_stats["pdef"]
                 mdef = adventure.monster_modified_stats["mdef"]
                 cdef = adventure.monster_modified_stats.get("cdef", 1.0)
-                hp = int(
-                    adventure.monster_modified_stats["hp"]
-                    * self.ATTRIBS[adventure.attribute][0]
-                    * adventure.monster_stats
-                )
-                dipl = int(
-                    adventure.monster_modified_stats["dipl"]
-                    * self.ATTRIBS[adventure.attribute][1]
-                    * adventure.monster_stats
-                )
+                hp = adventure.monster_hp()
+                dipl = adventure.monster_dipl()
                 msg += (
-                    f"{self.bot.get_guild(server_id).name} - "
+                    f"{guild.name} - "
                     f"[{adventure.challenge}]({adventure.message.jump_url})\n"
                     f"[{stat_range['stat_type']}-min:{stat_range['min_stat']}-max:{stat_range['max_stat']}-winratio:{stat_range['win_percent']}] "
                     f"(hp:{hp}-char:{dipl}-pdef:{pdef}-mdef:{mdef}-cdef:{cdef})\n\n"

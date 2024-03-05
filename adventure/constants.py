@@ -162,6 +162,20 @@ class Rarities(Enum):
         )
 
     @staticmethod
+    def emojis():
+        return {
+            Rarities.normal: "\N{WHITE LARGE SQUARE}\N{VARIATION SELECTOR-16}",
+            Rarities.rare: "\N{LARGE GREEN SQUARE}",
+            Rarities.epic: "\N{LARGE BLUE SQUARE}",
+            Rarities.legendary: "\N{LARGE YELLOW SQUARE}",
+            Rarities.ascended: "\N{UP-POINTING SMALL RED TRIANGLE}",
+            Rarities.set: "\N{LARGE RED SQUARE}",
+            Rarities.forged: "\N{HAMMER AND PICK}\N{VARIATION SELECTOR-16}",
+            Rarities.event: "\N{PARTY POPPER}",
+            Rarities.pet: "\N{CAT FACE}",
+        }
+
+    @staticmethod
     def names():
         return {
             Rarities.normal: _("Normal"),
@@ -262,6 +276,10 @@ class Rarities(Enum):
             "ascended": 4,
             "set": 5,
         }[self.name]
+
+    @property
+    def emoji(self):
+        return self.emojis().get(self)
 
     @property
     def rarity_colour(self) -> ANSITextColours:
