@@ -110,7 +110,7 @@ class Item:
         ret += " " + " | ".join(f"{stat_name}: {getattr(self, stat_name.lower(), 0) * mult}" for stat_name in stats)
         return ret
 
-    def row(self, player: Character, show_delta: bool = False) -> Tuple[Any, ...]:
+    def row(self, player: Optional[Character], show_delta: bool = False) -> Tuple[Any, ...]:
         """
         Return a tuple of relevant data for use in tables for this item.
 
@@ -119,7 +119,7 @@ class Item:
             player: Character
                 The player's Character sheet to know their level and show possible deltas.
         """
-        can_equip = self.lvl <= player.lvl
+        can_equip = self.lvl <= player.lvl if player is not None else True
         subtable = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
         subtable.set_style(BeautifulTable.STYLE_RST)
         # subtable.columns.header = [self.ansi]
@@ -131,7 +131,7 @@ class Item:
             set_str = f"\n{self.set}"
         lvl_str = f"{ANSITextColours.red.as_str(str(self.lvl))}" if not can_equip else f"{self.lvl}"
         lvl_str = _("Lvl: {lvl_str}").format(lvl_str=lvl_str)
-        if show_delta:
+        if show_delta and player is not None:
             current_equipped = getattr(player, self.slot.char_slot, None)
             att = player.get_equipped_delta(current_equipped, self, "att")
             cha = player.get_equipped_delta(current_equipped, self, "cha")
@@ -157,7 +157,7 @@ class Item:
         item_name = self.as_ansi(45)
         return f"{self.owned}x {lvl_str} {self.slot.get_name()} {degrade_str}\n{item_name}{set_str}", subtable
 
-    def table(self, player: Character) -> str:
+    def table(self, player: Optional[Character]) -> str:
         table = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
         table.set_style(BeautifulTable.STYLE_RST)
         table.border.top = ""

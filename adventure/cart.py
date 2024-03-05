@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import asyncio
 import logging
 import random
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import List, Optional
 
 import discord
 from redbot.core import commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import box, humanize_number
+from redbot.core.utils.chat_formatting import box, humanize_number, pagify
 
 from .bank import bank
 from .charsheet import Character, Item
-from .constants import ANSITextColours, Rarities, Slot
-from .helpers import _get_epoch, escape, is_dev, smart_embed
+from .constants import ANSIBackgroundColours, ANSIBackgroundTextColours, ANSITextColours, Rarities
+from .helpers import escape, is_dev, smart_embed
 
 _ = Translator("Adventure", __file__)
 
@@ -114,7 +113,7 @@ class TraderModal(discord.ui.Modal):
 
 class TraderButton(discord.ui.Button):
     def __init__(self, item: Item, cog: commands.Cog):
-        super().__init__(label=item.name)
+        super().__init__(label=str(item), emoji=item.rarity.emoji)
         self.item = item
         self.cog = cog
 
@@ -127,6 +126,30 @@ class TraderButton(discord.ui.Button):
             )
             return
         modal = TraderModal(self.item, self.cog, view=self.view, ctx=self.view.ctx)
+        await interaction.response.send_modal(modal)
+
+
+class TraderSelect(discord.ui.Select):
+    def __init__(self, items: List[Item], cog: commands.Cog):
+        self.items = items
+        self.cog = cog
+        self.select_options = [
+            discord.SelectOption(label=str(item), value=str(i), description=item.stat_str(), emoji=item.rarity.emoji)
+            for i, item in enumerate(items)
+        ]
+        super().__init__(
+            min_values=1, max_values=1, placeholder=_("What would you like to purchase?"), options=self.select_options
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        if datetime.now(timezone.utc) >= self.view.end_time:
+            self.view.stop()
+            await self.view.on_timeout()
+            await interaction.response.send_message(
+                _("{cart_name} has moved onto the next village.").format(cart_name=self.view.cart_name), ephemeral=True
+            )
+            return
+        modal = TraderModal(self.items[int(self.values[0])], self.cog, view=self.view, ctx=self.view.ctx)
         await interaction.response.send_modal(modal)
 
 
@@ -144,9 +167,7 @@ class Trader(discord.ui.View):
     async def on_timeout(self):
         if self.message is not None:
             timestamp = f"<t:{int(self.end_time.timestamp())}:R>"
-            new_content = self.stock_str + _("{cart_name} left {time}.").format(
-                time=timestamp, cart_name=self.cart_name
-            )
+            new_content = _("{cart_name} left {time}.").format(time=timestamp, cart_name=self.cart_name)
             await self.message.edit(content=new_content, view=None)
 
     async def edit_timestamp(self):
@@ -165,8 +186,8 @@ class Trader(discord.ui.View):
         if await self.cog.config.guild(ctx.guild).cart_name():
             cart = await self.cog.config.guild(ctx.guild).cart_name()
         self.cart_name = cart
-        cart_header = _("[{cart_name} is bringing the cart around!]").format(cart_name=cart)
-        text = box(ANSITextColours.blue.as_str(cart_header), lang="ansi")
+        cart_header = _("[{cart_name} is bringing the cart around!]").format(cart_name=cart) + "\n\n"
+        text = ANSITextColours.blue.as_str(cart_header)
         if ctx.guild.id not in self.cog._last_trade:
             self.cog._last_trade[ctx.guild.id] = 0
 
@@ -183,7 +204,6 @@ class Trader(discord.ui.View):
             room = ctx.guild.get_channel(room)
         if room is None or bypass:
             room = ctx
-        self.cog.bot.dispatch("adventure_cart", ctx)  # dispatch after silent return
         if stockcount is None:
             stockcount = random.randint(3, 9)
         self.cog._curent_trader_stock[ctx.guild.id] = (stockcount, {})
@@ -194,55 +214,40 @@ class Trader(discord.ui.View):
         )
         if str(currency_name).startswith("<"):
             currency_name = "credits"
-        for (index, item) in enumerate(stock):
+        table = None
+        price_colour = ANSIBackgroundTextColours(ANSITextColours.white, ANSIBackgroundColours.orange)
+        for index, item in enumerate(stock):
             item = stock[index]
-            if item["item"].slot is Slot.two_handed:  # two handed weapons add their bonuses twice
-                hand = item["item"].slot.get_name()
-                att = item["item"].att * 2
-                cha = item["item"].cha * 2
-                intel = item["item"].int * 2
-                luck = item["item"].luck * 2
-                dex = item["item"].dex * 2
+            price = item["price"]
+            price_str = f"{humanize_number(price)} {currency_name}"
+            price_str = price_colour.as_str(price_str)
+            if table is None:
+                table = item["item"].table(None)
+                stats = table.rows.pop(-1)
+                # We need to remove the last item to stick the price info inside the table
+                # so that it doesn't appear outside the border
+                table.rows.append([price_str])
+                table.rows.append(stats)
             else:
-                if item["item"].slot is Slot.right or item["item"].slot is Slot.left:
-                    hand = item["item"].slot.get_name() + _(" handed")
-                else:
-                    hand = item["item"].slot.get_name() + _(" slot")
-                att = item["item"].att
-                cha = item["item"].cha
-                intel = item["item"].int
-                luck = item["item"].luck
-                dex = item["item"].dex
-            text += box(
-                _(
-                    "\n[{i}] Lvl req {lvl} | {item_name} ("
-                    "Attack: {str_att}, "
-                    "Charisma: {str_cha}, "
-                    "Intelligence: {str_int}, "
-                    "Dexterity: {str_dex}, "
-                    "Luck: {str_luck} "
-                    "[{hand}]) for {item_price} {currency_name}."
-                ).format(
-                    i=str(index + 1),
-                    item_name=item["item"].ansi,
-                    lvl=item["item"].lvl,
-                    str_att=str(att),
-                    str_int=str(intel),
-                    str_cha=str(cha),
-                    str_luck=str(luck),
-                    str_dex=str(dex),
-                    hand=hand,
-                    item_price=humanize_number(item["price"]),
-                    currency_name=currency_name,
-                ),
-                lang="ansi",
-            )
+                item_name, item_row = item["item"].row(None)
+                table.rows.append([item_name])
+                table.rows.append([item_row])
+                stats = table.rows.pop(-1)
+                table.rows.append([price_str])
+                table.rows.append(stats)
+        text += str(table)
         self.stock_str = text
         timestamp = f"<t:{int(self.end_time.timestamp())}:R>"
-        text += _("I am leaving {time}.\nDo you want to buy any of these fine items? Tell me which one below:").format(
-            time=timestamp
-        )
-        self.message = await room.send(text, view=self)
+
+        pages = list(pagify(text, delims=["```", "\n"], priority=True, page_length=1900))
+        msg_ref = None
+        for page in pages:
+            msg_ref = await room.send(box(page, lang="ansi"))
+        last_page_text = _(
+            "I am leaving {time}.\nDo you want to buy any of these fine items? Tell me which one below:"
+        ).format(time=timestamp)
+        self.message = await room.send(last_page_text, view=self, reference=msg_ref)
+        self.cog.bot.dispatch("adventure_cart", ctx)  # dispatch after all messages sent
 
     async def generate(self, howmany: int = 5):
         output = {}
@@ -273,8 +278,12 @@ class Trader(discord.ui.View):
             price *= item.max_main_stat
 
             self.items.update({item.name: {"itemname": item.name, "item": item, "price": price, "lvl": item.lvl}})
-            self.add_item(TraderButton(item, self.cog))
+            # self.add_item(TraderButton(item, self.cog))
+        item_list = []
+        for item, data in self.items.items():
+            item_list.append(data["item"])
+        self.add_item(TraderSelect(item_list, self.cog))
 
-        for (index, item) in enumerate(self.items):
+        for index, item in enumerate(self.items):
             output.update({index: self.items[item]})
         return output

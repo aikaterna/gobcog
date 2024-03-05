@@ -865,8 +865,8 @@ class BackpackSelectEquip(discord.ui.Select):
 
                 if not c.can_equip(equip_item):
                     equip_msg += _("You need to be level `{level}` to equip {item}.").format(
-                            level=equiplevel, item=equip_item.ansi
-                        )
+                        level=equiplevel, item=equip_item.ansi
+                    )
                     equip_msg += "\n\n"
                     continue
 

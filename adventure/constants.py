@@ -164,7 +164,7 @@ class Rarities(Enum):
     @staticmethod
     def emojis():
         return {
-            Rarities.normal: "\N{WHITE LARGE SQUARE}\N{VARIATION SELECTOR-16}",
+            Rarities.normal: "\N{WHITE LARGE SQUARE}",
             Rarities.rare: "\N{LARGE GREEN SQUARE}",
             Rarities.epic: "\N{LARGE BLUE SQUARE}",
             Rarities.legendary: "\N{LARGE YELLOW SQUARE}",
@@ -482,6 +482,15 @@ class Skills(Enum):
     reset = "reset"
 
 
+class ANSIBackgroundTextColours:
+    def __init__(self, text_colour: ANSITextColours, background_colour: ANSIBackgroundColours):
+        self.text_colour = text_colour
+        self.background_colour = background_colour
+
+    def as_str(self, value: str) -> str:
+        return f"{ANSI_ESCAPE}[{self.text_colour.value};{self.background_colour.value}m{value}{ANSI_CLOSE}"
+
+
 class ANSITextColours(Enum):
     normal = 0
     gray = 30
@@ -513,6 +522,9 @@ class ANSIBackgroundColours(Enum):
 
     def __str__(self):
         return str(self.value)
+
+    def as_str(self, value: str) -> str:
+        return f"{ANSI_ESCAPE}[{self.value}m{value}{ANSI_CLOSE}"
 
 
 class HeroClasses(Enum):
