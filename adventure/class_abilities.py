@@ -440,7 +440,7 @@ class ClassAbilities(AdventureMixin):
                 c.heroclass["cooldown"] = time.time() + cooldown_time
                 await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
             else:
-                cooldown_time = c.heroclass["cooldown"]
+                cooldown_time = int(c.heroclass["cooldown"])
                 return await smart_embed(
                     ctx,
                     _("This command is on cooldown. Try again in {}.").format(f"<t:{cooldown_time}:R>"),

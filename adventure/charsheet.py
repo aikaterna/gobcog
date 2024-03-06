@@ -455,7 +455,7 @@ class Character:
         elif self.right is not None and self.left is None:
             return self.right.ansi
         elif self.left is not None and self.right is not None:
-            return humanize_list([self.left.ansi, self.right.ansi])
+            return humanize_list([self.right.ansi, self.left.ansi])
         return _("fists")
 
     def remove_restrictions(self):
