@@ -20,7 +20,7 @@ from .charsheet import Character, Item
 from .constants import HeroClasses, Rarities, Slot
 from .converters import HeroClassConverter, ItemConverter
 from .helpers import ConfirmView, escape, is_dev, smart_embed
-from .menus import BaseMenu, SimpleSource
+from .menus import BackpackMenu, BackpackSource, BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
 
@@ -887,12 +887,10 @@ class ClassAbilities(AdventureMixin):
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] > time.time():
-                    cooldown_time = c.heroclass["cooldown"]
+                    cooldown_time = int(c.heroclass["cooldown"])
                     return await smart_embed(
                         ctx,
-                        _("This command is on cooldown. Try again in {}").format(
-                            humanize_timedelta(seconds=int(cooldown_time)) if cooldown_time >= 1 else _("1 second")
-                        ),
+                        _("This command is on cooldown. Try again in {}").format(f"<t:{cooldown_time}:R>"),
                     )
                 ascended_forge_msg = ""
                 ignored_rarities = [Rarities.forged, Rarities.set, Rarities.event]
@@ -917,11 +915,14 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                     return
-                await BaseMenu(
-                    source=SimpleSource(pages),
+                await BackpackMenu(
+                    source=BackpackSource(pages),
+                    cog=self,
+                    help_command=self.forge,
                     delete_message_after=True,
                     clear_reactions_after=True,
                     timeout=180,
+                    tinker_forge=True,
                 ).start(ctx=ctx)
                 await smart_embed(
                     ctx,

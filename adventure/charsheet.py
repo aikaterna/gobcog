@@ -793,7 +793,7 @@ class Character:
         tmp = {}
 
         def _sort(item):
-            return self.get_rarity_index(item[1].rarity), item[1].lvl, item[1].total_stats
+            return self.get_rarity_index(item.rarity), item.lvl, item.total_stats
 
         async for item in AsyncIter(backpack, steps=100):
             slots = backpack[item].slot
@@ -807,7 +807,7 @@ class Character:
 
             if slot_name not in tmp:
                 tmp[slot_name] = []
-            tmp[slot_name].append((item, backpack[item]))
+            tmp[slot_name].append(backpack[item])
         slots = sorted(list(tmp.keys()), key=self.get_slot_index)
         final = []
         async for (idx, slot_name) in AsyncIter(slots, steps=100).enumerate():
@@ -959,12 +959,12 @@ class Character:
             msg = _("{author}'s forgeables\n\n").format(author=escape(self.user.display_name, formatting=True))
         # subtable = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
         async for slot_group in AsyncIter(bkpk, steps=100):
-            slot_name_org = slot_group[0][1].slot
+            slot_name_org = slot_group[0].slot
             if slot is not None and slot is not slot_name_org:
                 continue
             if clean and not slot_group:
                 continue
-            async for item_name, item in AsyncIter(slot_group, steps=100):
+            async for item in AsyncIter(slot_group, steps=100):
                 if forging and (item.rarity in [Rarities.forged, Rarities.set] or item in consumed_list):
                     continue
                 if forging and item.rarity is Rarities.ascended:
@@ -1002,7 +1002,7 @@ class Character:
         tmp = {}
 
         def _sort(item):
-            return self.get_rarity_index(item[1].rarity), item[1].lvl, item[1].total_stats
+            return self.get_rarity_index(item.rarity), item.lvl, item.total_stats
 
         if not _except:
             async for item_name in AsyncIter(backpack, steps=100):
@@ -1082,7 +1082,7 @@ class Character:
 
                 if slot_name not in tmp:
                     tmp[slot_name] = []
-                tmp[slot_name].append((item_name, item))
+                tmp[slot_name].append(item)
         else:
             rarities = [] if rarities == [i for i in Rarities] else rarities
             slots = [] if slots == [i for i in Slot] else slots
@@ -1160,7 +1160,7 @@ class Character:
                         continue
                 if slot_name not in tmp:
                     tmp[slot_name] = []
-                tmp[slot_name].append((item_name, item))
+                tmp[slot_name].append(item)
 
         slots = sorted(list(tmp.keys()), key=self.get_slot_index)
         final = []
@@ -1205,79 +1205,8 @@ class Character:
             ignore_case=ignore_case,
             _except=_except,
         )
-
-        msg = _("{author}'s backpack\n\n").format(author=escape(self.user.display_name, formatting=True))
-        table = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
-        table.set_style(BeautifulTable.STYLE_RST)
-        tables = []
-        headers = [
-            "Name",
-            "Slot",
-            "ATT",
-            "CHA",
-            "INT",
-            "DEX",
-            "LUC",
-            "LVL",
-            "QTY",
-        ]
-        if not rarities or any(x in rarities for x in ["legendary", "event", "ascended"]):
-            headers.append("DEG")
-
-        if sets or not rarities or "set" in rarities:
-            headers.append("SET")
-
-        table.columns.header = headers
-
-        remainder = False
-        async for slot_name, slot_group in AsyncIter(bkpk, steps=100):
-            slot_name_org = slot_group[0][1].slot
-            current_equipped = getattr(self, slot_name_org.name, None)
-            async for item_name, item in AsyncIter(slot_group, steps=100):
-                if len(str(table)) > 1500:
-                    tables.append(box(msg + str(table) + f"\nPage {len(tables) + 1}", lang="ansi"))
-                    table = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=250)
-                    table.set_style(BeautifulTable.STYLE_RST)
-                    table.columns.header = headers
-                    remainder = False
-                if delta:
-                    att = self.get_equipped_delta(current_equipped, item, "att")
-                    cha = self.get_equipped_delta(current_equipped, item, "cha")
-                    int = self.get_equipped_delta(current_equipped, item, "int")
-                    dex = self.get_equipped_delta(current_equipped, item, "dex")
-                    luck = self.get_equipped_delta(current_equipped, item, "luck")
-                else:
-                    att = item.att if slot_name_org is not Slot.two_handed else item.att * 2
-                    cha = item.cha if slot_name_org is not Slot.two_handed else item.cha * 2
-                    int = item.int if slot_name_org is not Slot.two_handed else item.int * 2
-                    dex = item.dex if slot_name_org is not Slot.two_handed else item.dex * 2
-                    luck = item.luck if slot_name_org is not Slot.two_handed else item.luck * 2
-                data = [
-                    item.ansi,
-                    slot_name,
-                    att,
-                    cha,
-                    int,
-                    dex,
-                    luck,
-                    f"[{r}]" if (r := self.equip_level(item)) is not None and r > self.lvl else f"{r}",
-                    item.owned,
-                ]
-                if "DEG" in headers:
-                    data.append(
-                        f"[{item.degrade}]"
-                        if item.rarity in [Rarities.legendary, Rarities.event, Rarities.ascended] and item.degrade >= 0
-                        else "N/A"
-                    )
-                if "SET" in headers:
-                    data.append(
-                        item.set or "N/A",
-                    )
-                table.rows.append(data)
-                remainder = True
-        if remainder:
-            tables.append(box(msg + str(table) + f"\nPage {len(tables) + 1}", lang="ansi"))
-        return tables
+        items = [item for groups in bkpk for item in groups[1]]
+        return await self.make_backpack_tables(items, show_delta=delta)
 
     async def get_argparse_backpack_items(
         self, query: MutableMapping[str, Any], rarity_exclude: List[str] = None
