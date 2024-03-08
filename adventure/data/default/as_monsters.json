@@ -1681,7 +1681,7 @@
         "image": "https://upload.wikimedia.org/wikipedia/commons/7/70/Wenceslas_Hollar_-_The_basilisk_and_the_weasel.jpg",
         "boss": false,
         "miniboss": {
-            "requirements": [".mirror_shield", "left"],
+            "requirements": ["item", "shiny"],
             "defeat": "The Basilisk's gaze turned everyone to stone.",
             "special": "gaze"
         },

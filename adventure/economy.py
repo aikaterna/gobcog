@@ -5,7 +5,7 @@ import time
 from typing import Literal, Union
 
 import discord
-from beautifultable import ALIGN_LEFT, BeautifulTable
+from beautifultable import ALIGN_CENTER, BeautifulTable
 from redbot.core import commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.i18n import Translator
@@ -243,30 +243,39 @@ class EconomyCommands(AdventureMixin):
             return
 
         sets = await character.get_set_count()
-        table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
+        table = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=500)
         table.set_style(BeautifulTable.STYLE_RST)
         table.columns.header = [
             "Name",
-            "Unique Pieces",
-            "Unique Owned",
+            "Unique\nPieces",
+            # "Unique Owned",
         ]
+        table.columns.alignment["Name"] = BeautifulTable.ALIGN_LEFT
         msgs = []
         for k, v in sets.items():
             if len(str(table)) > 1500:
                 table.rows.sort("Name", reverse=False)
                 msgs.append(box(str(table) + f"\nPage {len(msgs) + 1}", lang="ansi"))
-                table = BeautifulTable(default_alignment=ALIGN_LEFT, maxwidth=500)
+                table = BeautifulTable(default_alignment=ALIGN_CENTER, maxwidth=500)
                 table.set_style(BeautifulTable.STYLE_RST)
                 table.columns.header = [
                     "Name",
-                    "Unique Pieces",
-                    "Unique Owned",
+                    "Unique\nPieces",
+                    # "Unique Owned",
                 ]
+
+            total = v[0]
+            owned = v[1]
+            owned_str = str(owned)
+            if total == owned:
+                owned_str = ANSITextColours.green.as_str(f"{owned}/{total}")
+            else:
+                owned_str = ANSITextColours.red.as_str(str(owned)) + f"/{total}"
+
             table.rows.append(
                 (
                     k,
-                    f"{v[0]}",
-                    f" {v[1]}" if v[1] == v[0] else ANSITextColours.red.as_str(v[1]),
+                    owned_str,
                 )
             )
         table.rows.sort("Name", reverse=False)

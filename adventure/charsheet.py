@@ -291,7 +291,7 @@ class Item:
         parts = data["parts"] if "parts" in data else 0
         # This is used to preserve integrity of Set items
         # db = get_item_db(rarity)
-        if rarity == "set":
+        if rarity == "set" and ctx is not None:
             item = ctx.bot.get_cog("Adventure").TR_GEAR_SET.get(name, {})
             if item:
                 parts = item.get("parts", parts)

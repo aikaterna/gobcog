@@ -2361,13 +2361,13 @@ class Adventure(
         participants = list(set(fight_list + talk_list + pray_list + magic_list))
         if session.miniboss:
             failed = True
-            req_item, slot = session.miniboss["requirements"]
+            req_item, key = session.miniboss["requirements"]
             if req_item == "members":
-                if len(participants) > int(slot):
+                if len(participants) > int(key):
                     failed = False
             elif req_item == "emoji" and session.reacted:
                 failed = False
-            else:
+            elif req_item == "item":
                 for user in participants:  # check if any fighter has an equipped mirror shield to give them a chance.
                     try:
                         c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
@@ -2381,9 +2381,12 @@ class Adventure(
                         current_equipment = c.get_current_equipment()
                         for item in current_equipment:
                             item_name = str(item)
-                            if item.rarity is not Rarities.forged and (
-                                req_item in item_name or "shiny" in item_name.lower()
-                            ):
+                            if item.rarity is not Rarities.forged and key in item_name.lower():
+                                failed = False
+                                break
+                            if key == "shiny" and str(item) == ".mirror_shield":
+                                # special case for anyone who happens to still have the
+                                # impossible to acquire mirror shield
                                 failed = False
                                 break
         else:
