@@ -16,6 +16,7 @@ from .abc import AdventureMixin
 from .charsheet import Character, has_funds
 from .constants import HeroClasses
 from .helpers import escape, smart_embed
+from .rng import Random
 
 # This is split into its own file for future buttons usage
 # We will have game sessions inherit discord.ui.View and then we can send a message
@@ -50,7 +51,7 @@ class AttackButton(discord.ui.Button):
         if c.hc is HeroClasses.ranger:
             pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
 
-        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = self.view.rng.choice(choices[heroclass] + choices["hero"])
         choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge_name())
         weapon = c.get_weapons()
@@ -100,7 +101,7 @@ class MagicButton(discord.ui.Button):
         if c.hc is HeroClasses.ranger:
             pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
 
-        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = self.view.rng.choice(choices[heroclass] + choices["hero"])
         choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge_name())
         weapon = c.get_weapons()
@@ -152,7 +153,7 @@ class TalkButton(discord.ui.Button):
         if c.hc is HeroClasses.ranger:
             pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
 
-        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = self.view.rng.choice(choices[heroclass] + choices["hero"])
         choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge_name())
         weapon = c.get_weapons()
@@ -204,7 +205,7 @@ class PrayButton(discord.ui.Button):
         if c.hc is HeroClasses.ranger:
             pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
 
-        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = self.view.rng.choice(choices[heroclass] + choices["hero"])
         choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge_name())
         weapon = c.get_weapons()
@@ -258,7 +259,7 @@ class RunButton(discord.ui.Button):
         if c.hc is HeroClasses.ranger:
             pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
 
-        choice = random.choice(choices[heroclass] + choices["hero"])
+        choice = self.view.rng.choice(choices[heroclass] + choices["hero"])
         choice = choice.replace("$pet", pet)
         choice = choice.replace("$monster", self.view.challenge_name())
         weapon = c.get_weapons()
@@ -345,7 +346,7 @@ class SpecialActionButton(discord.ui.Button):
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] <= time.time():
             max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 15 else 20
-            roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
+            roll = self.view.rng.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
             if self.view.insight[0] < roll:
                 self.view.insight = roll, c
                 good = True
@@ -636,6 +637,7 @@ class GameSession(discord.ui.View):
     no_monster: bool = False
     exposed: bool = False
     finished: bool = False
+    rng: Random
 
     def __init__(self, **kwargs):
         self.ctx: Context = kwargs.pop("ctx")
@@ -665,6 +667,7 @@ class GameSession(discord.ui.View):
         self.start_time = datetime.now()
         self.easy_mode = kwargs.get("easy_mode", False)
         self.no_monster = kwargs.get("no_monster", False)
+        self.rng = kwargs["rng"]
         super().__init__(timeout=self.timer)
         self.attack_button = AttackButton(discord.ButtonStyle.grey)
         self.talk_button = TalkButton(discord.ButtonStyle.grey)

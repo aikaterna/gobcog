@@ -718,6 +718,8 @@ class ChallengeConverter(Transformer):
     async def convert(cls, ctx: commands.Context, argument: str) -> str:
         if ctx.author.id not in (*ctx.bot.owner_ids, *DEV_LIST):
             return ""
+        if argument.isnumeric():
+            return int(argument)
         cog = ctx.bot.get_cog("Adventure")
         monsters, monster_stats, transcended = await cog.update_monster_roster()
         if argument not in monsters:

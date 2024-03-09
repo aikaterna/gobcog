@@ -42,6 +42,7 @@ from .loadouts import LoadoutCommands
 from .loot import LootCommands
 from .negaverse import Negaverse
 from .rebirth import RebirthCommands
+from .rng import Random
 from .themeset import ThemesetCommands
 from .types import Monster
 
@@ -679,12 +680,12 @@ class Adventure(
 
         await ctx.bot.on_command_error(ctx, error, unhandled_by_cog=not handled)
 
-    async def get_challenge(self, ctx: commands.Context, monsters):
+    async def get_challenge(self, ctx: commands.Context, monsters, rng: Random):
         try:
             c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
-            choice = random.choice(list(monsters.keys()) * 3)
+            choice = rng.choice(list(monsters.keys()) * 3)
             return choice
         possible_monsters = []
         stat_range = self._adv_results.get_stat_range(ctx)
@@ -698,7 +699,7 @@ class Adventure(
                 continue
             if not stats["boss"] and not stats["miniboss"]:
                 count = 0
-                break_at = random.randint(1, 15)
+                break_at = rng.randint(1, 15)
                 while count < break_at:
                     count += 1
                     possible_monsters.append(m)
@@ -708,12 +709,12 @@ class Adventure(
                 possible_monsters.append(m)
 
         if len(possible_monsters) == 0:
-            choice = random.choice(list(monsters.keys()) * 3)
+            choice = rng.choice(list(monsters.keys()) * 3)
         else:
-            choice = random.choice(possible_monsters)
+            choice = rng.choice(possible_monsters)
         return choice
 
-    def _dynamic_monster_stats(self, ctx: commands.Context, choice: Monster) -> Monster:
+    def _dynamic_monster_stats(self, ctx: commands.Context, choice: Monster, rng: Random) -> Monster:
         stat_range = self._adv_results.get_stat_range(ctx)
         win_percentage = stat_range.get("win_percent", 0.5)
         choice["cdef"] = choice.get("cdef", 1.0)
@@ -725,11 +726,11 @@ class Adventure(
             monster_diplo_min = int(choice["dipl"] * 2)
             monster_diplo_max = int(choice["dipl"] * 3)
             # dipl 2-3x base
-            percent_pdef = random.randrange(25, 30) / 100
+            percent_pdef = rng.randrange(25, 30) / 100
             monster_pdef = choice["pdef"] * percent_pdef
-            percent_mdef = random.randrange(25, 30) / 100
+            percent_mdef = rng.randrange(25, 30) / 100
             monster_mdef = choice["mdef"] * percent_mdef
-            percent_cdef = random.randrange(25, 30) / 100
+            percent_cdef = rng.randrange(25, 30) / 100
             monster_cdef = choice["cdef"] * percent_cdef
         elif win_percentage >= 0.75:
             # less than 90% win rate but more than 75%
@@ -739,11 +740,11 @@ class Adventure(
             monster_diplo_min = int(choice["dipl"] * 1.5)
             monster_diplo_max = int(choice["dipl"] * 2)
             # dipl 1.5-2x base
-            percent_pdef = random.randrange(15, 25) / 100
+            percent_pdef = rng.randrange(15, 25) / 100
             monster_pdef = choice["pdef"] * percent_pdef
-            percent_mdef = random.randrange(15, 25) / 100
+            percent_mdef = rng.randrange(15, 25) / 100
             monster_mdef = choice["mdef"] * percent_mdef
-            percent_cdef = random.randrange(15, 25) / 100
+            percent_cdef = rng.randrange(15, 25) / 100
             monster_cdef = choice["cdef"] * percent_cdef
         elif win_percentage >= 0.50:
             # less than 75% win rate but more than 50%
@@ -753,11 +754,11 @@ class Adventure(
             monster_diplo_min = int(choice["dipl"])
             monster_diplo_max = int(choice["dipl"] * 1.5)
             # dipl 1-1.5x base
-            percent_pdef = random.randrange(1, 15) / 100
+            percent_pdef = rng.randrange(1, 15) / 100
             monster_pdef = choice["pdef"] * percent_pdef
-            percent_mdef = random.randrange(1, 15) / 100
+            percent_mdef = rng.randrange(1, 15) / 100
             monster_mdef = choice["mdef"] * percent_mdef
-            percent_cdef = random.randrange(1, 15) / 100
+            percent_cdef = rng.randrange(1, 15) / 100
             monster_cdef = choice["cdef"] * percent_cdef
         elif win_percentage >= 0.35:
             # less than 50% win rate but more than 35%
@@ -767,11 +768,11 @@ class Adventure(
             monster_diplo_min = int(choice["dipl"] * 0.9)
             monster_diplo_max = int(choice["dipl"])
             # dipl 0.9-1x base
-            percent_pdef = random.randrange(1, 15) / 100
+            percent_pdef = rng.randrange(1, 15) / 100
             monster_pdef = choice["pdef"] * percent_pdef * -1
-            percent_mdef = random.randrange(1, 15) / 100
+            percent_mdef = rng.randrange(1, 15) / 100
             monster_mdef = choice["mdef"] * percent_mdef * -1
-            percent_cdef = random.randrange(1, 15) / 100
+            percent_cdef = rng.randrange(1, 15) / 100
             monster_cdef = choice["cdef"] * percent_cdef * -1
         elif win_percentage >= 0.15:
             # less than 35% win rate but more than 15%
@@ -781,11 +782,11 @@ class Adventure(
             monster_diplo_min = int(choice["dipl"] * 0.8)
             monster_diplo_max = int(choice["dipl"] * 0.9)
             # dipl 0.8-0.9x base
-            percent_pdef = random.randrange(15, 25) / 100
+            percent_pdef = rng.randrange(15, 25) / 100
             monster_pdef = choice["pdef"] * percent_pdef * -1
-            percent_mdef = random.randrange(15, 25) / 100
+            percent_mdef = rng.randrange(15, 25) / 100
             monster_mdef = choice["mdef"] * percent_mdef * -1
-            percent_cdef = random.randrange(15, 25) / 100
+            percent_cdef = rng.randrange(15, 25) / 100
             monster_cdef = choice["cdef"] * percent_cdef * -1
         else:
             # less than 15% win rate
@@ -795,23 +796,23 @@ class Adventure(
             monster_diplo_min = int(choice["dipl"] * 0.6)
             monster_diplo_max = int(choice["dipl"] * 0.8)
             # dipl 0.6-0.8x base
-            percent_pdef = random.randrange(25, 30) / 100
+            percent_pdef = rng.randrange(25, 30) / 100
             monster_pdef = choice["pdef"] * percent_pdef * -1
-            percent_mdef = random.randrange(25, 30) / 100
+            percent_mdef = rng.randrange(25, 30) / 100
             monster_mdef = choice["mdef"] * percent_mdef * -1
-            percent_cdef = random.randrange(25, 30) / 100
+            percent_cdef = rng.randrange(25, 30) / 100
             monster_cdef = choice["cdef"] * percent_cdef * -1
 
         if monster_hp_min < monster_hp_max:
-            new_hp = random.randrange(monster_hp_min, monster_hp_max)
+            new_hp = rng.randrange(monster_hp_min, monster_hp_max)
         elif monster_hp_max < monster_hp_min:
-            new_hp = random.randrange(monster_hp_max, monster_hp_min)
+            new_hp = rng.randrange(monster_hp_max, monster_hp_min)
         else:
             new_hp = max(monster_hp_max, monster_hp_min)
         if monster_diplo_min < monster_diplo_max:
-            new_diplo = random.randrange(monster_diplo_min, monster_diplo_max)
+            new_diplo = rng.randrange(monster_diplo_min, monster_diplo_max)
         elif monster_diplo_max < monster_diplo_min:
-            new_diplo = random.randrange(monster_diplo_max, monster_diplo_min)
+            new_diplo = rng.randrange(monster_diplo_max, monster_diplo_min)
         else:
             new_diplo = max(monster_diplo_max, monster_diplo_min)
 
@@ -825,7 +826,9 @@ class Adventure(
         choice["cdef"] = new_cdef
         return choice
 
-    async def update_monster_roster(self, c: Optional[Character] = None) -> Tuple[Dict[str, Monster], float, bool]:
+    async def update_monster_roster(
+        self, c: Optional[Character] = None, rng: Optional[Random] = None
+    ) -> Tuple[Dict[str, Monster], float, bool]:
         """
         Gets the current list of available monsters, their stats, and whether
         or not to spawn a transcended.
@@ -842,7 +845,10 @@ class Adventure(
                 The Available monsters dictionary, the stats they should have scaled,
                 and whether or not it is transcended.
         """
-        transcended_chance = random.randint(0, 10)
+        if rng is not None:
+            transcended_chance = rng.randint(0, 10)
+        else:
+            transcended_chance = random.randint(0, 10)
         theme = await self.config.theme()
         extra_monsters = await self.config.themes.all()
         extra_monsters = extra_monsters.get(theme, {}).get("monsters", {})
@@ -864,27 +870,42 @@ class Adventure(
                 monster_stats = 1 + max((c.rebirths // 10) - 1, 0) / 2
         return monsters, monster_stats, transcended
 
-    async def _simple(self, ctx: commands.Context, adventure_msg, challenge: str = None, attribute: str = None):
+    async def _simple(
+        self, ctx: commands.Context, adventure_msg, challenge: Union[int, str, None] = None, attribute: str = None
+    ):
+        rng = Random(ctx.message.id)
+        log.debug("Setting session seed to message ID %s", ctx.message.id)
+        if challenge is not None:
+            if isinstance(challenge, int):
+                rng = Random(challenge)
+                log.debug("Setting session seed to custom number %s", challenge)
+                challenge = None
+            elif isinstance(challenge, str) and challenge.isnumeric():
+                log.debug("Setting session seed to custom number was string %s", challenge)
+                rng = Random(int(challenge))
+                challenge = None
+
         self.bot.dispatch("adventure", ctx)
         text = ""
         c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
+
+        monster_roster, monster_stats, transcended = await self.update_monster_roster(c=c, rng=rng)
+        if not challenge or challenge not in monster_roster:
+            challenge = await self.get_challenge(ctx, monster_roster, rng)
+
         easy_mode = await self.config.easy_mode()
         if not easy_mode:
             if c.rebirths >= 30:
                 easy_mode = False
             elif c.rebirths >= 20:
-                easy_mode = bool(random.getrandbits(1))
+                easy_mode = bool(rng.getrandbits(1))
             else:
                 easy_mode = True
-
-        monster_roster, monster_stats, transcended = await self.update_monster_roster(c)
-        if not challenge or challenge not in monster_roster:
-            challenge = await self.get_challenge(ctx, monster_roster)
 
         if attribute and attribute.lower() in self.ATTRIBS:
             attribute = attribute.lower()
         else:
-            attribute = random.choice(list(self.ATTRIBS.keys()))
+            attribute = rng.choice(list(self.ATTRIBS.keys()))
         new_challenge = challenge
         if easy_mode:
             if transcended:
@@ -914,7 +935,7 @@ class Adventure(
                 # Hide Transcended on Easy mode
                 new_challenge = challenge.replace("Ascended", "")
             timer = 60 * 3
-            no_monster = random.randint(0, 100) == 25
+            no_monster = rng.randint(0, 100) == 25
         # if ctx.author.id in DEV_LIST:
         # timer = 20
         self._sessions[ctx.guild.id] = GameSession(
@@ -932,13 +953,14 @@ class Adventure(
             monster_stats=monster_stats if not no_monster else None,
             message=ctx.message,
             transcended=transcended if not no_monster else None,
-            monster_modified_stats=self._dynamic_monster_stats(ctx, monster_roster[challenge]),
+            monster_modified_stats=self._dynamic_monster_stats(ctx, monster_roster[challenge], rng),
             easy_mode=easy_mode,
             no_monster=no_monster,
+            rng=rng,
         )
         adventure_msg = (
-            f"{adventure_msg}{text}\n{random.choice(self.LOCATIONS)}\n"
-            f"{bold(ctx.author.display_name)}{random.choice(self.RAISINS)}"
+            f"{adventure_msg}{text}\n{rng.choice(self.LOCATIONS)}\n"
+            f"{bold(ctx.author.display_name)}{rng.choice(self.RAISINS)}"
         )
         await self._choice(ctx, adventure_msg)
         if ctx.guild.id not in self._sessions:
@@ -950,43 +972,37 @@ class Adventure(
     async def _choice(self, ctx: commands.Context, adventure_msg):
         session = self._sessions[ctx.guild.id]
         easy_mode = session.easy_mode
+        embed = discord.Embed(colour=discord.Colour.blurple())
+        embed.set_footer(text=f"Seed {hex(session.rng.internal_seed)[2:].upper()}")
+        use_embeds = await self.config.guild(ctx.guild).embed() and ctx.channel.permissions_for(ctx.me).embed_links
         if easy_mode:
             dragon_text = _(
                 "but **a{attr} {chall}** "
                 "just landed in front of you glaring! \n\n"
                 "What will you do and will other heroes be brave enough to help you?\n"
-                "Heroes have 5 minutes to participate via reaction:"
-                "\n\nReact with: {reactions}"
+                "Heroes have 5 minutes to participate."
             ).format(
                 attr=session.attribute,
                 chall=session.challenge,
-                reactions=_("**Fight** - **Spell** - **Talk** - **Pray** - **Run**"),
             )
             basilisk_text = _(
                 "but **a{attr} {chall}** stepped out looking around. \n\n"
                 "What will you do and will other heroes help your cause?\n"
-                "Heroes have 3 minutes to participate via reaction:"
-                "\n\nReact with: {reactions}"
+                "Heroes have 3 minutes to participate."
             ).format(
                 attr=session.attribute,
                 chall=session.challenge,
-                reactions=_("**Fight** - **Spell** - **Talk** - **Pray** - **Run**"),
             )
             normal_text = _(
                 "but **a{attr} {chall}** "
                 "is guarding it with{threat}. \n\n"
                 "What will you do and will other heroes help your cause?\n"
-                "Heroes have 2 minutes to participate via reaction:"
-                "\n\nReact with: {reactions}"
+                "Heroes have 2 minutes to participate."
             ).format(
                 attr=session.attribute,
                 chall=session.challenge,
-                threat=random.choice(self.THREATEE),
-                reactions=_("**Fight** - **Spell** - **Talk** - **Pray** - **Run**"),
+                threat=session.rng.choice(self.THREATEE),
             )
-
-            embed = discord.Embed(colour=discord.Colour.blurple())
-            use_embeds = await self.config.guild(ctx.guild).embed() and ctx.channel.permissions_for(ctx.me).embed_links
             if session.boss:
                 if use_embeds:
                     embed.description = f"{adventure_msg}\n{dragon_text}"
@@ -1018,15 +1034,10 @@ class Adventure(
                     adventure_msg = await ctx.send(f"{adventure_msg}\n{normal_text}", view=session)
                 timeout = 60 * 2
         else:
-            embed = discord.Embed(colour=discord.Colour.blurple())
-            use_embeds = await self.config.guild(ctx.guild).embed() and ctx.channel.permissions_for(ctx.me).embed_links
             timeout = 60 * 3
             obscured_text = _(
-                "What will you do and will other heroes help your cause?\n"
-                "Heroes have {time} minutes to participate via reaction:"
-                "\n\nReact with: {reactions}"
+                "What will you do and will other heroes help your cause?\nHeroes have {time} minutes to participate."
             ).format(
-                reactions=_("**Fight** - **Spell** - **Talk** - **Pray** - **Run**"),
                 time=timeout // 60,
             )
             if use_embeds:
@@ -1196,12 +1207,12 @@ class Adventure(
                 Treasure(epic=1, legendary=5, ascended=1, _set=1),
                 Treasure(epic=1, legendary=1, ascended=1, _set=1),
             ]
-            treasure = random.choice(available_loot)
+            treasure = session.rng.choice(available_loot)
             return treasure
         treasure = Treasure()  # empty treasure container
         if session.easy_mode:
             if (slain or persuaded) and not failed:
-                roll = random.randint(1, 10)
+                roll = session.rng.randint(1, 10)
                 monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
                 if session.transcended:
                     if session.boss and not session.no_monster:
@@ -1216,7 +1227,7 @@ class Adventure(
                             Treasure(epic=1, legendary=1, ascended=1, _set=1),
                             Treasure(_set=1),
                         ]
-                    treasure = random.choice(available_loot)
+                    treasure = session.rng.choice(available_loot)
                 elif session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
                     # available_loot = [[0, 0, 3, 1, 0, 0], [0, 0, 1, 2, 1, 0], [0, 0, 0, 3, 2, 0]]
                     available_loot = [
@@ -1224,7 +1235,7 @@ class Adventure(
                         Treasure(epic=1, legendary=2, ascended=1),
                         Treasure(legendary=3, ascended=2),
                     ]
-                    treasure = random.choice(available_loot)
+                    treasure = session.rng.choice(available_loot)
                 elif session.miniboss:  # rewards 50:50 rare:normal chest for killing something like the basilisk
                     # available_loot = [[1, 1, 1, 0, 0, 0], [0, 0, 1, 1, 1, 0], [0, 0, 2, 2, 0, 0], [0, 1, 0, 2, 1, 0]]
                     available_loot = [
@@ -1233,7 +1244,7 @@ class Adventure(
                         Treasure(epic=2, legendary=2),
                         Treasure(rare=1, legendary=2, ascended=1),
                     ]
-                    treasure = random.choice(available_loot)
+                    treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 700:  # super hard stuff
                     # available_loot = [[0, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 1, 0]]
                     available_loot = [
@@ -1242,7 +1253,7 @@ class Adventure(
                         Treasure(legendary=1, ascended=1),
                     ]
                     if roll <= 7:
-                        treasure = random.choice(available_loot)
+                        treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 500:  # rewards 50:50 rare:epic chest for killing hard stuff.
                     # available_loot = [[0, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 0], [0, 1, 1, 0, 0, 0]]
                     available_loot = [
@@ -1251,7 +1262,7 @@ class Adventure(
                         Treasure(rare=1, epic=1),
                     ]
                     if roll <= 5:
-                        treasure = random.choice(available_loot)
+                        treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 300:  # rewards 50:50 rare:normal chest for killing hardish stuff
                     # available_loot = [[1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0]]
                     available_loot = [
@@ -1260,7 +1271,7 @@ class Adventure(
                         Treasure(normal=1, rare=1),
                     ]
                     if roll <= 2:
-                        treasure = random.choice(available_loot)
+                        treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 80:  # small chance of a normal chest on killing stuff that's not terribly weak
                     if roll == 1:
                         # treasure = [1, 0, 0, 0, 0, 0]
@@ -1268,7 +1279,7 @@ class Adventure(
 
                 if session.boss:  # always rewards at least an epic chest.
                     # roll for legendary chest
-                    roll = random.randint(1, 100)
+                    roll = session.rng.randint(1, 100)
                     if roll <= 10:
                         treasure.ascended += 1
                     elif roll <= 20:
@@ -1281,7 +1292,7 @@ class Adventure(
                     treasure = Treasure()
         else:
             if (slain or persuaded) and not failed:
-                roll = random.randint(1, 10)
+                roll = session.rng.randint(1, 10)
                 monster_amount = hp + dipl if slain and persuaded else hp if slain else dipl
                 if session.transcended:
                     if session.boss and not session.no_monster:
@@ -1296,21 +1307,21 @@ class Adventure(
                             Treasure(epic=1, legendary=4, ascended=2, _set=1),
                             Treasure(epic=1, legendary=1, ascended=2, _set=1),
                         ]
-                    treasure = random.choice(available_loot)
+                    treasure = session.rng.choice(available_loot)
                 elif session.boss:  # rewards 60:30:10 Epic Legendary Gear Set items
                     # available_loot = [[0, 0, 1, 2, 1, 0], [0, 0, 0, 3, 2, 0]]
                     available_loot = [
                         Treasure(epic=1, legendary=2, ascended=1),
                         Treasure(legendary=3, ascended=2),
                     ]
-                    treasure = random.choice(available_loot)
+                    treasure = session.rng.choice(available_loot)
                 elif session.miniboss:  # rewards 50:50 rare:normal chest for killing something like the basilisk
                     # treasure = random.choice([[0, 0, 2, 2, 3, 0], [0, 1, 0, 2, 2, 0]])
                     available_loot = [
                         Treasure(epic=2, legendary=2, ascended=3),
                         Treasure(rare=1, legendary=2, ascended=2),
                     ]
-                    treasure = random.choice(available_loot)
+                    treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 700:  # super hard stuff
                     available_loot = [
                         Treasure(legendary=2, ascended=2),
@@ -1319,7 +1330,7 @@ class Adventure(
                     if roll <= 7:
                         # treasure = random.choice([[0, 0, 0, 2, 2, 0], [0, 1, 2, 1, 0, 0]])
 
-                        treasure = random.choice(available_loot)
+                        treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 500:  # rewards 50:50 rare:epic chest for killing hard stuff.
                     # available_loot = [[0, 0, 2, 0, 0, 0], [0, 1, 2, 1, 0, 0]]
                     available_loot = [
@@ -1327,7 +1338,7 @@ class Adventure(
                         Treasure(rare=1, epic=2, legendary=1),
                     ]
                     if roll <= 5:
-                        treasure = random.choice(available_loot)
+                        treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 300:  # rewards 50:50 rare:normal chest for killing hardish stuff
                     available_loot = [[0, 2, 0, 0, 0, 0], [1, 2, 1, 0, 0, 0]]
                     available_loot = [
@@ -1335,7 +1346,7 @@ class Adventure(
                         Treasure(normal=1, rare=2, epic=1),
                     ]
                     if roll <= 2:
-                        treasure = random.choice(available_loot)
+                        treasure = session.rng.choice(available_loot)
                 elif monster_amount >= 80:  # small chance of a normal chest on killing stuff that's not terribly weak
                     if roll == 1:
                         treasure = Treasure(normal=3)
@@ -1343,7 +1354,7 @@ class Adventure(
 
                 if session.boss:  # always rewards at least an epic chest.
                     # roll for legendary chest
-                    roll = random.randint(1, 100)
+                    roll = session.rng.randint(1, 100)
                     if roll <= 30:
                         treasure.ascended += 1
                     elif roll <= 50:
@@ -1715,7 +1726,7 @@ class Adventure(
                     _("This challenge was too much for one hero."),
                     _("You tried your best, but the group couldn't succeed at their attempt."),
                 ]
-                text = random.choice(options)
+                text = session.rng.choice(options)
         else:
             if slain and persuaded:
                 if len(pray_list) > 0:
@@ -1872,7 +1883,7 @@ class Adventure(
                     _("This challenge was too much for the group."),
                     _("You tried your best, but couldn't succeed."),
                 ]
-                text = random.choice(options)
+                text = session.rng.choice(options)
         loss_list = []
         if len(repair_list) > 0:
             temp_repair = []
@@ -1973,23 +1984,23 @@ class Adventure(
             elif (mod + 1) > 45:
                 mod = 45
 
-            roll = max(random.randint((1 + mod), max_roll), 1)
+            roll = max(session.rng.randint((1 + mod), max_roll), 1)
             if c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", False):
                 pet_crit = c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", 0)
-                pet_crit = random.randint(pet_crit, 100)
+                pet_crit = session.rng.randint(pet_crit, 100)
                 if pet_crit == 100:
                     roll = max_roll
                 elif roll <= 25 and pet_crit >= 95:
-                    roll = random.randint(max_roll - 5, max_roll)
+                    roll = session.rng.randint(max_roll - 5, max_roll)
                 elif roll > 25 and pet_crit >= 95:
-                    roll = random.randint(roll, max_roll)
+                    roll = session.rng.randint(roll, max_roll)
             roll_perc = roll / max_roll
             att_value = c.total_att
             rebirths = c.rebirths * (3 if c.hc is not HeroClasses.berserker else 1)
             if roll_perc < 0.10:
                 if c.hc is HeroClasses.berserker and c.heroclass["ability"]:
-                    bonus_roll = random.randint(5, 15)
-                    bonus_multi = random.choice([0.2, 0.3, 0.4, 0.5])
+                    bonus_roll = session.rng.randint(5, 15)
+                    bonus_multi = session.rng.choice([0.2, 0.3, 0.4, 0.5])
                     bonus = max(bonus_roll, int((roll + att_value + rebirths) * bonus_multi))
                     attack += int((roll - bonus + att_value) / pdef)
                     report += (
@@ -2005,14 +2016,14 @@ class Adventure(
             elif roll_perc > 0.95 or c.hc is HeroClasses.berserker:
                 crit_str = ""
                 crit_bonus = 0
-                base_bonus = random.randint(5, 10) + rebirths
+                base_bonus = session.rng.randint(5, 10) + rebirths
                 if roll_perc > 0.95:
                     msg += _("{user} landed a critical hit.\n").format(user=bold(user.display_name))
                     critlist.append(user)
-                    crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
+                    crit_bonus = (session.rng.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
                 if c.hc is HeroClasses.berserker and c.heroclass["ability"]:
-                    base_bonus = (random.randint(1, 10) + 5) * (rebirths // 2)
+                    base_bonus = (session.rng.randint(1, 10) + 5) * (rebirths // 2)
                 base_str = f"{self.emojis.crit}️ {humanize_number(base_bonus)}"
                 attack += int((roll + base_bonus + crit_bonus + att_value) / pdef)
                 bonus = base_str + crit_str
@@ -2047,16 +2058,16 @@ class Adventure(
                 max_roll = 20
             elif (mod + 1) > 45:
                 mod = 45
-            roll = max(random.randint((1 + mod), max_roll), 1)
+            roll = max(session.rng.randint((1 + mod), max_roll), 1)
             if c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", False):
                 pet_crit = c.heroclass.get("pet", {}).get("bonuses", {}).get("crit", 0)
-                pet_crit = random.randint(pet_crit, 100)
+                pet_crit = session.rng.randint(pet_crit, 100)
                 if pet_crit == 100:
                     roll = max_roll
                 elif roll <= 25 and pet_crit >= 95:
-                    roll = random.randint(max_roll - 5, max_roll)
+                    roll = session.rng.randint(max_roll - 5, max_roll)
                 elif roll > 25 and pet_crit >= 95:
-                    roll = random.randint(roll, max_roll)
+                    roll = session.rng.randint(roll, max_roll)
             roll_perc = roll / max_roll
             int_value = c.total_int
             rebirths = c.rebirths * (3 if c.hc is HeroClasses.wizard else 1)
@@ -2065,8 +2076,8 @@ class Adventure(
                 fumblelist.append(user)
                 fumble_count += 1
                 if c.hc is HeroClasses.wizard and c.heroclass["ability"]:
-                    bonus_roll = random.randint(5, 15)
-                    bonus_multi = random.choice([0.2, 0.3, 0.4, 0.5])
+                    bonus_roll = session.rng.randint(5, 15)
+                    bonus_multi = session.rng.choice([0.2, 0.3, 0.4, 0.5])
                     bonus = max(bonus_roll, int((roll + int_value + rebirths) * bonus_multi))
                     magic += int((roll - bonus + int_value) / mdef)
                     report += (
@@ -2078,15 +2089,15 @@ class Adventure(
             elif roll_perc > 0.95 or (c.hc is HeroClasses.wizard):
                 crit_str = ""
                 crit_bonus = 0
-                base_bonus = random.randint(5, 10) + rebirths
+                base_bonus = session.rng.randint(5, 10) + rebirths
                 base_str = f"{self.emojis.magic_crit}️ {humanize_number(base_bonus)}"
                 if roll_perc > 0.95:
                     msg += _("{} had a surge of energy.\n").format(bold(user.display_name))
                     critlist.append(user)
-                    crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
+                    crit_bonus = (session.rng.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
                 if c.hc is HeroClasses.wizard and c.heroclass["ability"]:
-                    base_bonus = (random.randint(1, 10) + 5) * (rebirths // 2)
+                    base_bonus = (session.rng.randint(1, 10) + 5) * (rebirths // 2)
                     base_str = f"{self.emojis.magic_crit}️ {humanize_number(base_bonus)}"
                 magic += int((roll + base_bonus + crit_bonus + int_value) / mdef)
                 bonus = base_str + crit_str
@@ -2150,7 +2161,7 @@ class Adventure(
                     max_roll = 20
                 elif (mod + 1) > 45:
                     mod = 45
-                roll = max(random.randint((1 + mod), max_roll), 1)
+                roll = max(session.rng.randint((1 + mod), max_roll), 1)
                 roll_perc = roll / max_roll
                 if len(fight_list + talk_list + magic_list) == 0:
                     msg += _("{} blessed like a madman but nobody was there to receive it.\n").format(
@@ -2230,7 +2241,7 @@ class Adventure(
                         roll=roll,
                     )
             else:
-                roll = random.randint(1, 10)
+                roll = session.rng.randint(1, 10)
                 if len(fight_list + talk_list + magic_list) == 0:
                     msg += _("{} prayed like a madman but nobody else helped them.\n").format(bold(user.display_name))
 
@@ -2298,13 +2309,13 @@ class Adventure(
                 mod = 15
             elif (mod + 1) > 45:
                 mod = 45
-            roll = max(random.randint((1 + mod), max_roll), 1)
+            roll = max(session.rng.randint((1 + mod), max_roll), 1)
             dipl_value = c.total_cha
             rebirths = c.rebirths * (3 if c.hc is HeroClasses.bard else 1)
             roll_perc = roll / max_roll
             if roll_perc < 0.10:
                 if c.hc is HeroClasses.bard and c.heroclass["ability"]:
-                    bonus = random.randint(5, 15)
+                    bonus = session.rng.randint(5, 15)
                     diplomacy += int((roll - bonus + dipl_value + rebirths) / cdef)
                     report += f"{bold(user.display_name)} " f"🎲({roll}) +💥{bonus} +🗨{humanize_number(dipl_value)} | "
                 else:
@@ -2314,15 +2325,15 @@ class Adventure(
             elif roll_perc > 0.95 or c.hc is HeroClasses.bard:
                 crit_str = ""
                 crit_bonus = 0
-                base_bonus = random.randint(5, 10) + rebirths
+                base_bonus = session.rng.randint(5, 10) + rebirths
                 if roll_perc > 0.95:
                     msg += _("{} made a compelling argument.\n").format(bold(user.display_name))
                     critlist.append(user)
-                    crit_bonus = (random.randint(5, 20)) + (rebirths * 2)
+                    crit_bonus = (session.rng.randint(5, 20)) + (rebirths * 2)
                     crit_str = f"{self.emojis.crit} {crit_bonus}"
 
                 if c.hc is HeroClasses.bard and c.heroclass["ability"]:
-                    base_bonus = (random.randint(1, 10) + 5) * (rebirths // 2)
+                    base_bonus = (session.rng.randint(1, 10) + 5) * (rebirths // 2)
                 base_str = f"🎵 {humanize_number(base_bonus)}"
                 diplomacy += int((roll + base_bonus + crit_bonus + dipl_value) / cdef)
                 bonus = base_str + crit_str
