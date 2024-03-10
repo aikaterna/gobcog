@@ -14,7 +14,7 @@
         {"parts": 2, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 2, "statmult": 1.0, "xpmult": 1.4, "cpmult": 1.0}
     ],
     "Heavenswheel": [
-        {"parts": 5, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 3, "statmult": 1.0, "xpmult": 1.0, "cpmult": 1.5},
+        {"parts": 2, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 3, "statmult": 1.0, "xpmult": 1.0, "cpmult": 1.5},
         {"parts": 5, "att": 0, "cha": 0, "int": 0, "dex": 0, "luck": 20, "statmult": 1.0, "xpmult": 1.0, "cpmult": 1.5}
     ],
     "Titan": [
