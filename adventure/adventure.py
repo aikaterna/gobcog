@@ -878,6 +878,7 @@ class Adventure(
                 log.debug("Setting session seed to custom number was string %s", challenge)
                 seed = GameSeed.from_int(int(challenge))
                 challenge = None
+
         rng = Random(seed)
 
         self.bot.dispatch("adventure", ctx)

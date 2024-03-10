@@ -38,7 +38,7 @@ class GameSeed:
     Custom monsters with higher stats will break this if they go above 4095.
     """
 
-    TIMESTAMP_SHIFT = 26
+    TIMESTAMP_SHIFT = 30
     # This number should always be a multiple of 2
     HP_SHIFT = TIMESTAMP_SHIFT - 1
     # Since this is essentially true or false for hp or dipl just 1 bit is needed
