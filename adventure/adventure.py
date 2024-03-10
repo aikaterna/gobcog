@@ -887,20 +887,26 @@ class Adventure(
         if challenge is None or challenge not in monster_roster:
             challenge = await self.get_challenge(monster_roster, rng)
 
+        if attribute and attribute.lower() in self.ATTRIBS:
+            attribute = attribute.lower()
+        else:
+            attribute = rng.choice(list(self.ATTRIBS.keys()))
+        new_challenge = challenge
         easy_mode = await self.config.easy_mode()
         if not easy_mode:
             if c.rebirths >= 30:
                 easy_mode = False
             elif c.rebirths >= 20:
                 easy_mode = bool(rng.getrandbits(1))
+                # This usage of rng causes following usage to be non-deterministic unless
+                # we start with a character at more than 20 rebirths.
+                # as a result we want this to be the last since it only affects a small
+                # portion of the game. One that I don't care to be deterministic since
+                # it can be toggled by the end user anyway.
+                # Now up until this point all aspects of the adventure are controlled by
+                # a set game seed and nothing else.
             else:
                 easy_mode = True
-
-        if attribute and attribute.lower() in self.ATTRIBS:
-            attribute = attribute.lower()
-        else:
-            attribute = rng.choice(list(self.ATTRIBS.keys()))
-        new_challenge = challenge
         if easy_mode:
             if transcended:
                 # Shows Transcended on Easy mode
