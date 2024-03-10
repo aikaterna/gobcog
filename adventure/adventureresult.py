@@ -31,11 +31,11 @@ class GameSeed:
     This seed encodes the min and max stat range to reduce the pool size of monsters
     which is critical to making the monster RNG deterministic based on some seed.
 
-    The premise is similar to discord unique ID's. Encoding a timestamp after 26 bits.
+    The premise is similar to discord unique ID's. Encoding a timestamp after 30 bits.
     The 21st bit contains whether to prefer hp or diplomacy for the monster stats.
-    The next 20 bits contain the min and max. These are limited to 4095 bits.
+    The next 20 bits contain the min and max. These are limited to 16383 bits.
     Since the base monsters cap at 560 stat this should be good enough.
-    Custom monsters with higher stats will break this if they go above 4095.
+    Custom monsters with higher stats will break this if they go above 16383.
     """
 
     TIMESTAMP_SHIFT = 30
@@ -69,10 +69,10 @@ class GameSeed:
         return 1 if self.stat_range.stat_type == "hp" else 0
 
     def min_stat(self):
-        return int(self.stat_range.min_stat)
+        return max(int(self.stat_range.min_stat), 0)
 
     def max_stat(self):
-        return int(self.stat_range.max_stat)
+        return min(int(self.stat_range.max_stat), 16383)
 
     def timestamp(self):
         # Strip the timestamp from the message ID
