@@ -1,5 +1,7 @@
 import random
 
+from .adventureresult import GameSeed
+
 
 class Random(random.Random):
     """
@@ -10,6 +12,6 @@ class Random(random.Random):
     For now we just want determinism and reproducability.
     """
 
-    def __init__(self, seed: int):
+    def __init__(self, seed: GameSeed):
         self.internal_seed = seed
-        super().__init__(seed)
+        super().__init__(int(seed))

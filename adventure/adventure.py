@@ -22,7 +22,7 @@ from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number, pagify
 from redbot.core.utils.predicates import ReactionPredicate
 
-from .adventureresult import AdventureResults
+from .adventureresult import AdventureResults, GameSeed
 from .adventureset import AdventureSetCommands
 from .backpack import BackPackCommands
 from .bank import bank
@@ -169,7 +169,7 @@ class Adventure(
         self.THREATEE: list = None
         self.TR_GEAR_SET: dict = None
         self.ATTRIBS: dict = None
-        self.MONSTERS: dict = None
+        self.MONSTERS: Dict[str, Monster] = None
         self.AS_MONSTERS: dict = None
         self.MONSTER_NOW: dict = None
         self.LOCATIONS: list = None
@@ -680,31 +680,20 @@ class Adventure(
 
         await ctx.bot.on_command_error(ctx, error, unhandled_by_cog=not handled)
 
-    async def get_challenge(self, ctx: commands.Context, monsters, rng: Random):
-        try:
-            c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            choice = rng.choice(list(monsters.keys()) * 3)
-            return choice
+    async def get_challenge(self, monsters: Dict[str, Monster], rng: Random):
         possible_monsters = []
-        stat_range = self._adv_results.get_stat_range(ctx)
+        stat_range = rng.internal_seed.stat_range
+        log.debug("Random Seed is %s", int(rng.internal_seed))
+        log.debug(stat_range)
         async for (e, (m, stats)) in AsyncIter(monsters.items(), steps=100).enumerate(start=1):
-            if stat_range["max_stat"] > 0.0:
-                main_stat = stats["hp"] if (stat_range["stat_type"] == "attack") else stats["dipl"]
-                appropriate_range = (stat_range["min_stat"] * 0.5) <= main_stat <= (stat_range["max_stat"] * 1.2)
-            else:
-                appropriate_range = max(stats["hp"], stats["dipl"]) <= (max(c.att, c.int, c.cha) * 5)
+            main_stat = stats["hp"] if (stat_range.stat_type == "hp") else stats["dipl"]
+            appropriate_range = (int(stat_range.min_stat) * 0.5) <= main_stat <= (int(stat_range.max_stat) * 1.2)
             if not appropriate_range:
                 continue
             if not stats["boss"] and not stats["miniboss"]:
-                count = 0
                 break_at = rng.randint(1, 15)
-                while count < break_at:
-                    count += 1
-                    possible_monsters.append(m)
-                    if count == break_at:
-                        break
+                # log.debug("Adding monster %s times", break_at)
+                possible_monsters.extend([m for i in range(1, break_at)])
             else:
                 possible_monsters.append(m)
 
@@ -852,7 +841,6 @@ class Adventure(
         theme = await self.config.theme()
         extra_monsters = await self.config.themes.all()
         extra_monsters = extra_monsters.get(theme, {}).get("monsters", {})
-        monster_stats = 1
         monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
         transcended = False
         # set our default return values first
@@ -873,25 +861,31 @@ class Adventure(
     async def _simple(
         self, ctx: commands.Context, adventure_msg, challenge: Union[int, str, None] = None, attribute: str = None
     ):
-        rng = Random(ctx.message.id)
+        stat_range = self._adv_results.get_stat_range(ctx)
+        c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
+        if stat_range.max_stat <= 0:
+            stat_range.max_stat = max(c.att, c.int, c.cha) * 5
+        seed = GameSeed(ctx.message.id, stat_range)
+        # pull the timestamp from the message ID
+
         log.debug("Setting session seed to message ID %s", ctx.message.id)
         if challenge is not None:
             if isinstance(challenge, int):
-                rng = Random(challenge)
+                seed = GameSeed.from_int(int(challenge))
                 log.debug("Setting session seed to custom number %s", challenge)
                 challenge = None
             elif isinstance(challenge, str) and challenge.isnumeric():
                 log.debug("Setting session seed to custom number was string %s", challenge)
-                rng = Random(int(challenge))
+                seed = GameSeed.from_int(int(challenge))
                 challenge = None
+        rng = Random(seed)
 
         self.bot.dispatch("adventure", ctx)
         text = ""
-        c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
 
         monster_roster, monster_stats, transcended = await self.update_monster_roster(c=c, rng=rng)
-        if not challenge or challenge not in monster_roster:
-            challenge = await self.get_challenge(ctx, monster_roster, rng)
+        if challenge is None or challenge not in monster_roster:
+            challenge = await self.get_challenge(monster_roster, rng)
 
         easy_mode = await self.config.easy_mode()
         if not easy_mode:
