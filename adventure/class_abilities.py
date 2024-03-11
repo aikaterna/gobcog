@@ -892,9 +892,9 @@ class ClassAbilities(AdventureMixin):
                         _("This command is on cooldown. Try again in {}").format(f"<t:{cooldown_time}:R>"),
                     )
                 ascended_forge_msg = ""
-                ignored_rarities = [Rarities.forged, Rarities.set, Rarities.event]
+                ignored_rarities = {Rarities.forged, Rarities.set, Rarities.event}
                 if c.rebirths < 30:
-                    ignored_rarities.append(Rarities.ascended)
+                    ignored_rarities.add(Rarities.ascended)
                     ascended_forge_msg += _("\n\nAscended items will be forgeable after 30 rebirths.")
                 consumed = []
                 forgeables_items = [str(i) for n, i in c.backpack.items() if i.rarity not in ignored_rarities]
@@ -914,7 +914,7 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                     return
-                await BackpackMenu(
+                menu = BackpackMenu(
                     source=BackpackSource(pages),
                     cog=self,
                     help_command=self.forge,
@@ -922,115 +922,25 @@ class ClassAbilities(AdventureMixin):
                     clear_reactions_after=True,
                     timeout=180,
                     tinker_forge=True,
-                ).start(ctx=ctx)
-                await smart_embed(
-                    ctx,
-                    _(
-                        "Reply with the full or partial name of item 1 to select for forging. "
-                        "Try to be specific. (Say `cancel` to exit){}".format(ascended_forge_msg)
-                    ),
                 )
-                try:
-                    item = None
-                    while not item:
-                        reply = await ctx.bot.wait_for(
-                            "message",
-                            check=MessagePredicate.same_context(user=ctx.author),
-                            timeout=30,
-                        )
-                        new_ctx = await self.bot.get_context(reply)
-                        new_ctx.command = self.forge
-                        if reply.content.lower() in ["cancel", "exit"]:
-                            return await smart_embed(ctx, _("Forging process has been cancelled."))
-                        with contextlib.suppress(BadArgument):
-                            item = None
-                            item = await ItemConverter().convert(new_ctx, reply.content)
-                            if str(item) not in forgeables_items:
-                                item = None
-
-                        if not item:
-                            wrong_item = _("{c}, I could not find that item - check your spelling.").format(
-                                c=bold(ctx.author.display_name)
-                            )
-                            await smart_embed(ctx, wrong_item)
-                        elif not c.can_equip(item):
-                            wrong_item = _("{c}, this item is too high level for you to reforge it.").format(
-                                c=bold(ctx.author.display_name)
-                            )
-                            await smart_embed(ctx, wrong_item)
-                            item = None
-                            continue
-                        else:
-                            break
-                    consumed.append(item)
-                except asyncio.TimeoutError:
+                await menu.start(ctx=ctx)
+                await menu.wait()
+                await menu.message.edit(view=None)
+                consumed = menu.selected_items
+                if not consumed:
                     timeout_msg = _("I don't have all day you know, {}.").format(bold(ctx.author.display_name))
                     return await smart_embed(ctx, timeout_msg)
-                if item.rarity in [Rarities.forged, Rarities.set]:
-                    return await smart_embed(
-                        ctx,
-                        _("{c}, {item.rarity} items cannot be reforged.").format(
-                            c=bold(ctx.author.display_name), item=item
-                        ),
-                    )
-                await smart_embed(
-                    ctx,
-                    _(
-                        "Reply with the full or partial name of item 2 to select for forging. "
-                        "Try to be specific. (Say `cancel` to exit)"
-                    ),
-                )
-                try:
-                    item = None
-                    while not item:
-                        reply = await ctx.bot.wait_for(
-                            "message",
-                            check=MessagePredicate.same_context(user=ctx.author),
-                            timeout=30,
-                        )
-                        if reply.content.lower() in ["cancel", "exit"]:
-                            return await smart_embed(ctx, _("Forging process has been cancelled."))
-                        new_ctx = await self.bot.get_context(reply)
-                        new_ctx.command = self.forge
-                        with contextlib.suppress(BadArgument):
-                            item = None
-                            item = await ItemConverter().convert(new_ctx, reply.content)
-                            if str(item) not in forgeables_items:
-                                item = None
-                        if item and consumed[0].owned <= 1 and str(consumed[0]) == str(item):
-                            wrong_item = _(
-                                "{c}, you only own 1 copy of this item and you've already selected it."
-                            ).format(c=bold(ctx.author.display_name))
-                            await smart_embed(ctx, wrong_item)
-
-                            continue
-                        if not item:
-                            wrong_item = _("{c}, I could not find that item - check your spelling.").format(
-                                c=bold(ctx.author.display_name)
-                            )
-                            await smart_embed(ctx, wrong_item)
-                        elif not c.can_equip(item):
-                            wrong_item = _("{c}, this item is too high level for you to reforge it.").format(
-                                c=bold(ctx.author.display_name)
-                            )
-                            await smart_embed(ctx, wrong_item)
-                            item = None
-                            continue
-                        else:
-                            break
-                    consumed.append(item)
-                except asyncio.TimeoutError:
-                    timeout_msg = _("I don't have all day you know, {}.").format(bold(ctx.author.display_name))
-                    return await smart_embed(ctx, timeout_msg)
-                if item.rarity in [Rarities.forged, Rarities.set]:
-                    return await smart_embed(
-                        ctx,
-                        _("{c}, {item.rarity} items cannot be reforged.").format(
-                            c=bold(ctx.author.display_name), item=item
-                        ),
-                    )
                 newitem = await self._to_forge(ctx, consumed, c)
                 for x in consumed:
+                    if x.name not in c.backpack:
+                        return await smart_embed(
+                            message=box(
+                                _(
+                                    "I don't know what you're playing at but {item} is no longer in your backpack."
+                                ).format(item=x.as_ansi()),
+                                lang="ansi",
+                            )
+                        )
                     c.backpack[x.name].owned -= 1
                     if c.backpack[x.name].owned <= 0:
                         del c.backpack[x.name]
@@ -1073,7 +983,7 @@ class ClassAbilities(AdventureMixin):
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         mad_forge = box(
                             _("{author}, {newitem} got mad at your rejection and blew itself up.").format(
-                                author=escape(ctx.author.display_name), newitem=newitem
+                                author=escape(ctx.author.display_name), newitem=newitem.as_ansi()
                             ),
                             lang="ansi",
                         )
@@ -1089,6 +999,64 @@ class ClassAbilities(AdventureMixin):
                         lang="ansi",
                     )
                     await ctx.send(forged_item)
+
+    async def get_forge_items(self, ctx: commands.Context, c: Character):
+        ascended_forge_msg = ""
+        ignored_rarities = [Rarities.forged, Rarities.set, Rarities.event]
+        if c.rebirths < 30:
+            ignored_rarities.append(Rarities.ascended)
+            ascended_forge_msg += _("\n\nAscended items will be forgeable after 30 rebirths.")
+        consumed = []
+        forgeables_items = [str(i) for n, i in c.backpack.items() if i.rarity not in ignored_rarities]
+        await smart_embed(
+            ctx,
+            _(
+                "Reply with the full or partial name of item 1 to select for forging. "
+                "Try to be specific. (Say `cancel` to exit){}".format(ascended_forge_msg)
+            ),
+        )
+        consumed = []
+        try:
+            item = None
+            while len(consumed) < 2:
+                reply = await ctx.bot.wait_for(
+                    "message",
+                    check=MessagePredicate.same_context(user=ctx.author),
+                    timeout=30,
+                )
+                new_ctx = await self.bot.get_context(reply)
+                new_ctx.command = self.forge
+                if reply.content.lower() in ["cancel", "exit"]:
+                    return await smart_embed(ctx, _("Forging process has been cancelled."))
+                with contextlib.suppress(BadArgument):
+                    item = None
+                    item = await ItemConverter().convert(new_ctx, reply.content)
+                    if str(item) not in forgeables_items:
+                        item = None
+
+                if not item:
+                    wrong_item = _("{c}, I could not find that item - check your spelling.").format(
+                        c=bold(ctx.author.display_name)
+                    )
+                    await smart_embed(ctx, wrong_item)
+                elif not c.can_equip(item):
+                    wrong_item = _("{c}, this item is too high level for you to reforge it.").format(
+                        c=bold(ctx.author.display_name)
+                    )
+                    await smart_embed(ctx, wrong_item)
+                    item = None
+                    continue
+                else:
+                    break
+            consumed.append(item)
+        except asyncio.TimeoutError:
+            timeout_msg = _("I don't have all day you know, {}.").format(bold(ctx.author.display_name))
+            return await smart_embed(ctx, timeout_msg)
+        if item.rarity in [Rarities.forged, Rarities.set]:
+            return await smart_embed(
+                ctx,
+                _("{c}, {item.rarity} items cannot be reforged.").format(c=bold(ctx.author.display_name), item=item),
+            )
 
     async def _to_forge(self, ctx: commands.Context, consumed: List[Item], character: Character):
         item1 = consumed[0]

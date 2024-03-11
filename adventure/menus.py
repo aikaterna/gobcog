@@ -836,12 +836,20 @@ class LeaderboardMenu(BaseMenu):
 
 
 class BackpackSelectEquip(discord.ui.Select):
-    def __init__(self, options: List[discord.SelectOption]):
+    def __init__(self, options: List[discord.SelectOption], placeholder: str, max_values: Optional[int] = None):
         self.view: BackpackMenu
-        super().__init__(min_values=1, max_values=len(options), options=options, placeholder=_("Equip"))
+        super().__init__(min_values=1, max_values=max_values or len(options), options=options, placeholder=placeholder)
+        self.selected_items = []
 
     async def equip_items(self, interaction: discord.Interaction):
+        if self.view.cog.in_adventure(self.view.ctx):
+            return await smart_embed(
+                message=_("You tried to equip an item but the monster ahead of you commands your attention."),
+                ephemeral=True,
+                interaction=interaction,
+            )
         equip_msg = ""
+        await interaction.response.defer()
         async with self.view.cog.get_lock(self.view.ctx.author):
             for item_index in self.values:
                 equip_item = self.view.source.current_table.items[int(item_index)]
@@ -887,23 +895,22 @@ class BackpackSelectEquip(discord.ui.Select):
         await smart_embed(message=box(equip_msg, lang="ansi"), interaction=interaction)
 
     async def forge_items(self, interaction: discord.Interaction):
-        # here is where we could potentially forge items through the select menu
-        # Unfortunately I realized that this would be cumbersome since we're limited
-        # to only 5-6 items per page and therefore the menu only shows items listed
-        # So this might not be a possible way to improve this ux at this time
-        # I am leaving the code here incase we could utilize it in the future
-        # for now the menu is disabled at the view level and this will never
-        # get called
-        raise NotImplementedError()
+        for item_index in self.values:
+            item = self.view.source.current_table.items[int(item_index)]
+            if item in self.view.selected_items and item.owned < 2:
+                return await smart_embed(
+                    message=_("You can't make items out of thin air like that! This is a duplicate."),
+                    interaction=interaction,
+                    ephemeral=True,
+                )
+            self.view.selected_items.append(item)
+        page = await self.view.source.get_page(self.view.current_page)
+        kwargs = await self.view._get_kwargs_from_page(page)
+        await interaction.response.edit_message(**kwargs)
+        if len(self.view.selected_items) >= 2:
+            self.view.stop()
 
     async def callback(self, interaction: discord.Interaction):
-        if self.view.cog.in_adventure(self.view.ctx):
-            return await smart_embed(
-                message=_("You tried to equip an item but the monster ahead of you commands your attention."),
-                ephemeral=True,
-                interaction=interaction,
-            )
-        await interaction.response.defer()
         if self.view.tinker_forge:
             return await self.forge_items(interaction)
         await self.equip_items(interaction)
@@ -921,13 +928,18 @@ class BackpackSource(menus.ListPageSource):
     def is_paginating(self):
         return True
 
-    async def format_page(self, menu: menus.MenuPages, page: BackpackTable):
+    async def format_page(self, view: BackpackMenu, page: BackpackTable):
         self.current_table = page
         self.select_options = [
             discord.SelectOption(label=str(item), value=i, description=item.stat_str(), emoji=item.rarity.emoji)
             for i, item in enumerate(self.current_table.items)
         ]
-        return str(page)
+        ret = str(page)
+
+        if view.tinker_forge and view.selected_items:
+            items = view.selected_items
+            ret += box(_("Selected Items:\n{items}").format(items="\n".join([i.as_ansi() for i in items])), lang="ansi")
+        return ret
 
 
 class BackpackMenu(BaseMenu):
@@ -956,12 +968,15 @@ class BackpackMenu(BaseMenu):
         self.tinker_forge = tinker_forge
 
         self.cog = cog
+        self.selected_items = []
 
     def _modify_select(self):
         if self.equip_select is not None:
             self.remove_item(self.equip_select)
-        if getattr(self.source, "select_options", None) and not self.tinker_forge:
-            self.equip_select = BackpackSelectEquip(self.source.select_options)
+        if getattr(self.source, "select_options", None):
+            max_values = 1 if self.tinker_forge else None
+            placeholder = _("Forge") if self.tinker_forge else _("Equip")
+            self.equip_select = BackpackSelectEquip(self.source.select_options, placeholder, max_values)
             self.add_item(self.equip_select)
 
     async def _get_kwargs_from_page(self, page: Any):

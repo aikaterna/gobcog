@@ -359,7 +359,7 @@ class ItemConverter(Transformer):
             items = ""
             view = ConfirmItemView(60, lookup, ctx.author)
             for number, item in enumerate(lookup):
-                items += f"{number}. {str(item)} (owned {item.owned})\n"
+                items += f"{number}. {item.as_ansi()} (owned {item.owned})\n"
 
             await ctx.send(
                 _("Multiple items share that name, which one would you like?\n{items}").format(
