@@ -4,8 +4,7 @@ import contextlib
 import logging
 import random
 import time
-from math import ceil
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 import discord
 from discord.ext.commands.errors import BadArgument
@@ -20,7 +19,7 @@ from .charsheet import Character, Item
 from .constants import HeroClasses, Rarities, Slot
 from .converters import HeroClassConverter, ItemConverter
 from .helpers import ConfirmView, escape, is_dev, smart_embed
-from .menus import BackpackMenu, BackpackSource, BaseMenu, SimpleSource
+from .menus import BackpackMenu, BackpackSource
 
 _ = Translator("Adventure", __file__)
 
@@ -1091,20 +1090,20 @@ class ClassAbilities(AdventureMixin):
                     )
                     await ctx.send(forged_item)
 
-    async def _to_forge(self, ctx: commands.Context, consumed, character):
+    async def _to_forge(self, ctx: commands.Context, consumed: List[Item], character: Character):
         item1 = consumed[0]
         item2 = consumed[1]
 
         roll = random.randint(1, 20)
-        modifier = (roll / 20) + 0.3
+        modifier = (roll / 20) + 0.75
         base_cha = max(character._cha, 1)
         base_int = character._int
         base_luck = character._luck
         base_att = max(character._att, 1)
-        modifier_bonus_luck = 0.01 * base_luck // 10
-        modifier_bonus_int = 0.01 * base_int // 20
-        modifier_penalty_str = 0.01 * base_att // 20
-        modifier_penalty_cha = 0.01 * base_cha // 20
+        modifier_bonus_luck = 0.01 * (base_luck // 10)
+        modifier_bonus_int = 0.01 * (base_int // 20)
+        modifier_penalty_str = 0.01 * (base_att // 20)
+        modifier_penalty_cha = 0.01 * (base_cha // 20)
         modifier = sum([modifier_bonus_int, modifier_bonus_luck, modifier_penalty_cha, modifier_penalty_str, modifier])
         modifier = max(0.001, modifier)
 
@@ -1120,63 +1119,24 @@ class ClassAbilities(AdventureMixin):
         newluck = int((base_luck * modifier) + base_luck)
         newslot = random.choice([i for i in Slot])
 
-        if newslot is Slot.two_handed:  # two handed weapons add their bonuses twice
-            hand = "two handed"
-        else:
-            if newslot is Slot.right or newslot is Slot.left:
-                hand = newslot.get_name() + " handed"
-            else:
-                hand = newslot.get_name() + " slot"
-        if newslot is Slot.two_handed:
-            two_handed_msg = box(
-                _(
-                    "{author}, your forging roll was {dice}({roll}).\n"
-                    "The device you tinkered will have "
-                    "(ATT {new_att} | "
-                    "CHA {new_cha} | "
-                    "INT {new_int} | "
-                    "DEX {new_dex} | "
-                    "LUCK {new_luck})"
-                    " and be {hand}."
-                ).format(
-                    author=escape(ctx.author.display_name),
-                    roll=roll,
-                    dice=self.emojis.dice,
-                    new_att=(newatt * 2),
-                    new_cha=(newdip * 2),
-                    new_int=(newint * 2),
-                    new_dex=(newdex * 2),
-                    new_luck=(newluck * 2),
-                    hand=hand,
-                ),
-                lang="ansi",
-            )
-            await ctx.send(two_handed_msg)
-        else:
-            reg_item = box(
-                _(
-                    "{author}, your forging roll was {dice}({roll}).\n"
-                    "The device you tinkered will have "
-                    "(ATT {new_att} | "
-                    "CHA {new_dip} | "
-                    "INT {new_int} | "
-                    "DEX {new_dex} | "
-                    "LUCK {new_luck})"
-                    " and be {hand}."
-                ).format(
-                    author=escape(ctx.author.display_name),
-                    roll=roll,
-                    dice=self.emojis.dice,
-                    new_att=newatt,
-                    new_dip=newdip,
-                    new_int=newint,
-                    new_dex=newdex,
-                    new_luck=newluck,
-                    hand=hand,
-                ),
-                lang="ansi",
-            )
-            await ctx.send(reg_item)
+        item = {
+            _("Unnamed Artifact"): {
+                "slot": newslot.to_json(),
+                "att": newatt,
+                "cha": newdip,
+                "int": newint,
+                "dex": newdex,
+                "luck": newluck,
+                "rarity": "forged",
+            }
+        }
+        item = Item.from_json(ctx, item)
+        msg = _(
+            "{author}, your forging roll was {dice}({roll}).\nThe device you tinkered will have the following stats.\n"
+        ).format(author=escape(ctx.author.display_name), dice=self.emojis.dice, roll=roll)
+
+        msg += box(str(item.table(character)), lang="ansi")
+        await ctx.send(msg)
         get_name = _(
             "{}, please respond with "
             "a name for your creation within 30s.\n"
@@ -1197,16 +1157,5 @@ class ClassAbilities(AdventureMixin):
                     name = _("Long-winded Artifact")
                 else:
                     name = reply.content.lower()
-        item = {
-            name: {
-                "slot": newslot.to_json(),
-                "att": newatt,
-                "cha": newdip,
-                "int": newint,
-                "dex": newdex,
-                "luck": newluck,
-                "rarity": "forged",
-            }
-        }
-        item = Item.from_json(ctx, item)
+        item.name = name
         return item
