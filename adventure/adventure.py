@@ -22,7 +22,7 @@ from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import bold, box, humanize_list, humanize_number, pagify
 from redbot.core.utils.predicates import ReactionPredicate
 
-from .adventureresult import AdventureResults, GameSeed
+from .adventureresult import AdventureResults
 from .adventureset import AdventureSetCommands
 from .backpack import BackPackCommands
 from .bank import bank
@@ -42,7 +42,7 @@ from .loadouts import LoadoutCommands
 from .loot import LootCommands
 from .negaverse import Negaverse
 from .rebirth import RebirthCommands
-from .rng import Random
+from .rng import GameSeed, Random
 from .themeset import ThemesetCommands
 from .types import Monster
 
