@@ -180,7 +180,9 @@ class ClassAbilities(AdventureMixin):
                                 if tinker_wep:
                                     await class_msg.edit(
                                         content=box(
-                                            _("{} has run off to find a new master.").format(humanize_list(tinker_wep)),
+                                            _("{} has run off to find a new master.").format(
+                                                humanize_list([i.as_ansi() for i in tinker_wep])
+                                            ),
                                             lang="ansi",
                                         ),
                                         view=None,
@@ -930,7 +932,7 @@ class ClassAbilities(AdventureMixin):
                 if not consumed:
                     timeout_msg = _("I don't have all day you know, {}.").format(bold(ctx.author.display_name))
                     return await smart_embed(ctx, timeout_msg)
-                newitem = await self._to_forge(ctx, consumed, c)
+                newitem, roll = await self._to_forge(ctx, consumed, c)
                 for x in consumed:
                     if x.name not in c.backpack:
                         return await smart_embed(
@@ -950,32 +952,37 @@ class ClassAbilities(AdventureMixin):
                     if item.rarity is Rarities.forged:
                         c = await c.unequip_item(item)
                 lookup = list(i for n, i in c.backpack.items() if i.rarity is Rarities.forged)
+                msg = _(
+                    "{author}, your forging roll was {dice}({roll}).\nThe device you tinkered will have the following stats.\n"
+                ).format(author=escape(ctx.author.display_name), dice=self.emojis.dice, roll=roll)
+
+                msg += box(str(newitem.table(c)), lang="ansi")
                 if len(lookup) > 0:
-                    forge_str = box(
+                    msg += box(
                         _("{author}, you already have a device. Do you want to replace {replace}?").format(
                             author=escape(ctx.author.display_name),
-                            replace=", ".join([str(x) for x in lookup]),
+                            replace=", ".join([x.as_ansi() for x in lookup]),
                         ),
                         lang="ansi",
                     )
-                    view = ConfirmView(60, ctx.author)
-                    forge_msg = await ctx.send(forge_str, view=view)
+                    view = ConfirmView(60, ctx.author, get_name=True)
+                    view.message = await ctx.send(msg, view=view)
                     await view.wait()
-                    with contextlib.suppress(discord.HTTPException):
-                        await forge_msg.delete()
+                    if view.item_name is not None:
+                        newitem.name = view.item_name
                     if view.confirmed:  # user reacted with Yes.
                         c.heroclass["cooldown"] = time.time() + cooldown_time
                         created_item = box(
                             _("{author}, your new {newitem} consumed {lk} and is now lurking in your backpack.").format(
                                 author=escape(ctx.author.display_name),
-                                newitem=newitem,
-                                lk=", ".join([str(x) for x in lookup]),
+                                newitem=newitem.as_ansi(),
+                                lk=", ".join([x.as_ansi() for x in lookup]),
                             ),
                             lang="ansi",
                         )
                         for item in lookup:
                             del c.backpack[item.name]
-                        await ctx.send(created_item)
+                        await view.message.edit(content=created_item, view=None)
                         c.backpack[newitem.name] = newitem
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     else:
@@ -987,18 +994,35 @@ class ClassAbilities(AdventureMixin):
                             ),
                             lang="ansi",
                         )
-                        return await ctx.send(mad_forge)
+                        return await view.message.edit(content=mad_forge, view=None)
                 else:
-                    c.heroclass["cooldown"] = time.time() + cooldown_time
-                    c.backpack[newitem.name] = newitem
-                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
-                    forged_item = box(
-                        _("{author}, your new {newitem} is lurking in your backpack.").format(
-                            author=escape(ctx.author.display_name), newitem=newitem
-                        ),
-                        lang="ansi",
-                    )
-                    await ctx.send(forged_item)
+                    msg += _("Do you want to keep this item?")
+                    view = ConfirmView(60, ctx.author, get_name=True)
+                    view.message = await ctx.send(msg, view=view)
+                    await view.wait()
+                    if view.item_name is not None:
+                        newitem.name = view.item_name
+                    if view.confirmed:
+                        c.heroclass["cooldown"] = time.time() + cooldown_time
+                        c.backpack[newitem.name] = newitem
+                        await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
+                        forged_item = box(
+                            _("{author}, your new {newitem} is lurking in your backpack.").format(
+                                author=escape(ctx.author.display_name), newitem=newitem.as_ansi()
+                            ),
+                            lang="ansi",
+                        )
+                        await view.message.edit(content=created_item, view=None)
+                    else:
+                        c.heroclass["cooldown"] = time.time() + cooldown_time
+                        await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
+                        mad_forge = box(
+                            _("{author}, {newitem} got mad at your rejection and blew itself up.").format(
+                                author=escape(ctx.author.display_name), newitem=newitem.as_ansi()
+                            ),
+                            lang="ansi",
+                        )
+                        return await view.message.edit(content=mad_forge, view=None)
 
     async def get_forge_items(self, ctx: commands.Context, c: Character):
         ascended_forge_msg = ""
@@ -1099,31 +1123,5 @@ class ClassAbilities(AdventureMixin):
             }
         }
         item = Item.from_json(ctx, item)
-        msg = _(
-            "{author}, your forging roll was {dice}({roll}).\nThe device you tinkered will have the following stats.\n"
-        ).format(author=escape(ctx.author.display_name), dice=self.emojis.dice, roll=roll)
 
-        msg += box(str(item.table(character)), lang="ansi")
-        await ctx.send(msg)
-        get_name = _(
-            "{}, please respond with "
-            "a name for your creation within 30s.\n"
-            "(You will not be able to change it afterwards. 40 characters maximum.)"
-        ).format(bold(ctx.author.display_name))
-        await smart_embed(ctx, get_name)
-        reply = None
-        name = _("Unnamed Artifact")
-        try:
-            reply = await ctx.bot.wait_for("message", check=MessagePredicate.same_context(user=ctx.author), timeout=30)
-        except asyncio.TimeoutError:
-            name = _("Unnamed Artifact")
-        if reply is None:
-            name = _("Unnamed Artifact")
-        else:
-            if hasattr(reply, "content"):
-                if len(reply.content) > 40:
-                    name = _("Long-winded Artifact")
-                else:
-                    name = reply.content.lower()
-        item.name = name
-        return item
+        return item, roll
