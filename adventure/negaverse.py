@@ -176,7 +176,7 @@ class Negaverse(AdventureMixin):
                 offering_value += curr_balance
                 loss_string = _("all of their")
                 loss_state = True
-                max_items_lost = max(min(10, int(len(character.backpack) * 0.10)), 0)
+                max_items_lost = max(min(10, int(len(character.backpack) * 0.10)), 1)
                 items = await character.looted(
                     how_many=random.randint(1, max_items_lost), exclude={Rarities.normal, Rarities.epic, Rarities.rare}
                 )
