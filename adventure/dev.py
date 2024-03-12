@@ -202,7 +202,6 @@ class DevCommands(AdventureMixin):
                 if server is None:
                     # should not happen but the type checker is happier
                     continue
-                stat_range = self._adv_results.get_stat_range(server)
                 pdef = adventure.monster_modified_stats["pdef"]
                 mdef = adventure.monster_modified_stats["mdef"]
                 cdef = adventure.monster_modified_stats.get("cdef", 1.0)
@@ -211,8 +210,7 @@ class DevCommands(AdventureMixin):
                 msg += (
                     f"{server.name} - "
                     f"[{adventure.challenge}]({adventure.message.jump_url})\n"
-                    f"(hp:**{hp}**-char:**{dipl}**-pdef:**{pdef:0.2f}**-mdef:**{mdef:0.2f}**-cdef:**{cdef:0.2f}**)\n"
-                    f"{stat_range}\n\n"
+                    f"(hp:**{hp}**-char:**{dipl}**-pdef:**{pdef:0.2f}**-mdef:**{mdef:0.2f}**-cdef:**{cdef:0.2f}**)\n\n"
                 )
         else:
             msg += "None.\n\n"
