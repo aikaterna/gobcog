@@ -188,38 +188,39 @@ class DevCommands(AdventureMixin):
     @commands.command(name="adventurestats")
     @commands.bot_has_permissions(add_reactions=True, embed_links=True)
     @commands.is_owner()
-    async def _adventurestats(self, ctx: commands.Context):
+    async def _adventurestats(self, ctx: commands.Context, guild: Optional[discord.Guild] = None):
         """[Owner] Show all current adventures."""
         msg = bold(_("Active Adventures\n"))
         embed_list = []
-
+        if guild is None:
+            guild: discord.Guild = ctx.guild
+        if guild is None:
+            return await ctx.send_help()
         if len(self._sessions) > 0:
             for server_id, adventure in self._sessions.items():
-                guild = self.bot.get_guild(server_id)
-                if guild is None:
+                server = self.bot.get_guild(server_id)
+                if server is None:
                     # should not happen but the type checker is happier
                     continue
-                stat_range = self._adv_results.get_stat_range(ctx)
+                stat_range = self._adv_results.get_stat_range(server)
                 pdef = adventure.monster_modified_stats["pdef"]
                 mdef = adventure.monster_modified_stats["mdef"]
                 cdef = adventure.monster_modified_stats.get("cdef", 1.0)
                 hp = adventure.monster_hp()
                 dipl = adventure.monster_dipl()
                 msg += (
-                    f"{guild.name} - "
+                    f"{server.name} - "
                     f"[{adventure.challenge}]({adventure.message.jump_url})\n"
-                    f"[{stat_range['stat_type']}-min:{stat_range['min_stat']}-max:{stat_range['max_stat']}-winratio:{stat_range['win_percent']}] "
-                    f"(hp:{hp}-char:{dipl}-pdef:{pdef}-mdef:{mdef}-cdef:{cdef})\n\n"
+                    f"(hp:**{hp}**-char:**{dipl}**-pdef:**{pdef:0.2f}**-mdef:**{mdef:0.2f}**-cdef:**{cdef:0.2f}**)\n"
+                    f"{stat_range}\n\n"
                 )
         else:
             msg += "None.\n\n"
-        msg += bold(_("Guild Stats\n"))
-        stats = self._adv_results.get_stat_range(ctx)
-        msg += _("Main Stat: {stat_type}\nMin Stat: {min_stat}\nMax Stat: {max_stat}\nWin%: {win_percent}").format(
-            stat_type=stats.stat_type, min_stat=stats.min_stat, max_stat=stats.max_stat, win_percent=stats.win_percent
-        )
-        for page in pagify(msg, delims=["\n\n"], page_length=1000):
+        stats = self._adv_results.get_stat_range(guild)
+        stats_msg = _("Stats for {guild_name}\n{stats}").format(guild_name=guild.name, stats=str(stats))
+        for page in pagify(msg, delims=["\n\n"], page_length=2048):
             embed = discord.Embed(description=page)
+            embed.add_field(name=_("Guild Stats"), value=stats_msg)
             embed_list.append(embed)
         await BaseMenu(
             source=SimpleSource(embed_list),

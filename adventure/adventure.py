@@ -710,7 +710,7 @@ class Adventure(
         return choice
 
     def _dynamic_monster_stats(self, ctx: commands.Context, choice: Monster, rng: Random) -> Monster:
-        stat_range = self._adv_results.get_stat_range(ctx)
+        stat_range = self._adv_results.get_stat_range(ctx.guild)
         win_percentage = stat_range.get("win_percent", 0.5)
         choice["cdef"] = choice.get("cdef", 1.0)
         if win_percentage >= 0.90:
@@ -867,7 +867,7 @@ class Adventure(
     async def _simple(
         self, ctx: commands.Context, adventure_msg, challenge: Union[int, str, None] = None, attribute: str = None
     ):
-        stat_range = self._adv_results.get_stat_range(ctx)
+        stat_range = self._adv_results.get_stat_range(ctx.guild)
         c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
         if stat_range.max_stat <= 0:
             stat_range.max_stat = max(c.att, c.int, c.cha) * 5
@@ -1538,9 +1538,9 @@ class Adventure(
                 int_dipl=humanize_number(dipl),
             )
         if dmg_dealt >= diplomacy:
-            self._adv_results.add_result(ctx, "attack", dmg_dealt, people, slain)
+            self._adv_results.add_result(ctx.guild, "attack", dmg_dealt, people, slain)
         else:
-            self._adv_results.add_result(ctx, "talk", diplomacy, people, persuaded)
+            self._adv_results.add_result(ctx.guild, "talk", diplomacy, people, persuaded)
         result_msg = result_msg + "\n" + damage_str + diplo_str
 
         await calc_msg.delete()
