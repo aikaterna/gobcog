@@ -10,6 +10,7 @@ from redbot.core import Config, commands
 from redbot.core.bot import Red
 
 if TYPE_CHECKING:
+    from .adventureresult import AdventureResults
     from .adventureset import TaxesConverter
     from .charsheet import Character, Item
     from .constants import Rarities, Treasure
@@ -42,6 +43,7 @@ class AdventureMixin(ABC):
     def __init__(self, *_args):
         self.config: Config
         self.bot: Red
+        self._adv_results: AdventureResults
         self.settings: Dict[Any, Any]
         self.emojis: SimpleNamespace
         self._ready: asyncio.Event
@@ -148,6 +150,10 @@ class AdventureMixin(ABC):
 
     @abstractmethod
     async def _simple(self, ctx: commands.Context, adventure_msg, challenge: str = None, attribute: str = None):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def dispatch_adventure(self, session: GameSession, was_exposed: bool = False):
         raise NotImplementedError()
 
     @abstractmethod

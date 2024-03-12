@@ -212,7 +212,12 @@ class DevCommands(AdventureMixin):
                     f"(hp:{hp}-char:{dipl}-pdef:{pdef}-mdef:{mdef}-cdef:{cdef})\n\n"
                 )
         else:
-            msg += "None."
+            msg += "None.\n\n"
+        msg += bold(_("Guild Stats\n"))
+        stats = self._adv_results.get_stat_range(ctx)
+        msg += _("Main Stat: {stat_type}\nMin Stat: {min_stat}\nMax Stat: {max_stat}\nWin%: {win_percent}").format(
+            stat_type=stats.stat_type, min_stat=stats.min_stat, max_stat=stats.max_stat, win_percent=stats.win_percent
+        )
         for page in pagify(msg, delims=["\n\n"], page_length=1000):
             embed = discord.Embed(description=page)
             embed_list.append(embed)

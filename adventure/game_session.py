@@ -371,6 +371,7 @@ class SpecialActionButton(discord.ui.Button):
                 await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
             if good:
                 session = self.view
+                was_exposed = not session.exposed
                 if roll <= 0.4:
                     return await smart_embed(interaction=interaction, message=_("You suck."), cog=self.view.cog)
                 msg = ""
@@ -474,7 +475,7 @@ class SpecialActionButton(discord.ui.Button):
                     image = None
                     if roll >= 0.4:
                         image = session.monster["image"]
-                    return await smart_embed(
+                    response_msg = await smart_embed(
                         ctx=None,
                         message=msg,
                         success=True,
@@ -482,6 +483,9 @@ class SpecialActionButton(discord.ui.Button):
                         cog=self.view.cog,
                         interaction=interaction,
                     )
+                    if session.exposed and not session.easy_mode:
+                        session.cog.dispatch_adventure(session, was_exposed=was_exposed)
+                    return response_msg
                 else:
                     return await smart_embed(
                         ctx=None,
@@ -646,6 +650,7 @@ class GameSession(discord.ui.View):
         self.attribute: dict = kwargs.pop("attribute")
         self.attribute_stats: Tuple[float, ...] = kwargs.pop("attribute_stats", (1.0, 1.0))
         self.guild: discord.Guild = kwargs.pop("guild")
+        self.channel: discord.TextChannel = kwargs.pop("channel")
         self.boss: bool = kwargs.pop("boss")
         self.miniboss: dict = kwargs.pop("miniboss")
         self.timer: int = kwargs.pop("timer")
@@ -667,6 +672,9 @@ class GameSession(discord.ui.View):
         self.start_time = datetime.now()
         self.easy_mode = kwargs.get("easy_mode", False)
         self.no_monster = kwargs.get("no_monster", False)
+        self.possessed = self.attribute == " possessed"
+        self.immortal = self.attribute == "n immortal"
+        self.ascended = "Ascended" in self.challenge
         self.rng = kwargs["rng"]
         super().__init__(timeout=self.timer)
         self.attack_button = AttackButton(discord.ButtonStyle.grey)
@@ -714,6 +722,11 @@ class GameSession(discord.ui.View):
         if self.easy_mode:
             return self.challenge
         return _("Unknown creature")
+
+    async def send(self, *args, **kwargs):
+        # This is here so that you can still use the session to send a new message
+        # when it is dispatched through the bot.
+        await self.ctx.send(args, **kwargs)
 
     async def interaction_check(self, interaction: discord.Interaction):
         """Just extends the default reaction_check to use owner_ids"""

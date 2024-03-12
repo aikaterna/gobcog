@@ -94,7 +94,7 @@ class Adventure(
             user_id
         ).clear()  # This will only ever touch the separate currency, leaving bot economy to be handled by core.
 
-    __version__ = "4.1.0"
+    __version__ = "4.1.1"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -234,6 +234,12 @@ class Adventure(
                     if cog.repo is not None:
                         self._repo = cog.repo.clean_url
                     self._commit = cog.commit
+        if any([_id in self.bot.owner_ids for _id in DEV_LIST]):
+            # Only add this value to the dev environment for people in the dev list
+            try:
+                self.bot.add_dev_env_value("adventure", lambda x: self)
+            except Exception:
+                pass
         try:
             global _config
             _config = self.config
@@ -880,10 +886,7 @@ class Adventure(
                 challenge = None
 
         rng = Random(seed)
-
-        self.bot.dispatch("adventure", ctx)
         text = ""
-
         monster_roster, monster_stats, transcended = await self.update_monster_roster(c=c, rng=rng)
         if challenge is None or challenge not in monster_roster:
             challenge = await self.get_challenge(monster_roster, rng)
@@ -915,22 +918,12 @@ class Adventure(
             no_monster = False
             if monster_roster[challenge]["boss"]:
                 timer = 60 * 5
-                self.bot.dispatch("adventure_boss", ctx)
                 challenge_str = _("[{challenge} Alarm!]").format(challenge=new_challenge)
                 text = box(ANSITextColours.red.as_str(challenge_str), lang="ansi")
             elif monster_roster[challenge]["miniboss"]:
                 timer = 60 * 3
-                self.bot.dispatch("adventure_miniboss", ctx)
             else:
                 timer = 60 * 2
-            if transcended:
-                self.bot.dispatch("adventure_transcended", ctx)
-            elif "Ascended" in new_challenge:
-                self.bot.dispatch("adventure_ascended", ctx)
-            if attribute == "n immortal":
-                self.bot.dispatch("adventure_immortal", ctx)
-            elif attribute == " possessed":
-                self.bot.dispatch("adventure_possessed", ctx)
         else:
             if transcended:
                 # Hide Transcended on Easy mode
@@ -946,6 +939,7 @@ class Adventure(
             attribute=attribute if not no_monster else None,
             attribute_stats=self.ATTRIBS[attribute] if not no_monster else [],
             guild=ctx.guild,
+            channel=ctx.channel,
             boss=monster_roster[challenge]["boss"] if not no_monster else None,
             miniboss=monster_roster[challenge]["miniboss"] if not no_monster else None,
             timer=timer,
@@ -969,6 +963,31 @@ class Adventure(
         rewards = self._rewards
         participants = self._sessions[ctx.guild.id].participants
         return (rewards, participants)
+
+    def dispatch_adventure(self, session: GameSession, was_exposed: bool = False):
+        """
+        Dispatches adventures based on the game session.
+
+        This passes the session itself so we can link to the message it is actually on
+        when another cog sees this event. It also reveals everything about the session
+        so the filtering actually occurs via the event itself.
+        """
+        if not was_exposed:
+            # Don't ping regular adventures twice, this one already occured at the start always
+            self.bot.dispatch("adventure", session)
+        if session.easy_mode or was_exposed is True:
+            if session.boss:
+                self.bot.dispatch("adventure_boss", session)
+            elif session.miniboss:
+                self.bot.dispatch("adventure_miniboss", session)
+            if session.transcended:
+                self.bot.dispatch("adventure_transcended", session)
+            elif session.ascended:
+                self.bot.dispatch("adventure_ascended", session)
+            elif session.immortal:
+                self.bot.dispatch("adventure_immortal", session)
+            elif session.possessed:
+                self.bot.dispatch("adventure_possessed", session)
 
     async def _choice(self, ctx: commands.Context, adventure_msg):
         session = self._sessions[ctx.guild.id]
@@ -1051,6 +1070,7 @@ class Adventure(
         session.message = adventure_msg
         # start_adding_reactions(adventure_msg, self._adventure_actions)
         timer = await self._adv_countdown(ctx, session.timer, "Time remaining")
+        self.dispatch_adventure(session)
 
         self.tasks[adventure_msg.id] = timer
         try:
@@ -2736,3 +2756,9 @@ class Adventure(
         for lock in self.locks.values():
             with contextlib.suppress(Exception):
                 lock.release()
+        try:
+            self.bot.remove_dev_env_value("adventure")
+            # since this is only added for people in the dev list
+            # we want to catch the exception
+        except Exception:
+            pass

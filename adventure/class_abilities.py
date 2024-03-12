@@ -580,8 +580,10 @@ class ClassAbilities(AdventureMixin):
                                 skill=self.emojis.skills.psychic,
                             ),
                         )
+                session = self._sessions[ctx.guild.id]
+                was_exposed = not session.exposed
                 if good:
-                    session = self._sessions[ctx.guild.id]
+
                     if roll <= 0.4:
                         return await smart_embed(ctx, _("You suck."))
                     msg = ""
@@ -700,7 +702,10 @@ class ClassAbilities(AdventureMixin):
                         image = None
                         if roll >= 0.4 and not session.no_monster:
                             image = session.monster["image"]
-                        return await smart_embed(ctx, msg, image=image)
+                        response_msg = await smart_embed(ctx, msg, image=image)
+                        if session.exposed and not session.easy_mode:
+                            self.dispatch_adventure(session, was_exposed=was_exposed)
+                        return response_msg
                     else:
                         return await smart_embed(ctx, _("You have failed to discover anything about this monster."))
             else:
