@@ -214,6 +214,8 @@ class Adventure(
 
     async def cog_before_invoke(self, ctx: commands.Context):
         await self._ready_event.wait()
+        if ctx.command.name in ["adventurestats", "adventureseed"]:
+            return True
         if ctx.author.id in self.locks and self.locks[ctx.author.id].locked():
             await ctx.send(_("You're already interacting with something that needs your attention!"), ephemeral=True)
             raise CheckFailure(f"There's an active lock for this user ({ctx.author.id})")
