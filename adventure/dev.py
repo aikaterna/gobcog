@@ -232,7 +232,7 @@ class DevCommands(AdventureMixin):
             description=(
                 f"HP: **{true_hp}**\nCHA: **{true_dipl}**"
                 f"\nHP Mod: **{attribute_stats[0]}**\nCHA Mod: **{attribute_stats[1]}**"
-            )
+            ),
         )
         embed.add_field(name="Base Stats", value=base_stats)
         embed.add_field(name="Dynamic Stats", value=d_stats)
