@@ -933,6 +933,9 @@ class Adventure(
             no_monster = rng.randint(0, 100) == 25
         # if ctx.author.id in DEV_LIST:
         # timer = 20
+        monster = monster_roster[challenge].copy()
+        # we want to copy it so that its base stats remain the same and dynamic adjustmnets
+        # are made for that specific adventure.
         self._sessions[ctx.guild.id] = GameSession(
             ctx=ctx,
             cog=self,
@@ -941,7 +944,7 @@ class Adventure(
             attribute_stats=self.ATTRIBS[attribute] if not no_monster else [],
             guild=ctx.guild,
             channel=ctx.channel,
-            boss=monster_roster[challenge]["boss"] if not no_monster else None,
+            boss=monster["boss"] if not no_monster else None,
             miniboss=monster_roster[challenge]["miniboss"] if not no_monster else None,
             timer=timer,
             monster=monster_roster[challenge] if not no_monster else None,
@@ -949,7 +952,7 @@ class Adventure(
             monster_stats=monster_stats if not no_monster else None,
             message=ctx.message,
             transcended=transcended if not no_monster else None,
-            monster_modified_stats=self._dynamic_monster_stats(ctx, monster_roster[challenge], rng),
+            monster_modified_stats=self._dynamic_monster_stats(ctx, monster, rng),
             easy_mode=easy_mode,
             no_monster=no_monster,
             rng=rng,
