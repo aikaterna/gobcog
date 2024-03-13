@@ -848,6 +848,7 @@ class Adventure(
         extra_monsters = await self.config.themes.all()
         extra_monsters = extra_monsters.get(theme, {}).get("monsters", {})
         monsters = {**self.MONSTERS, **self.AS_MONSTERS, **extra_monsters}
+        monsters = {k: v for k, v in sorted(monsters.items(), key=lambda x: x[0])}
         transcended = False
         # set our default return values first
         monster_stats = 1.0
