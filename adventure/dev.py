@@ -200,12 +200,6 @@ class DevCommands(AdventureMixin):
         challenge = await self.get_challenge(monster_roster, rng)
         attribute = rng.choice(list(self.ATTRIBS.keys()))
         monster = monster_roster[challenge].copy()
-        dynamic_stats = self._dynamic_monster_stats(monster.copy(), rng)
-        state = rng.getstate()
-        easy_mode = bool(rng.getrandbits(1))
-        no_monster_30 = rng.randint(0, 100) == 25
-        rng.setstate(state)
-        no_monster = rng.randint(0, 100) == 25
         seed_box = box(hex(rng.internal_seed)[2:].upper())
 
         hp = monster["hp"]
@@ -216,6 +210,13 @@ class DevCommands(AdventureMixin):
         boss = monster["boss"]
         miniboss = monster["miniboss"]
         base_stats = f"HP: {hp}\nCHA: {dipl}\nPDEF: {pdef:0.2f}\nMDEF: {mdef:0.2f}\nCDEF: {cdef:0.2f}"
+
+        dynamic_stats = self._dynamic_monster_stats(monster.copy(), rng)
+        state = rng.getstate()
+        easy_mode = bool(rng.getrandbits(1))
+        no_monster_30 = rng.randint(0, 100) == 25
+        rng.setstate(state)
+        no_monster = rng.randint(0, 100) == 25
 
         dhp = dynamic_stats["hp"]
         ddipl = dynamic_stats["dipl"]
@@ -252,6 +253,8 @@ class DevCommands(AdventureMixin):
         if miniboss:
             requirements = ", ".join(i for i in miniboss.get("requirements", []))
             embed.add_field(name="Miniboss", value=f"{requirements}")
+        if transcended:
+            embed.add_field(name="Transcended", value=str(transcended))
         if monster.get("image", None):
             embed.set_image(url=monster["image"])
         await ctx.send(embed=embed)
