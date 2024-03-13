@@ -37,7 +37,7 @@ class Action(Enum):
         return {
             Action.fight: "\N{DAGGER KNIFE}\N{VARIATION SELECTOR-16}",
             Action.talk: "\N{LEFT SPEECH BUBBLE}\N{VARIATION SELECTOR-16}",
-            Action.pray: "\N{DAGGER KNIFE}\N{VARIATION SELECTOR-16}",
+            Action.pray: "\N{PERSON WITH FOLDED HANDS}",
             Action.magic: "\N{SPARKLES}",
             Action.run: "\N{RUNNER}\N{ZERO WIDTH JOINER}\N{MALE SIGN}\N{VARIATION SELECTOR-16}",
         }[self]
