@@ -512,7 +512,7 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"]
+                    cooldown_time = int(c.heroclass["cooldown"])
                     return await smart_embed(
                         ctx,
                         _(
@@ -758,7 +758,7 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"]
+                    cooldown_time = int(c.heroclass["cooldown"])
                     return await smart_embed(
                         ctx,
                         _(
@@ -808,7 +808,7 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"]
+                    cooldown_time = int(c.heroclass["cooldown"])
                     return await smart_embed(
                         ctx,
                         _(
@@ -855,7 +855,7 @@ class ClassAbilities(AdventureMixin):
                         ),
                     )
                 else:
-                    cooldown_time = c.heroclass["cooldown"]
+                    cooldown_time = int(c.heroclass["cooldown"])
                     return await smart_embed(
                         ctx,
                         _(

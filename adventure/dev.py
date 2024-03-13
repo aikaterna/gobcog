@@ -18,6 +18,7 @@ from .constants import DEV_LIST, Rarities, Slot
 from .converters import RarityConverter, SlotConverter
 from .helpers import escape, is_dev
 from .menus import BaseMenu, SimpleSource
+from .rng import GameSeed, Random
 
 _ = Translator("Adventure", __file__)
 
@@ -185,6 +186,47 @@ class DevCommands(AdventureMixin):
                 await self.config.user(target).set(await c.to_json(ctx, self.config))
         await ctx.tick()
 
+    @commands.command(name="adventureseed")
+    @commands.bot_has_permissions(add_reactions=True, embed_links=True)
+    @commands.is_owner()
+    async def _adventureseed(self, ctx: commands.Context, seed: Union[str, int]):
+        """[Owner] Shows information about an adventure seed"""
+        if isinstance(seed, str):
+            seed = int(seed, 16)
+        gameseed = GameSeed.from_int(int(seed))
+        rng = Random(gameseed)
+        c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
+        monster_roster, monster_stats, transcended = await self.update_monster_roster(c=c, rng=rng)
+        challenge = await self.get_challenge(monster_roster, rng)
+        attribute = rng.choice(list(self.ATTRIBS.keys()))
+        monster = monster_roster[challenge]
+        easy_mode = bool(rng.getrandbits(1))
+        seed_box = box(hex(rng.internal_seed)[2:].upper())
+        hp = monster["hp"]
+        dipl = monster["dipl"]
+        pdef = monster["pdef"]
+        mdef = monster["mdef"]
+        boss = monster["boss"]
+        miniboss = monster["miniboss"]
+        base_stats = f"HP: {hp}\nCHA: {dipl}\nPDEF: {pdef}\nMDEF: {mdef}"
+        embed = discord.Embed(
+            title=f"a{attribute} {challenge}",
+            description=f"Base Stats:\n{base_stats}",
+        )
+        embed.add_field(
+            name="Easy Mode under 30 rebirths",
+            value=str(easy_mode),
+        )
+        embed.add_field(name="Seed Stats", value=f"{seed_box}\n{str(gameseed.stat_range)}")
+        if boss:
+            embed.add_field(name="Boss", value=str(boss))
+        if miniboss:
+            requirements = ", ".join(i for i in miniboss.get("requirements", []))
+            embed.add_field(name="Miniboss", value=f"{requirements}")
+        if monster.get("image", None):
+            embed.set_image(url=monster["image"])
+        await ctx.send(embed=embed)
+
     @commands.command(name="adventurestats")
     @commands.bot_has_permissions(add_reactions=True, embed_links=True)
     @commands.is_owner()
@@ -207,10 +249,12 @@ class DevCommands(AdventureMixin):
                 cdef = adventure.monster_modified_stats.get("cdef", 1.0)
                 hp = adventure.monster_hp()
                 dipl = adventure.monster_dipl()
+                seed = hex(adventure.rng.internal_seed)[2:].upper()
                 msg += (
                     f"{server.name} - "
                     f"[{adventure.challenge}]({adventure.message.jump_url})\n"
-                    f"(hp:**{hp}**-char:**{dipl}**-pdef:**{pdef:0.2f}**-mdef:**{mdef:0.2f}**-cdef:**{cdef:0.2f}**)\n\n"
+                    f"(hp:**{hp}**-char:**{dipl}**-pdef:**{pdef:0.2f}**-mdef:**{mdef:0.2f}**-cdef:**{cdef:0.2f}**)\n"
+                    f"{box(seed)}\n\n"
                 )
         else:
             msg += "None.\n\n"
