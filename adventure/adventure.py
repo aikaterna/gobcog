@@ -986,14 +986,19 @@ class Adventure(
                 self.bot.dispatch("adventure_boss", session)
             elif session.miniboss:
                 self.bot.dispatch("adventure_miniboss", session)
+            # Notify of boss/miniboss
+
             if session.transcended:
                 self.bot.dispatch("adventure_transcended", session)
             elif session.ascended:
                 self.bot.dispatch("adventure_ascended", session)
-            elif session.immortal:
+            # Notify of ascended/descended
+
+            if session.immortal:
                 self.bot.dispatch("adventure_immortal", session)
             elif session.possessed:
                 self.bot.dispatch("adventure_possessed", session)
+            # Notify of immortal/possessed
 
     async def _choice(self, ctx: commands.Context, adventure_msg):
         session = self._sessions[ctx.guild.id]
