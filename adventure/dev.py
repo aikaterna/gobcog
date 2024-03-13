@@ -199,25 +199,54 @@ class DevCommands(AdventureMixin):
         monster_roster, monster_stats, transcended = await self.update_monster_roster(c=c, rng=rng)
         challenge = await self.get_challenge(monster_roster, rng)
         attribute = rng.choice(list(self.ATTRIBS.keys()))
-        monster = monster_roster[challenge]
+        monster = monster_roster[challenge].copy()
+        dynamic_stats = self._dynamic_monster_stats(monster.copy(), rng)
+        state = rng.getstate()
         easy_mode = bool(rng.getrandbits(1))
+        no_monster_30 = rng.randint(0, 100) == 25
+        rng.setstate(state)
+        no_monster = rng.randint(0, 100) == 25
         seed_box = box(hex(rng.internal_seed)[2:].upper())
+
         hp = monster["hp"]
         dipl = monster["dipl"]
         pdef = monster["pdef"]
         mdef = monster["mdef"]
+        cdef = monster.get("cdef", 1.0)
         boss = monster["boss"]
         miniboss = monster["miniboss"]
-        base_stats = f"HP: {hp}\nCHA: {dipl}\nPDEF: {pdef}\nMDEF: {mdef}"
+        base_stats = f"HP: {hp}\nCHA: {dipl}\nPDEF: {pdef:0.2f}\nMDEF: {mdef:0.2f}\nCDEF: {cdef:0.2f}"
+
+        dhp = dynamic_stats["hp"]
+        ddipl = dynamic_stats["dipl"]
+        dpdef = dynamic_stats["pdef"]
+        dmdef = dynamic_stats["mdef"]
+        dcdef = dynamic_stats.get("cdef", 1.0)
+        d_stats = f"HP: {dhp}\nCHA: {ddipl}\nPDEF: {dpdef:0.2f}\nMDEF: {dmdef:0.2f}\nCDEF: {dcdef:0.2f}"
+
+        attribute_stats = self.ATTRIBS[attribute]
+        true_hp = max(int(dhp * attribute_stats[0] * monster_stats), 1)
+        true_dipl = max(int(ddipl * attribute_stats[1] * monster_stats), 1)
         embed = discord.Embed(
             title=f"a{attribute} {challenge}",
-            description=f"Base Stats:\n{base_stats}",
+            description=(
+                f"HP: **{true_hp}**\nCHA: **{true_dipl}**"
+                f"\nHP Mod: **{attribute_stats[0]}**\nCHA Mod: **{attribute_stats[1]}**"
+            )
         )
+        embed.add_field(name="Base Stats", value=base_stats)
+        embed.add_field(name="Dynamic Stats", value=d_stats)
+
+        embed.add_field(name="Seed Stats", value=f"{str(gameseed.stat_range)}")
+        embed.add_field(name="Seed", value=seed_box)
         embed.add_field(
             name="Easy Mode under 30 rebirths",
             value=str(easy_mode),
         )
-        embed.add_field(name="Seed Stats", value=f"{seed_box}\n{str(gameseed.stat_range)}")
+        if no_monster:
+            embed.add_field(name="No Monster", value=str(no_monster))
+        if no_monster_30:
+            embed.add_field(name="No Monster under 30 rebirths", value=str(no_monster_30))
         if boss:
             embed.add_field(name="Boss", value=str(boss))
         if miniboss:

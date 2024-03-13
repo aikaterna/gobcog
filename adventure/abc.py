@@ -143,6 +143,10 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def _dynamic_monster_stats(self, choice: Monster, rng: Random) -> Monster:
+        raise NotImplementedError()
+
+    @abstractmethod
     async def update_monster_roster(
         self, c: Optional[Character] = None, rng: Optional[Random] = None
     ) -> Tuple[Dict[str, Monster], float, bool]:

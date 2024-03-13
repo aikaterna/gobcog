@@ -711,9 +711,9 @@ class Adventure(
             choice = rng.choice(possible_monsters)
         return choice
 
-    def _dynamic_monster_stats(self, ctx: commands.Context, choice: Monster, rng: Random) -> Monster:
-        stat_range = self._adv_results.get_stat_range(ctx.guild)
-        win_percentage = stat_range.get("win_percent", 0.5)
+    def _dynamic_monster_stats(self, choice: Monster, rng: Random) -> Monster:
+        stat_range = rng.internal_seed.stat_range
+        win_percentage = stat_range.win_percent
         choice["cdef"] = choice.get("cdef", 1.0)
         if win_percentage >= 0.90:
             # more than 90% win rate
@@ -900,6 +900,10 @@ class Adventure(
             attribute = rng.choice(list(self.ATTRIBS.keys()))
         new_challenge = challenge
         easy_mode = await self.config.easy_mode()
+        monster = monster_roster[challenge].copy()
+        dynamic_monster_stats = self._dynamic_monster_stats(monster, rng)
+        # we want to copy it so that its base stats remain the same and dynamic adjustmnets
+        # are made for that specific adventure.
         if not easy_mode:
             if c.rebirths >= 30:
                 easy_mode = False
@@ -935,9 +939,7 @@ class Adventure(
             no_monster = rng.randint(0, 100) == 25
         # if ctx.author.id in DEV_LIST:
         # timer = 20
-        monster = monster_roster[challenge].copy()
-        # we want to copy it so that its base stats remain the same and dynamic adjustmnets
-        # are made for that specific adventure.
+
         self._sessions[ctx.guild.id] = GameSession(
             ctx=ctx,
             cog=self,
@@ -954,7 +956,7 @@ class Adventure(
             monster_stats=monster_stats if not no_monster else None,
             message=ctx.message,
             transcended=transcended if not no_monster else None,
-            monster_modified_stats=self._dynamic_monster_stats(ctx, monster, rng),
+            monster_modified_stats=dynamic_monster_stats,
             easy_mode=easy_mode,
             no_monster=no_monster,
             rng=rng,
