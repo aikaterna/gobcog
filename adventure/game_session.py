@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import logging
-import random
 import time
 from datetime import datetime
-from math import ceil
-from typing import List, Mapping, MutableMapping, Optional, Set, Tuple
+from enum import Enum
+from typing import Dict, List, Mapping, MutableMapping, Optional, Set, Tuple
 
 import discord
 from redbot.core.commands import Context
@@ -26,17 +25,28 @@ _ = Translator("Adventure", __file__)
 log = logging.getLogger("red.cogs.adventure")
 
 
-class AttackButton(discord.ui.Button):
-    def __init__(
-        self,
-        style: discord.ButtonStyle,
-        row: Optional[int] = None,
-    ):
-        super().__init__(label="Attack", style=style, row=row)
-        self.style = style
-        self.emoji = "\N{DAGGER KNIFE}\N{VARIATION SELECTOR-16}"
-        self.action_type = "fight"
-        self.label_name = "Attack {}"
+class Action(Enum):
+    fight = 0
+    talk = 1
+    pray = 2
+    magic = 3
+    run = 4
+
+    @property
+    def emoji(self):
+        return {
+            Action.fight: "\N{DAGGER KNIFE}\N{VARIATION SELECTOR-16}",
+            Action.talk: "\N{LEFT SPEECH BUBBLE}\N{VARIATION SELECTOR-16}",
+            Action.pray: "\N{DAGGER KNIFE}\N{VARIATION SELECTOR-16}",
+            Action.magic: "\N{SPARKLES}",
+            Action.run: "\N{RUNNER}\N{ZERO WIDTH JOINER}\N{MALE SIGN}\N{VARIATION SELECTOR-16}",
+        }[self]
+
+
+class ActionButton(discord.ui.Button):
+    def __init__(self, action: Action):
+        self.action = action
+        super().__init__(label=self.action.name.title(), emoji=self.action.emoji)
 
     async def send_response(self, interaction: discord.Interaction):
         user = interaction.user
@@ -45,7 +55,7 @@ class AttackButton(discord.ui.Button):
         except Exception as exc:
             log.exception("Error with the new character sheet", exc_info=exc)
             pass
-        choices = self.view.cog.ACTION_RESPONSE.get(self.action_type, {})
+        choices = self.view.cog.ACTION_RESPONSE.get(self.action.name, {})
         heroclass = c.hc.name
         pet = ""
         if c.hc is HeroClasses.ranger:
@@ -65,225 +75,17 @@ class AttackButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         user = interaction.user
-        for x in ["magic", "talk", "pray", "run"]:
-            if user in getattr(self.view, x, []):
-                getattr(self.view, x).remove(user)
-        if user not in self.view.fight:
-            self.view.fight.append(user)
+        for action in Action:
+            if action is self.action:
+                continue
+            if user in getattr(self.view, action.name, []):
+                getattr(self.view, action.name).remove(user)
+        if user not in getattr(self.view, self.action.name):
+            getattr(self.view, self.action.name).append(user)
             await self.send_response(interaction)
             await self.view.update()
         else:
             await smart_embed(message="You are already fighting this monster.", ephemeral=True, interaction=interaction)
-
-
-class MagicButton(discord.ui.Button):
-    def __init__(
-        self,
-        style: discord.ButtonStyle,
-        row: Optional[int] = None,
-    ):
-        super().__init__(label="Magic", style=style, row=row)
-        self.style = style
-        self.emoji = "\N{SPARKLES}"
-        self.action_type = "magic"
-        self.label_name = "Magic {}"
-
-    async def send_response(self, interaction: discord.Interaction):
-        user = interaction.user
-        try:
-            c = await Character.from_json(self.view.ctx, self.view.cog.config, user, self.view.cog._daily_bonus)
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            pass
-        choices = self.view.cog.ACTION_RESPONSE.get(self.action_type, {})
-        heroclass = c.hc.name
-        pet = ""
-        if c.hc is HeroClasses.ranger:
-            pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
-
-        choice = self.view.rng.choice(choices[heroclass] + choices["hero"])
-        choice = choice.replace("$pet", pet)
-        choice = choice.replace("$monster", self.view.challenge_name())
-        weapon = c.get_weapons()
-        choice = choice.replace("$weapon", weapon)
-        god = await self.view.cog.config.god_name()
-        if await self.view.cog.config.guild(interaction.guild).god_name():
-            god = await self.view.cog.config.guild(interaction.guild).god_name()
-        choice = choice.replace("$god", god)
-        await smart_embed(message=box(choice, lang="ansi"), ephemeral=True, interaction=interaction)
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        user = interaction.user
-        for x in ["fight", "talk", "pray", "run"]:
-            if user in getattr(self.view, x, []):
-                getattr(self.view, x).remove(user)
-        if user not in self.view.magic:
-            self.view.magic.append(user)
-            await self.send_response(interaction)
-            await self.view.update()
-        else:
-            await smart_embed(
-                message="You have already cast a spell at this monster.", ephemeral=True, interaction=interaction
-            )
-
-
-class TalkButton(discord.ui.Button):
-    def __init__(
-        self,
-        style: discord.ButtonStyle,
-        row: Optional[int] = None,
-    ):
-        super().__init__(label="Talk", style=style, row=row)
-        self.style = style
-        self.emoji = "\N{LEFT SPEECH BUBBLE}\N{VARIATION SELECTOR-16}"
-        self.action_type = "talk"
-        self.label_name = "Talk {}"
-
-    async def send_response(self, interaction: discord.Interaction):
-        user = interaction.user
-        try:
-            c = await Character.from_json(self.view.ctx, self.view.cog.config, user, self.view.cog._daily_bonus)
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            pass
-        choices = self.view.cog.ACTION_RESPONSE.get(self.action_type, {})
-        heroclass = c.hc.name
-        pet = ""
-        if c.hc is HeroClasses.ranger:
-            pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
-
-        choice = self.view.rng.choice(choices[heroclass] + choices["hero"])
-        choice = choice.replace("$pet", pet)
-        choice = choice.replace("$monster", self.view.challenge_name())
-        weapon = c.get_weapons()
-        choice = choice.replace("$weapon", weapon)
-        god = await self.view.cog.config.god_name()
-        if await self.view.cog.config.guild(interaction.guild).god_name():
-            god = await self.view.cog.config.guild(interaction.guild).god_name()
-        choice = choice.replace("$god", god)
-        await smart_embed(message=box(choice, lang="ansi"), ephemeral=True, interaction=interaction)
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        user = interaction.user
-        for x in ["fight", "magic", "pray", "run"]:
-            if user in getattr(self.view, x, []):
-                getattr(self.view, x).remove(user)
-        if user not in self.view.talk:
-            self.view.talk.append(user)
-            await self.send_response(interaction)
-            await self.view.update()
-        else:
-            await smart_embed(
-                message="You are already talking to this monster.", ephemeral=True, interaction=interaction
-            )
-
-
-class PrayButton(discord.ui.Button):
-    def __init__(
-        self,
-        style: discord.ButtonStyle,
-        row: Optional[int] = None,
-    ):
-        super().__init__(label="Pray", style=style, row=row)
-        self.style = style
-        self.emoji = "\N{PERSON WITH FOLDED HANDS}"
-        self.action_type = "pray"
-        self.label_name = "Pray {}"
-
-    async def send_response(self, interaction: discord.Interaction):
-        user = interaction.user
-        try:
-            c = await Character.from_json(self.view.ctx, self.view.cog.config, user, self.view.cog._daily_bonus)
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            pass
-        choices = self.view.cog.ACTION_RESPONSE.get(self.action_type, {})
-        heroclass = c.hc.name
-        pet = ""
-        if c.hc is HeroClasses.ranger:
-            pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
-
-        choice = self.view.rng.choice(choices[heroclass] + choices["hero"])
-        choice = choice.replace("$pet", pet)
-        choice = choice.replace("$monster", self.view.challenge_name())
-        weapon = c.get_weapons()
-        choice = choice.replace("$weapon", weapon)
-        god = await self.view.cog.config.god_name()
-        if await self.view.cog.config.guild(interaction.guild).god_name():
-            god = await self.view.cog.config.guild(interaction.guild).god_name()
-        choice = choice.replace("$god", god)
-        await smart_embed(message=box(choice, lang="ansi"), ephemeral=True, interaction=interaction)
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        user = interaction.user
-        for x in ["fight", "magic", "talk", "run"]:
-            if user in getattr(self.view, x, []):
-                getattr(self.view, x).remove(user)
-        if user not in self.view.pray:
-            self.view.pray.append(user)
-            await self.send_response(interaction)
-            await self.view.update()
-        else:
-            await smart_embed(
-                message="You are already praying for help against this monster.",
-                ephemeral=True,
-                interaction=interaction,
-            )
-
-
-class RunButton(discord.ui.Button):
-    def __init__(
-        self,
-        style: discord.ButtonStyle,
-        row: Optional[int] = None,
-    ):
-        super().__init__(label="Run", style=style, row=row)
-        self.style = style
-        self.emoji = "\N{RUNNER}\N{ZERO WIDTH JOINER}\N{MALE SIGN}\N{VARIATION SELECTOR-16}"
-        self.action_type = "run"
-        self.label_name = "Run {}"
-
-    async def send_response(self, interaction: discord.Interaction):
-        user = interaction.user
-        try:
-            c = await Character.from_json(self.view.ctx, self.view.cog.config, user, self.view.cog._daily_bonus)
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            pass
-        choices = self.view.cog.ACTION_RESPONSE.get(self.action_type, {})
-        heroclass = c.hc.name
-        pet = ""
-        if c.hc is HeroClasses.ranger:
-            pet = c.heroclass.get("pet", {}).get("name", _("pet you would have if you had a pet"))
-
-        choice = self.view.rng.choice(choices[heroclass] + choices["hero"])
-        choice = choice.replace("$pet", pet)
-        choice = choice.replace("$monster", self.view.challenge_name())
-        weapon = c.get_weapons()
-        choice = choice.replace("$weapon", weapon)
-        god = await self.view.cog.config.god_name()
-        if await self.view.cog.config.guild(interaction.guild).god_name():
-            god = await self.view.cog.config.guild(interaction.guild).god_name()
-        choice = choice.replace("$god", god)
-        await smart_embed(message=box(choice, lang="ansi"), ephemeral=True, interaction=interaction)
-
-    async def callback(self, interaction: discord.Interaction):
-        """Skip to previous track"""
-        user = interaction.user
-        for x in ["fight", "magic", "talk", "pray"]:
-            if user in getattr(self.view, x, []):
-                getattr(self.view, x).remove(user)
-        if user not in self.view.run:
-            self.view.run.append(user)
-            await self.send_response(interaction)
-            await self.view.update()
-        else:
-            await smart_embed(
-                message="You have already run from this monster.", ephemeral=True, interaction=interaction
-            )
 
 
 class SpecialActionButton(discord.ui.Button):
@@ -642,6 +444,7 @@ class GameSession(discord.ui.View):
     exposed: bool = False
     finished: bool = False
     rng: Random
+    _last_update: Dict[Action, int]
 
     def __init__(self, **kwargs):
         self.ctx: Context = kwargs.pop("ctx")
@@ -677,12 +480,11 @@ class GameSession(discord.ui.View):
         self.ascended = "Ascended" in self.challenge
         self.rng = kwargs["rng"]
         super().__init__(timeout=self.timer)
-        self.attack_button = AttackButton(discord.ButtonStyle.grey)
-        self.talk_button = TalkButton(discord.ButtonStyle.grey)
-        self.magic_button = MagicButton(discord.ButtonStyle.grey)
-        self.talk_button = TalkButton(discord.ButtonStyle.grey)
-        self.pray_button = PrayButton(discord.ButtonStyle.grey)
-        self.run_button = RunButton(discord.ButtonStyle.grey)
+        self.attack_button = ActionButton(Action.fight)
+        self.talk_button = ActionButton(Action.talk)
+        self.magic_button = ActionButton(Action.magic)
+        self.pray_button = ActionButton(Action.pray)
+        self.run_button = ActionButton(Action.run)
         self.special_button = SpecialActionButton(discord.ButtonStyle.blurple)
         self.add_item(self.attack_button)
         self.add_item(self.talk_button)
@@ -690,6 +492,7 @@ class GameSession(discord.ui.View):
         self.add_item(self.pray_button)
         self.add_item(self.run_button)
         self.add_item(self.special_button)
+        self._last_update: Dict[Action, int] = {a: 0 for a in Action}
 
     def monster_hp(self) -> int:
         return max(int(self.monster_modified_stats.get("hp", 0) * self.attribute_stats[0] * self.monster_stats), 1)
@@ -698,11 +501,21 @@ class GameSession(discord.ui.View):
         return max(int(self.monster_modified_stats.get("dipl", 0) * self.attribute_stats[1] * self.monster_stats), 1)
 
     async def update(self):
-        self.attack_button.label = self.attack_button.label_name.format(f"({len(self.fight)})")
-        self.talk_button.label = self.talk_button.label_name.format(f"({len(self.talk)})")
-        self.magic_button.label = self.magic_button.label_name.format(f"({len(self.magic)})")
-        self.pray_button.label = self.pray_button.label_name.format(f"({len(self.pray)})")
-        self.run_button.label = self.run_button.label_name.format(f"({len(self.run)})")
+        buttons = {
+            Action.fight: self.attack_button,
+            Action.talk: self.talk_button,
+            Action.magic: self.magic_button,
+            Action.pray: self.pray_button,
+            Action.run: self.run_button,
+        }
+        for action in Action:
+            if len(getattr(self, action.name, [])) != self._last_update[action]:
+                new_number = len(getattr(self, action.name, []))
+                self._last_update[action] = new_number
+                if new_number != 0:
+                    buttons[action].label = buttons[action].action.name.title() + f" ({new_number})"
+                else:
+                    buttons[action].label = buttons[action].action.name.title()
         await self.message.edit(view=self)
 
     def in_adventure(self, user: discord.Member) -> bool:
