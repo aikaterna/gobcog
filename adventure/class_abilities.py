@@ -1017,7 +1017,7 @@ class ClassAbilities(AdventureMixin):
                             ),
                             lang="ansi",
                         )
-                        await view.message.edit(content=created_item, view=None)
+                        await view.message.edit(content=forged_item, view=None)
                     else:
                         c.heroclass["cooldown"] = time.time() + cooldown_time
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
