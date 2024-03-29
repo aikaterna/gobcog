@@ -418,7 +418,7 @@ class EconomyCommands(AdventureMixin):
                 ctx,
                 box(
                     ("Valid loot types: {loot_types}: " "ex. `{prefix}give loot normal @locastan` ").format(
-                        prefix=ctx.prefix, loot_types=humanize_list([i.ansi for i in loot_types])
+                        prefix=ctx.clean_prefix, loot_types=humanize_list([i.ansi for i in loot_types])
                     ),
                     lang="ansi",
                 ),

@@ -59,7 +59,7 @@ class ClassAbilities(AdventureMixin):
                     "So you feel like taking on a class, {author}?\n"
                     "Available classes are: {classes}\n"
                     "Use `{prefix}heroclass name-of-class` to choose one."
-                ).format(author=bold(ctx.author.display_name), classes=classes, prefix=ctx.prefix),
+                ).format(author=bold(ctx.author.display_name), classes=classes, prefix=ctx.clean_prefix),
             )
 
         else:
@@ -281,7 +281,7 @@ class ClassAbilities(AdventureMixin):
                     return await ctx.send(
                         box(
                             _("{author}, you already have a pet. Try foraging ({prefix}pet forage).").format(
-                                author=escape(ctx.author.display_name), prefix=ctx.prefix
+                                author=escape(ctx.author.display_name), prefix=ctx.clean_prefix
                             ),
                             lang="ansi",
                         )
