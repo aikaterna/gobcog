@@ -1577,8 +1577,10 @@ class Character:
             if item and item.to_json() not in list(self.pieces_to_keep.values()):
                 await self.add_to_backpack(item)
         if (self.left and self.left.slot is Slot.two_handed) or (self.right and self.right.slot is Slot.two_handed):
-            if self.left.to_json() not in list(self.pieces_to_keep.values()):
+            if self.left and self.left.to_json() not in list(self.pieces_to_keep.values()):
                 await self.add_to_backpack(self.left)
+            elif self.right and self.right.to_json() not in list(self.pieces_to_keep.values()):
+                await self.add_to_backpack(self.right)
         else:
             for item in [self.left, self.right]:
                 if item and item.to_json() not in list(self.pieces_to_keep.values()):
