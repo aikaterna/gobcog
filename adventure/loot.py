@@ -452,6 +452,7 @@ class LootCommands(AdventureMixin):
             if not character.can_equip(item):
                 await character.add_to_backpack(item)
                 await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
+                await open_msg.edit(view=None)
                 return await smart_embed(
                     ctx=ctx,
                     message=_(
@@ -464,7 +465,7 @@ class LootCommands(AdventureMixin):
                     user=escape(ctx.author.display_name), item=item.as_ansi(), slot=slot
                 )
             else:
-                equip_msg = _("{user} equipped {item} ({slot} slot) and put {old_item} into their backpack.").format(
+                equip_msg = _("{user} equipped {item} ({slot} slot) and put {old_item} into their backpack").format(
                     user=escape(ctx.author.display_name),
                     item=item,
                     slot=slot,
