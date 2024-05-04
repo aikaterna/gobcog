@@ -389,7 +389,7 @@ class EconomyCommands(AdventureMixin):
             ),
             lang="ansi",
         )
-        msg += item_table
+        msg += box(str(item_table), lang="ansi")
         await ctx.send(msg)
 
     @give.command(name="loot")
