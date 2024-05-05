@@ -1656,9 +1656,10 @@ class Character:
             item = getattr(self, slots.name)
             if item and item.set and self.rebirths >= 30:
                 items_to_keep[slots.name] = item.to_json()
-        if self.left == self.right and self.right is not None:
+        if self.left == self.right and self.right is not None and self.left is not None:
             if self.right.set and self.rebirths >= 30:
                 items_to_keep["right"] = self.right.to_json()
+                items_to_keep["left"] = self.left.to_json()
         else:
             if self.left and self.left.set and self.rebirths >= 30:
                 items_to_keep["left"] = self.left.to_json()
