@@ -49,8 +49,8 @@ class RebirthCommands(AdventureMixin):
             bal = await bank.get_balance(ctx.author)
             withdraw = max(base_cost, int(max((bal - base_cost), 1) * (rebirth_cost / 100.0)))
             currency_name = await bank.get_currency_name(
-                    ctx.guild,
-                )
+                ctx.guild,
+            )
             if last_known_currency and current_balance / last_known_currency < 0.25:
                 currency_name = await bank.get_currency_name(
                     ctx.guild,
