@@ -1009,6 +1009,7 @@ class Character:
                 item = backpack[item_name]
                 item_slots = item.slot
                 slot_name = item_slots.get_name()
+                mult = 2 if item.slot is Slot.two_handed else 1
                 if rarity_exclude is not None and item.rarity.name in rarity_exclude:
                     continue
 
@@ -1045,39 +1046,40 @@ class Character:
                         continue
                 if level:
                     if (d := level.get("equal")) is not None:
-                        if e_level != d:
+                        if item.lvl != d:
                             continue
-                    elif not level["min"] < e_level < level["max"]:
+                    elif not level["min"] < item.lvl < level["max"]:
                         continue
                 if dexterity:
                     if (d := dexterity.get("equal")) is not None:
-                        if item.dex != d:
+                        if item.dex*mult != d:
                             continue
-                    elif not dexterity["min"] < item.dex < dexterity["max"]:
+                    elif not dexterity["min"] < item.dex*mult < dexterity["max"]:
                         continue
                 if luck:
                     if (d := luck.get("equal")) is not None:
-                        if item.luck != d:
+                        if item.luck*mult != d:
                             continue
-                    elif not luck["min"] < item.luck < luck["max"]:
+                    elif not luck["min"] < item.luck*mult < luck["max"]:
                         continue
                 if charisma:
                     if (d := charisma.get("equal")) is not None:
-                        if item.cha != d:
+                        if item.cha*mult != d:
                             continue
-                    elif not charisma["min"] < item.cha < charisma["max"]:
+                    elif not charisma["min"] < item.cha*mult < charisma["max"]:
                         continue
                 if intelligence:
                     if (d := intelligence.get("equal")) is not None:
-                        if item.int != d:
+                        if item.int*mult != d:
                             continue
-                    elif not intelligence["min"] < item.int < intelligence["max"]:
+                    elif not intelligence["min"] < item.int*mult < intelligence["max"]:
                         continue
                 if strength:
+
                     if (d := strength.get("equal")) is not None:
-                        if item.att != d:
+                        if item.att*mult != d:
                             continue
-                    elif not strength["min"] < item.att <= strength["max"]:
+                    elif not strength["min"] < item.att*mult <= strength["max"]:
                         continue
 
                 if slot_name not in tmp:
@@ -1090,6 +1092,7 @@ class Character:
                 item = backpack[item_name]
                 item_slots = item.slot
                 slot_name = item_slots.get_name()
+                mult = 2 if item.slot is Slot.two_handed else 1
                 if rarity_exclude is not None and item.rarity in rarity_exclude:
                     continue
 
@@ -1124,39 +1127,39 @@ class Character:
                         continue
                 if level:
                     if (d := level.get("equal")) is not None:
-                        if e_level == d:
+                        if item.lvl == d:
                             continue
-                    elif level["min"] < e_level < level["max"]:
+                    elif level["min"] < item.lvl < level["max"]:
                         continue
                 if dexterity:
                     if (d := dexterity.get("equal")) is not None:
-                        if item.dex == d:
+                        if item.dex*mult == d:
                             continue
-                    elif dexterity["min"] < item.dex < dexterity["max"]:
+                    elif dexterity["min"] < item.dex*mult < dexterity["max"]:
                         continue
                 if luck:
                     if (d := luck.get("equal")) is not None:
-                        if item.luck == d:
+                        if item.luck*mult == d:
                             continue
-                    elif luck["min"] < item.luck < luck["max"]:
+                    elif luck["min"] < item.luck*mult < luck["max"]:
                         continue
                 if charisma:
                     if (d := charisma.get("equal")) is not None:
-                        if item.cha == d:
+                        if item.cha*mult == d:
                             continue
-                    elif charisma["min"] < item.cha < charisma["max"]:
+                    elif charisma["min"] < item.cha*mult < charisma["max"]:
                         continue
                 if intelligence:
                     if (d := intelligence.get("equal")) is not None:
-                        if item.int == d:
+                        if item.int*mult == d:
                             continue
-                    elif intelligence["min"] < item.int < intelligence["max"]:
+                    elif intelligence["min"] < item.int*mult < intelligence["max"]:
                         continue
                 if strength:
                     if (d := strength.get("equal")) is not None:
-                        if item.att == d:
+                        if item.att*mult == d:
                             continue
-                    elif strength["min"] < item.att <= strength["max"]:
+                    elif strength["min"] < item.att*mult <= strength["max"]:
                         continue
                 if slot_name not in tmp:
                     tmp[slot_name] = []

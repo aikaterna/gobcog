@@ -43,9 +43,14 @@ class RebirthCommands(AdventureMixin):
                 rebirth_cost = await self.config.guild(ctx.guild).rebirth_cost()
             else:
                 rebirth_cost = await self.config.rebirth_cost()
-            rebirthcost = 1000 * c.rebirths
+            base_cost = 1000 * c.rebirths
             current_balance = c.bal
             last_known_currency = c.last_known_currency
+            bal = await bank.get_balance(ctx.author)
+            withdraw = max(base_cost, int(max((bal - base_cost), 1) * (rebirth_cost / 100.0)))
+            currency_name = await bank.get_currency_name(
+                    ctx.guild,
+                )
             if last_known_currency and current_balance / last_known_currency < 0.25:
                 currency_name = await bank.get_currency_name(
                     ctx.guild,
@@ -61,14 +66,15 @@ class RebirthCommands(AdventureMixin):
                     ),
                 )
             else:
-                has_fund = await has_funds(ctx.author, rebirthcost)
+                has_fund = await has_funds(ctx.author, withdraw)
             if not has_fund:
-                currency_name = await bank.get_currency_name(
-                    ctx.guild,
-                )
+
+                remaining = withdraw - current_balance
                 return await smart_embed(
                     ctx,
-                    _("You need more {currency_name} to be able to rebirth.").format(currency_name=currency_name),
+                    _("You need {remaining} more {currency_name} to be able to rebirth.").format(
+                        currency_name=currency_name, remaining=humanize_number(remaining)
+                    ),
                 )
             space = "\N{EN SPACE}"
             view = ConfirmView(60, ctx.author)
@@ -76,7 +82,7 @@ class RebirthCommands(AdventureMixin):
                 ctx,
                 _(
                     "Rebirthing will:\n\n"
-                    "* cost {cost}% of your credits\n"
+                    "* cost {cost} of your {currency}\n"
                     "* cost all of your current gear\n"
                     "{space}- Legendary and Ascended items lose one degradation "
                     "point per rebirth and are broken down when they have 0 left.\n"
@@ -86,12 +92,13 @@ class RebirthCommands(AdventureMixin):
                     "for acquiring more powerful items, a higher max level, and the "
                     "ability to convert chests to higher rarities after the second rebirth.\n\n"
                     "Would you like to rebirth?"
-                ).format(cost=int(rebirth_cost), space=space * 4),
+                ).format(cost=humanize_number(withdraw), space=space * 4, currency=currency_name),
                 view=view,
             )
             await view.wait()
 
             if view.confirmed is None:
+                await open_msg.edit(view=None)
                 await smart_embed(ctx, "I can't wait forever, you know.")
                 return
             if not view.confirmed:
@@ -120,12 +127,9 @@ class RebirthCommands(AdventureMixin):
                     view=None,
                 )
                 return
-            bal = await bank.get_balance(ctx.author)
-            if bal >= 1000:
-                withdraw = int((bal - 1000) * (rebirth_cost / 100.0))
+            if bal >= withdraw:
                 await bank.withdraw_credits(ctx.author, withdraw)
             else:
-                withdraw = int(bal * (rebirth_cost / 100.0))
                 await bank.set_balance(ctx.author, 0)
 
             await open_msg.edit(
